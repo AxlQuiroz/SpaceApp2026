@@ -1,6 +1,6 @@
 # Contrato de integración · recursos v1
 
-**Consumidor:** motor del simulador. **Transporte:** HTTP/JSON. **Versión:** `/internal/v1`. **Autenticación:** Bearer de servicio. Este documento permite conectar después un motor en Python, Node.js, C# u otro lenguaje sin modificar los conectores NASA.
+**Consumidor:** motor del simulador. **Transporte:** HTTP/JSON. **Versión:** `/internal/v1`. **Autenticación:** Bearer de servicio. El motor y su API ya están implementados en `services/mission-api`; el contrato también permite consumidores en otros lenguajes sin modificar los conectores NASA.
 
 ## Responsabilidades
 
@@ -9,8 +9,8 @@
 | Conector | Construye consultas a una fuente fija y valida su estructura |
 | API de recursos | Normaliza registros, fechas y metadatos; gestiona errores, capturas y caché |
 | Motor | Aplica reglas versionadas, recursos, incidentes y efectos de la misión |
-| Futura API de aplicación | Gestionará partidas, acciones, sesiones y estado del jugador |
-| Frontend | Presentará el estado y recibirá las acciones del jugador |
+| API de aplicación | Gestiona partidas, acciones, sesiones y estado en `services/mission-api` |
+| Frontend externo | Node.js/React/Next.js; presenta estado y envía decisiones mediante el contrato de partidas |
 
 ## Sobre de respuesta
 

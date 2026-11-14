@@ -1,4 +1,4 @@
-"""Cliente para la futura lógica. Ejecutar desde services/resource-api.
+"""Cliente de ejemplo independiente. Ejecutar desde services/resource-api.
 
 El cliente obtiene datos; el motor decidirá su efecto en recursos o tripulación.
 """
@@ -69,7 +69,7 @@ async def main():
     print("Modo:", result.pages_meta[0]["retrieval_mode"])
     for event in result.records:
         print(event["source_id"], event["classification"], event["observed_at"])
-    # El futuro motor puede traducir estos eventos mediante reglas versionadas.
+    # El backend conectado y sus reglas versionadas están en services/mission-api.
     # Esta API no asigna porcentajes de pérdida, daños ni dosis por clase de llamarada.
 
 

@@ -1,0 +1,7 @@
+{
+  "integration": "nextjs-app-router",
+  "turns": 12,
+  "outcome": "success",
+  "score": 99,
+  "cookie_http_only": true
+}
