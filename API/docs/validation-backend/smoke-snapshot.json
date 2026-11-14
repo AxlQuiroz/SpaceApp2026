@@ -1,0 +1,30 @@
+{
+  "mode": "snapshot",
+  "mission_id": "beac9230-c176-4f74-8c2b-e209b1482fb3",
+  "turns": 12,
+  "outcome": "success",
+  "score": 99,
+  "sources": [
+    {
+      "id": "donki-episode",
+      "records": 15,
+      "retrieval_modes": [
+        "snapshot"
+      ]
+    },
+    {
+      "id": "radlab-reference",
+      "records": 1,
+      "retrieval_modes": [
+        "snapshot"
+      ]
+    },
+    {
+      "id": "osdr-study",
+      "records": 1,
+      "retrieval_modes": [
+        "snapshot"
+      ]
+    }
+  ]
+}

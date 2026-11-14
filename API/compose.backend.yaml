@@ -1,0 +1,38 @@
+services:
+  resources:
+    build: ./services/resource-api
+    env_file: .env
+    environment:
+      RESOURCE_CACHE_PATH: /app/data/resources.sqlite3
+    volumes:
+      - resource-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health/ready', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+  missions:
+    build: ./services/mission-api
+    env_file: .env
+    environment:
+      MISSION_DATABASE_PATH: /app/data/missions.sqlite3
+      MISSION_RESOURCE_API_URL: http://resources:8001
+      MISSION_ALLOW_INTERNAL_HTTP: "true"
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - mission-data:/app/data
+    depends_on:
+      resources:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  resource-data:
+  mission-data:

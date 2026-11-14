@@ -1,5 +1,7 @@
 # API de recursos científicos · v0.1.0
 
+El backend que consume este servicio está implementado en `services/mission-api`. Para instalar y ejecutar ambos servicios juntos usa el [README principal](../../README.md). Esta guía conserva los comandos para ejecutar recursos de forma independiente.
+
 Servicio independiente en **Python 3.12+ y FastAPI**, consumido por el motor de Órbita mediante HTTP. Obtiene y valida recursos NASA, los normaliza, conserva la procedencia y controla caché y fallos. La interfaz de transporte permite utilizar un motor escrito en otro lenguaje.
 
 ## Conectores disponibles

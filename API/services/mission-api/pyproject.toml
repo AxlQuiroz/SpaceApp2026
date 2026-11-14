@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=75,<83"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "orbita-mission-api"
+version = "0.2.0"
+description = "Motor de simulación y API de partidas de Órbita"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi==0.141.1",
+  "httpx[socks]==0.28.1",
+  "pydantic-settings==2.15.0",
+  "uvicorn==0.52.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+mission_api = ["migrations/*.sql"]

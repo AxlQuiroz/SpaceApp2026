@@ -1,0 +1,30 @@
+{
+  "mode": "live",
+  "mission_id": "7e59e215-efd6-492a-968e-fd4ac58539ec",
+  "turns": 12,
+  "outcome": "success",
+  "score": 99,
+  "sources": [
+    {
+      "id": "donki-episode",
+      "records": 15,
+      "retrieval_modes": [
+        "live"
+      ]
+    },
+    {
+      "id": "radlab-reference",
+      "records": 1,
+      "retrieval_modes": [
+        "live"
+      ]
+    },
+    {
+      "id": "osdr-study",
+      "records": 1,
+      "retrieval_modes": [
+        "live"
+      ]
+    }
+  ]
+}
