@@ -1,0 +1,1 @@
+{"columns":["timestamp","instrument_id","absorbed_dose_rate","celestial_body","dose_equivalent_rate","instrument","spacecraft","trajectory"],"index":[0],"data":[["2014-01-01T00:59:59","CRaTER-D1D2",7.782500000000001,"Moon",null,"CRaTER","LRO","Lunar orbit"]]}
