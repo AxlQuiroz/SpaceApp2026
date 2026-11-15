@@ -6,7 +6,8 @@ export default defineConfig({
   workers: 1,
   retries: process.env.CI ? 1 : 0,
   reporter: [["list"], ["html", { open: "never" }]],
-  use: { baseURL: "http://localhost:3100", reducedMotion: "reduce", screenshot: "only-on-failure", trace: "retain-on-failure" },
+  use: { baseURL: "http://localhost:3100", reducedMotion: "reduce", screenshot: "only-on-failure", trace: "retain-on-failure",
+    actionTimeout: 15_000, navigationTimeout: 30_000 },
   projects: [
     { name: "desktop", use: { browserName: "chromium", viewport: { width: 1440, height: 1000 } } },
     { name: "mobile", use: { browserName: "chromium", viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } },

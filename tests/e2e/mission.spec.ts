@@ -1,5 +1,16 @@
 import { test, expect, type Page } from "@playwright/test";
 
+async function checkWidth(page: Page) {
+  const viewport = page.viewportSize()!.width;
+  const layout = await page.evaluate(width => ({
+    width: document.documentElement.scrollWidth,
+    overflowing: [...document.querySelectorAll("body *")].map(el => ({
+      tag: el.tagName, class: el.getAttribute("class"), right: Math.round(el.getBoundingClientRect().right),
+    })).filter(el => el.right > width + 1).slice(0, 12),
+  }), viewport);
+  // En móvil, innerWidth puede ensancharse y ocultar el fallo mediante un zoom automático.
+  expect(layout.width, JSON.stringify(layout)).toBeLessThanOrEqual(viewport + 1);
+}
 async function dismissNarration(page: Page) {
   const box = page.getByTestId("narration");
   // Mensajes, palabras nuevas, preguntas, medallas e informe: una tarjeta por clic (dos en las preguntas).
@@ -15,21 +26,25 @@ async function start(page: Page, destination: "Luna" | "Marte" = "Luna") {
   if (destination === "Marte") await page.getByText("Marte", { exact: true }).click();
   await page.getByRole("button", { name: "Jugar", exact: true }).click();
   await expect(page.getByTestId("mission-hud")).toHaveAttribute("data-turn", "0");
-  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)).toBe(false);
+  await checkWidth(page);
   await page.getByRole("button", { name: "Saltar tutorial", exact: true }).click();
   await expect(page.getByTestId("narration")).toBeVisible();
   await dismissNarration(page);
 }
 async function action(page: Page, name: string) {
-  const confirmed = page.waitForResponse(response => response.url().endsWith("/commands") && response.request().method() === "POST");
+  await dismissNarration(page);
   const mobile = page.getByRole("button", { name: "Acciones", exact: true });
   if (await mobile.isVisible()) {
     await mobile.click();
     await page.getByRole("dialog").getByRole("button", { name: new RegExp(`^${name}`) }).click();
   } else await page.getByRole("button", { name, exact: true }).click();
   // "¿Qué pasaría si…?": la orden sólo se envía al confirmar.
-  await page.getByTestId("preview").getByRole("button", { name: "¡Hazlo!", exact: true }).click();
-  const response = await confirmed;
+  const confirmation = page.getByTestId("preview").getByRole("button", { name: "¡Hazlo!", exact: true });
+  await expect(confirmation).toBeEnabled();
+  const [response] = await Promise.all([
+    page.waitForResponse(response => response.url().endsWith("/commands") && response.request().method() === "POST", { timeout: 15_000 }),
+    confirmation.click(),
+  ]);
   expect(response.ok()).toBe(true);
   const result = await response.json();
   await expect(page.getByTestId("mission-hud")).toHaveAttribute("data-version", String(result.mission.state.version));
@@ -47,8 +62,7 @@ test("misión real completa, fuentes, recarga y menú", async ({ page }, info) =
   await start(page);
   const id = await page.getByTestId("mission-hud").getAttribute("data-mission-id");
   await page.screenshot({ path: info.outputPath("base-selene.png"), fullPage: true });
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
-  expect(overflow).toBe(false);
+  await checkWidth(page);
   await page.getByRole("button", { name: "☰ Menú", exact: true }).click();
   await page.getByRole("button", { name: "Fuentes NASA", exact: true }).click();
   const sources = page.getByRole("dialog", { name: "Fuentes y créditos", exact: true });
@@ -104,7 +118,7 @@ test("misión de Marte completa con datos reales, llamadas y tormenta de polvo",
   await start(page, "Marte");
   const id = await page.getByTestId("mission-hud").getAttribute("data-mission-id");
   await page.screenshot({ path: info.outputPath("base-marte.png"), fullPage: true });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)).toBe(false);
+  await checkWidth(page);
   const plan: Record<number, string[]> = {
     0: ["Explorar", "Llamar a la Tierra"], 2: ["Ir al refugio"],
     5: ["Invernadero", "MOXIE"], 7: ["Salir del refugio", "Explorar"],
