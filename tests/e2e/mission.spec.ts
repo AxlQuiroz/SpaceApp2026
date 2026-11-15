@@ -101,7 +101,7 @@ test("503 en una orden reintenta exactamente la misma intención", async ({ page
     await route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ error: { code: "BACKEND_UNAVAILABLE", message: "Error temporal de prueba" } }) });
   }, { times: 1 });
   await page.getByRole("button", { name: "Avanzar 2 horas", exact: true }).click();
-  await expect(page.getByRole("alert")).toContainText("Error temporal de prueba");
+  await expect(page.getByRole("alert").filter({ hasText: "Error temporal de prueba" })).toBeVisible();
   const requestPromise = page.waitForRequest(r => r.url().endsWith("/commands"));
   await page.getByRole("button", { name: "Reintentar", exact: true }).click();
   const retried = await requestPromise;

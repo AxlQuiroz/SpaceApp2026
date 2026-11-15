@@ -1,3 +1,4 @@
+from contextlib import closing
 import asyncio
 import json
 import sqlite3
@@ -74,7 +75,7 @@ class HttpTests(unittest.IsolatedAsyncioTestCase):
         response = await self.client.get("/api/v1/sessions/me", headers=self.auth)
         self.assertEqual(response.status_code, 200)
         self.assertNotIn("access_token", response.json())
-        with sqlite3.connect(self.settings.database_path) as c:
+        with closing(sqlite3.connect(self.settings.database_path)) as c, c:
             stored = c.execute("SELECT token_hash FROM sessions").fetchone()[0]
         self.assertNotEqual(stored, self.session_data["access_token"])
         self.assertEqual(len(stored), 64)
@@ -84,7 +85,7 @@ class HttpTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((await self.client.get("/api/v1/sessions/me", headers=self.auth)).status_code, 401)
 
     async def test_expired_token_is_rejected(self):
-        with sqlite3.connect(self.settings.database_path) as c:
+        with closing(sqlite3.connect(self.settings.database_path)) as c, c:
             c.execute("UPDATE sessions SET expires_at=0")
         self.assertEqual((await self.client.get("/api/v1/missions", headers=self.auth)).status_code, 401)
 

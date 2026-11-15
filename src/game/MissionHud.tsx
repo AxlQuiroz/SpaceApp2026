@@ -256,6 +256,7 @@ export function MissionHud({ game }: Props) {
           {isDemo() && (
             <Badge tone="warn">DEMO</Badge>
           )}
+          {s.status === "paused" && <Badge tone="warn">{t.missionStatus.paused}</Badge>}
         </div>
         <div className="bevel flex flex-wrap gap-1 px-1 py-1" data-tour="resources">
           <ResourceCounter icon="energy" label={t.resources.energy} value={r.energy_kwh} unit="kWh" decimals={1} max={p.energy_capacity_kwh} dangerBelow={DANGER.energy_kwh} delta={delta("energy_kwh")} />

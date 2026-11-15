@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { MissionApiClient, MissionApiError } from "../client.ts";
+import { MissionApiClient, MissionApiError, newIdempotencyKey } from "../client.ts";
 
 test("Next.js usa el proxy con cookies sin token de recursos", async () => {
   const calls: Array<{ url: string; init?: RequestInit }> = [];
@@ -98,3 +98,18 @@ test("sin fetcher propio usa el fetch global sin cambiarle el contexto (navegado
   }
 });
 
+
+
+test("genera UUID v4 sin randomUUID usando getRandomValues", () => {
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, "crypto");
+  let calls = 0;
+  Object.defineProperty(globalThis, "crypto", { configurable: true, value: {
+    getRandomValues: (array: Uint8Array) => { calls++; array.forEach((_v, i) => { array[i] = i; }); return array; },
+  } });
+  try {
+    assert.match(newIdempotencyKey(), /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    assert.equal(calls, 1);
+  } finally {
+    if (descriptor) Object.defineProperty(globalThis, "crypto", descriptor);
+  }
+});

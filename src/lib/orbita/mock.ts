@@ -4,6 +4,7 @@
  * ⚠️ Sólo para previsualizar el diseño. Los números son aproximados y NO son las reglas
  * oficiales (esas viven en el backend, `mission_api/rules.py`). No usar para la entrega.
  */
+import { newIdempotencyKey } from "./client";
 import type {
   ActionOption,
   Command,
@@ -55,7 +56,7 @@ const clamp = (n: number, max: number) => Math.min(max, Math.max(0, n));
 function initialState(opts: CreateMission, parent: string | null = null): MissionState {
   const k = opts.difficulty === "commander" ? 0.75 : 1;
   return {
-    id: crypto.randomUUID(),
+    id: newIdempotencyKey(),
     scenario_id: "lunar-outpost-v1",
     rules_version: "lunar-1.0.0",
     version: 1,

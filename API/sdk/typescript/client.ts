@@ -3,6 +3,16 @@ import type {
   MutationResult, PreviewResult, ScienceBundle, SessionInfo,
 } from "./schema";
 
+/** UUID v4 criptográfico, también cuando randomUUID no está disponible en una red local HTTP. */
+export function newIdempotencyKey(): string {
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 export class MissionApiError extends Error {
   status: number;
   code: string;
@@ -75,18 +85,18 @@ export class MissionApiClient {
     this.token = undefined;
   }
   scenarios(): Promise<Array<Record<string, unknown>>> { return this.request("/scenarios"); }
-  createMission(body: CreateMission = {}, key: string = crypto.randomUUID()): Promise<MutationResult> {
+  createMission(body: CreateMission = {}, key: string = newIdempotencyKey()): Promise<MutationResult> {
     return this.request("/missions", "POST", body, key);
   }
   missions(limit = 20, offset = 0): Promise<MissionList> { return this.request(`/missions?limit=${limit}&offset=${offset}`); }
   mission(id: string): Promise<MissionView> { return this.request(`/missions/${encodeURIComponent(id)}`); }
-  command(id: string, command: Command, key: string = crypto.randomUUID()): Promise<MutationResult> {
+  command(id: string, command: Command, key: string = newIdempotencyKey()): Promise<MutationResult> {
     return this.request(`/missions/${encodeURIComponent(id)}/commands`, "POST", command, key);
   }
   preview(id: string, actionId: NonNullable<Command["action_id"]>, expectedVersion: number): Promise<PreviewResult> {
     return this.request(`/missions/${encodeURIComponent(id)}/preview`, "POST", { action_id: actionId, expected_version: expectedVersion });
   }
-  restart(id: string, expectedVersion: number, key: string = crypto.randomUUID()): Promise<MutationResult> {
+  restart(id: string, expectedVersion: number, key: string = newIdempotencyKey()): Promise<MutationResult> {
     return this.request(`/missions/${encodeURIComponent(id)}/restart`, "POST", { expected_version: expectedVersion }, key);
   }
   events(id: string, limit = 20, offset = 0): Promise<EventList> {

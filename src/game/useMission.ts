@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { MissionApiClient, MissionApiError } from "@/lib/orbita/client";
+import { MissionApiClient, MissionApiError, newIdempotencyKey } from "@/lib/orbita/client";
 import { MockMissionClient } from "@/lib/orbita/mock";
 import type { ActionOption, Command, CreateMission, Evaluation, MissionSummary, MissionView, MutationResult, ScienceBundle, TimelineEvent } from "@/lib/orbita/schema";
 
@@ -197,9 +197,9 @@ export function useMission(client?: MissionApiClient) {
     if (pending.current) return Promise.resolve();
     return run(() => execute(operation));
   }, [execute, run]);
-  const start = useCallback((opts: CreateMission) => mutate({ kind: "create", key: crypto.randomUUID(), body: { data_mode: "snapshot", ...opts } }), [mutate]);
-  const send = useCallback((command: Command) => mission ? mutate({ kind: "command", key: crypto.randomUUID(), id: mission.state.id, body: command }) : Promise.resolve(), [mission, mutate]);
-  const restart = useCallback(() => mission ? mutate({ kind: "restart", key: crypto.randomUUID(), id: mission.state.id, version: mission.state.version }) : Promise.resolve(), [mission, mutate]);
+  const start = useCallback((opts: CreateMission) => mutate({ kind: "create", key: newIdempotencyKey(), body: { data_mode: "snapshot", ...opts } }), [mutate]);
+  const send = useCallback((command: Command) => mission ? mutate({ kind: "command", key: newIdempotencyKey(), id: mission.state.id, body: command }) : Promise.resolve(), [mission, mutate]);
+  const restart = useCallback(() => mission ? mutate({ kind: "restart", key: newIdempotencyKey(), id: mission.state.id, version: mission.state.version }) : Promise.resolve(), [mission, mutate]);
   const exitToMenu = useCallback(() => {
     if (lock.current || pending.current) return;
     setLatest([]); setError(null); setCanRetry(false); setPhase("menu");

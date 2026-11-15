@@ -1,3 +1,4 @@
+from contextlib import closing
 import asyncio
 import json
 import sqlite3
@@ -336,13 +337,13 @@ class ApiTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.calls[0].url.params["api_key"], "secret-nasa-key")
         self.assertNotIn("secret-nasa-key", response.text)
         self.assertNotIn("api_key", response.json()["meta"]["source_url"])
-        with sqlite3.connect(self.settings.cache_path) as connection:
+        with closing(sqlite3.connect(self.settings.cache_path)) as connection, connection:
             raw = connection.execute("SELECT payload FROM resources").fetchone()[0]
         self.assertNotIn("secret-nasa-key", raw)
 
     async def test_cache_corrupt_json_fetches_again(self):
         await self.weather()
-        with sqlite3.connect(self.settings.cache_path) as connection:
+        with closing(sqlite3.connect(self.settings.cache_path)) as connection, connection:
             connection.execute("UPDATE resources SET payload = 'invalid'")
         response = await self.weather()
         self.assertEqual(response.status_code, 200)
