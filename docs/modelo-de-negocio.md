@@ -74,8 +74,8 @@ Solo contadores agregados y anónimos: misiones iniciadas y completadas, palabra
 | --- | --- |
 | Juego completo gratis, sin cuentas | Hecho |
 | Medallas y bitácora (base de los desbloqueos gratuitos) | Hecho (`src/game/learning.ts`) |
-| Colores de traje por tripulante (`swap` en `PixelSprite`) | Mecanismo hecho; falta el vestidor |
-| Sección "Para familias", puerta parental y diploma imprimible | Por hacer |
+| Vestidor gratuito ligado a medallas (`src/game/wardrobe.ts`, menú principal) | Hecho; se aplica en la partida |
+| Sección "Para familias" con puerta parental, diploma imprimible, guía para jugar juntos y licencia escolar (`src/components/menu/FamilyModal.tsx`) | Hecho, sin cobro |
 | Pasarela de pago y revisión legal | Por hacer; requiere decisión del equipo |
 
 ## Orden sugerido

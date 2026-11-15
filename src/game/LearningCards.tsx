@@ -5,6 +5,7 @@ import { Badge, Modal, PixelButton, PixelSprite } from "@/components/hud";
 import type { PreviewResult } from "@/lib/orbita/schema";
 import { useAudio, useI18n } from "@/lib/providers";
 import type { IconName } from "@/sprites/sprites.config";
+import { suitForMedal } from "./wardrobe";
 import { MEDALS, TERMS, type Lang, type Medal, type Progress, type Quiz, type Term } from "./learning";
 
 /* ------------------------------------------------------------------ */
@@ -286,6 +287,12 @@ export function MedalsModal({ open, onClose, progress }: { open: boolean; onClos
               <div className="flex flex-col gap-1">
                 <span className="font-pixel text-lg text-amber">{medal.name[lang]}</span>
                 <span className="text-base text-steel-200">{medal.how[lang]}</span>
+                {suitForMedal(medal.id) && (
+                  <span className="flex items-center gap-2 text-base text-lime">
+                    <PixelSprite sprite="astronaut" anim="idle" scale={1} swap={suitForMedal(medal.id)!.swap} paused />
+                    {t.learn.reward}: {suitForMedal(medal.id)!.name[lang]}
+                  </span>
+                )}
                 {!has && <Badge tone="info">{t.learn.lockedMedal}</Badge>}
               </div>
             </li>

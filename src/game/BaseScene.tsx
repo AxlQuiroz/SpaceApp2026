@@ -5,6 +5,7 @@ import { Badge, PixelSprite, Starfield } from "@/components/hud";
 import type { SpaceWeatherLevel } from "@/components/hud";
 import type { MissionView } from "@/lib/orbita/schema";
 import { useI18n } from "@/lib/providers";
+import { suitSwap, useCrewLook } from "./wardrobe";
 import { CREW, crewAnim, crewPlacement, isMars, moduleText, type Activity, type BaseModule, type ModuleId, type ModuleStatus } from "./model";
 
 type Props = {
@@ -21,7 +22,7 @@ type Props = {
 
 type RoomProps = {
   m: BaseModule;
-  crew: (typeof CREW)[number][];
+  crew: { id: string; swap: Record<string, string> }[];
   anim: string;
   selected: boolean;
   name: string;
@@ -87,6 +88,9 @@ export function BaseScene({ mission, modules, weather, selected, onSelect, activ
   const { t } = useI18n();
   const byId = Object.fromEntries(modules.map((m) => [m.id, m])) as Record<ModuleId, BaseModule>;
   const placement = crewPlacement(mission);
+  // Trajes del vestidor: solo apariencia, no cambian la simulación.
+  const { look } = useCrewLook();
+  const crew = CREW.map((c, i) => ({ id: c.id, swap: suitSwap(look[i]) }));
   const baseAnim = crewAnim(mission);
   const solar = byId.solar;
   const mars = isMars(mission);
@@ -109,7 +113,7 @@ export function BaseScene({ mission, modules, weather, selected, onSelect, activ
   const room = (id: ModuleId, className?: string) => (
     <Room
       m={byId[id]}
-      crew={CREW.filter((_, i) => placement[i] === id && i !== awayIndex)}
+      crew={crew.filter((_, i) => placement[i] === id && i !== awayIndex)}
       anim={activity?.workRoom === id ? "work" : baseAnim}
       selected={selected === id}
       name={name(id)}
@@ -182,13 +186,13 @@ export function BaseScene({ mission, modules, weather, selected, onSelect, activ
             <PixelSprite key={i} sprite="solarPanel" anim={solar.status === "damaged" ? "damaged" : "normal"} scale={3} />
           ))}
           {activity?.surfaceWorker && (
-            <PixelSprite key={activity.key} sprite="astronaut" anim="work" scale={2} swap={CREW[0].swap} />
+            <PixelSprite key={activity.key} sprite="astronaut" anim="work" scale={2} swap={crew[0].swap} />
           )}
         </div>
 
         {activity?.explorer && (
           <div key={activity.key} className="walk-across absolute bottom-6">
-            <PixelSprite sprite="astronaut" anim="explore" scale={2} swap={CREW[0].swap} />
+            <PixelSprite sprite="astronaut" anim="explore" scale={2} swap={crew[0].swap} />
           </div>
         )}
 

@@ -101,9 +101,9 @@ export function AlertBanner({ icon, message, onDismiss }: AlertBannerProps) {
 /* Modal con marco metálico (usa <dialog> nativo: foco atrapado + Esc) */
 /* ------------------------------------------------------------------ */
 
-type ModalProps = { open: boolean; title: string; onClose: () => void; children: ReactNode };
+type ModalProps = { open: boolean; title: string; onClose: () => void; children: ReactNode; /** más ancho (secciones con pestañas) */ wide?: boolean };
 
-export function Modal({ open, title, onClose, children }: ModalProps) {
+export function Modal({ open, title, onClose, children, wide = false }: ModalProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const { t } = useI18n();
@@ -126,7 +126,7 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
       onCancel={event => { event.preventDefault(); onClose(); }}
       onClick={(e) => e.target === ref.current && onClose()}
       aria-labelledby={titleId}
-      className="bevel rivets pop-in m-auto w-[min(92vw,560px)] p-0 text-steel-50 backdrop:bg-void/80"
+      className={`bevel rivets pop-in m-auto p-0 ${wide ? "w-[min(94vw,780px)]" : "w-[min(92vw,560px)]"} text-steel-50 backdrop:bg-void/80`}
     >
       <header className="flex items-center justify-between bg-steel-900 py-1 pr-2 pl-4" style={{ margin: "calc(var(--px) * 2)" }}>
         <h2 id={titleId} className="font-pixel text-xl text-neon-cyan uppercase">

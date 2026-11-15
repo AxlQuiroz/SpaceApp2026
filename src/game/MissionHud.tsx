@@ -22,6 +22,7 @@ import { useAudio, useI18n } from "@/lib/providers";
 import { BaseScene } from "./BaseScene";
 import { EndModal, SourcesModal } from "./GameModals";
 import { COACH_STEPS, Coach, LogbookModal, MedalCard, MedalsModal, PreviewPanel, QuizCard, TermCard } from "./LearningCards";
+import { suitColor, useCrewLook } from "./wardrobe";
 import { MEDALS, newMedals, pickLesson, triggersFor, useProgress, type Medal, type Quiz, type Term } from "./learning";
 import {
   actionText,
@@ -100,6 +101,7 @@ export function MissionHud({ game }: Props) {
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
   const { progress, ready, learn, answer, award, finishTutorial } = useProgress();
+  const { look } = useCrewLook();
   /** Paso del tutorial jugable; null = no está activo. */
   const [coachStep, setCoachStep] = useState<number | null>(null);
   /** Acción elegida que espera confirmación en "¿Qué pasaría si…?". */
@@ -312,7 +314,7 @@ export function MissionHud({ game }: Props) {
   const placement = crewPlacement(mission);
   const crewDots = CREW.map((c, i) => {
     const mm = modules.find((m) => m.id === placement[i])!.map;
-    const color = { c1: "#f27a2a", c2: "#3ee6f0", c3: "#9be43a", c4: "#ffb23e" }[c.id];
+    const color = suitColor(look[i]);
     return { id: c.id, x: mm.x + 3 + (i % 2) * 5 + (placement[i] === "shelter" ? i * 4 : 0), y: mm.y + 6, color };
   });
 
