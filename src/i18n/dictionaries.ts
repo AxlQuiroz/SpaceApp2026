@@ -3,7 +3,7 @@
 
 export const es = {
   app: {
-    title: "Base Selene",
+    title: "RockieOS",
     subtitle: "Sobrevive en la Luna y aprende ciencia espacial",
     comingSoon: "Fase 1 en construcción",
   },
