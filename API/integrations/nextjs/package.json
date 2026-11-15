@@ -1,0 +1,19 @@
+{
+  "name": "orbita-nextjs-contract-checks",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Verificación del adaptador, sin aplicación de interfaz",
+  "scripts": {
+    "typecheck": "tsc --project tsconfig.json",
+    "test": "tsc --project tsconfig.test.json && node --test tests/route.test.cjs"
+  },
+  "engines": { "node": ">=24" },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "typescript": "7.0.2"
+  }
+}

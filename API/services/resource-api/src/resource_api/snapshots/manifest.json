@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.0",
+  "snapshots": [
+    {
+      "id": "donki-flr-2024-05-10",
+      "resource": "donki:FLR",
+      "query": {
+        "start": "2024-05-10",
+        "end": "2024-05-10"
+      },
+      "file": "donki-flr-2024-05-10.json",
+      "source_url": "https://ccmc.gsfc.nasa.gov/DONKI/WS/get/FLR?startDate=2024-05-10&endDate=2024-05-10",
+      "retrieved_at": "2026-11-14T20:42:26.958197+00:00",
+      "sha256": "77cd9c51213b52db7f5a5894ff70a61718d6ce0c87ef344b08c40467eea09ad1"
+    },
+    {
+      "id": "donki-sep-2024-05-10",
+      "resource": "donki:SEP",
+      "query": {
+        "start": "2024-05-10",
+        "end": "2024-05-10"
+      },
+      "file": "donki-sep-2024-05-10.json",
+      "source_url": "https://ccmc.gsfc.nasa.gov/DONKI/WS/get/SEP?startDate=2024-05-10&endDate=2024-05-10",
+      "retrieved_at": "2026-11-14T20:42:27.168662+00:00",
+      "sha256": "09d8d3bbf421ebe325fe2610e90fa20846b80553e80109e95cf7deaa285b199e"
+    },
+    {
+      "id": "donki-cme-2024-05-10",
+      "resource": "donki:CME",
+      "query": {
+        "start": "2024-05-10",
+        "end": "2024-05-10"
+      },
+      "file": "donki-cme-2024-05-10.json",
+      "source_url": "https://ccmc.gsfc.nasa.gov/DONKI/WS/get/CME?startDate=2024-05-10&endDate=2024-05-10",
+      "retrieved_at": "2026-11-14T20:42:27.061526+00:00",
+      "sha256": "cdd17670ab00a2aea42ca374da3a6637a7d4d9037cfabf0bd399dae00fbc19c4"
+    },
+    {
+      "id": "donki-gst-2024-05-10",
+      "resource": "donki:GST",
+      "query": {
+        "start": "2024-05-10",
+        "end": "2024-05-10"
+      },
+      "file": "donki-gst-2024-05-10.json",
+      "source_url": "https://ccmc.gsfc.nasa.gov/DONKI/WS/get/GST?startDate=2024-05-10&endDate=2024-05-10",
+      "retrieved_at": "2026-11-14T20:42:29.893622+00:00",
+      "sha256": "4cb4aa9e1aedb0aa0989fd39213b52b0f7afcf18265add7a8dea9f0c37d10231"
+    },
+    {
+      "id": "radlab-crater-2014-01-01",
+      "resource": "radlab",
+      "query": {
+        "start": "2014-01-01T00:00:00Z",
+        "end": "2014-01-01T01:00:00Z",
+        "instrument": "CRaTER"
+      },
+      "file": "radlab-crater-2014-01-01.json",
+      "source_url": "https://visualization.osdr.nasa.gov/radlab/api/?instrument=CRaTER&timestamp%3E=2014-01-01T00%3A00&timestamp%3C=2014-01-01T01%3A00&absorbed_dose_rate=&dose_equivalent_rate=&celestial_body=&spacecraft=&trajectory=&format=json",
+      "retrieved_at": "2026-11-14T20:42:34.041215+00:00",
+      "sha256": "a05d47b3f5d1e2408bbbbf53e59d7b815547d7c611250c9827b5b6166de21a60"
+    },
+    {
+      "id": "osdr-104",
+      "resource": "osdr",
+      "query": {
+        "study_id": 104
+      },
+      "file": "osdr-104.json",
+      "source_url": "https://osdr.nasa.gov/osdr/data/osd/meta/104",
+      "retrieved_at": "2026-11-14T20:42:31.688505+00:00",
+      "sha256": "3c3f371ff4484cca884154522f8056115a5abf288d7321c52ccdc4f01488eff5"
+    }
+  ]
+}

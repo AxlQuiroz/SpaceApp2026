@@ -18,6 +18,8 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      // El backend (Python + su SDK/adaptador TS) tiene sus propias herramientas y CI.
+      "API/**",
     ],
   },
 ];

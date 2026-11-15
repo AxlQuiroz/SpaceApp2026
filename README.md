@@ -1,11 +1,28 @@
-# Base Selene — NASA Space Apps
+# SpaceApp2026 · Órbita
+
+Entrenador de decisiones y recursos para una base lunar, con referencias científicas de NASA. El frontend (**Base Selene**, juego pixel art para niños de 7 a 12 años) está en la raíz del repo con Next.js; el backend, en `API/`.
+
+El **backend v0.2.0** se encuentra en [`API/`](API/README.md). Incluye la API interna de recursos NASA, el motor lunar, partidas persistentes en SQLite, el contrato OpenAPI, un cliente TypeScript y el adaptador para Next.js App Router.
+
+## Empezar
+
+Abre una terminal dentro de `API/` y sigue la [instalación en Windows](API/docs/backend-installation-windows.md). Las dependencias Python y los scripts se ejecutan desde esa carpeta.
+
+- [Conectar el frontend Next.js](API/docs/nextjs-integration.md).
+- [Contrato de partidas](API/docs/mission-api-contract.md).
+- [Reglas del simulador](API/docs/simulation-rules.md).
+- [Pruebas y límites de la validación](API/docs/backend-validation.md).
+
+GitHub Actions verifica Python, TypeScript y el recorrido entre el adaptador Next.js y los dos servicios usando capturas históricas, sin claves NASA ni acceso a sus proveedores.
+
+## Frontend · Base Selene
 
 Juego educativo (7-12 años) de supervivencia en una base lunar, con HUD pixel art de estrategia sci-fi.
 Especificación de diseño: [`Claude.md`](./Claude.md).
 
-## Arrancar
+### Arrancar
 
-1. Enciende el backend (rama `codex/backend-v0.2.0`, carpeta `API/`, ver su README). Debe quedar en `http://127.0.0.1:8000`.
+1. Enciende el backend (carpeta `API/`, ver su README). Debe quedar en `http://127.0.0.1:8000`.
 2. Frontend:
 
 ```bash
@@ -25,7 +42,7 @@ npm run dev                        # http://localhost:3000
 > (`SNAPSHOT_INTEGRITY_FAILED` → crear misión da 503). Solución: añadir en la rama del backend un
 > `.gitattributes` con `API/**/snapshots/*.json -text`, o clonar con `git -c core.autocrlf=false`.
 
-## Cómo encaja con el backend
+### Cómo encaja con el backend
 
 El motor de reglas vive en Python; el frontend **no** recalcula nada. `src/game/useMission.ts` usa el
 SDK (`src/lib/orbita/`) a través del proxy `src/app/api/mission/[...path]/route.ts`, que guarda la sesión
@@ -40,7 +57,7 @@ en una cookie HttpOnly. `src/game/model.ts` sólo traduce el `MissionView` a lo 
 | `/evaluation` | Modal de fin de misión |
 | `/science` | Modal "Fuentes NASA" |
 
-## Estructura
+### Estructura
 
 | Ruta | Qué hay |
 |---|---|
@@ -52,7 +69,7 @@ en una cookie HttpOnly. `src/game/model.ts` sólo traduce el `MissionView` a lo 
 | `src/lib/providers.tsx` | Contexto de idioma y audio |
 | `src/lib/audio.ts` | Efectos chiptune con Web Audio (sin archivos), silenciado por defecto |
 
-## Decisiones de diseño
+### Decisiones de diseño
 
 - **Bisel con `box-shadow` por capas** en vez de `border-image`/9-slice: sin imágenes, recoloreable con variables y escalable con `--px`.
 - **`--px`** = 2/3/4 px según el ancho: todos los bordes son múltiplos enteros, nada se ve borroso.
