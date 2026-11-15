@@ -14,14 +14,15 @@ export function MissionPlan({ mission, parameters }: { mission: MissionView; par
     { label: c.health, value: `${Math.round(s.crew_health_pct)}`, target: "≥ 60", met: s.crew_health_pct >= 60 },
     { label: c.science, value: `${s.science_points}/${parameters.science_target}`, target: `${parameters.science_target}`, met: s.science_points >= parameters.science_target },
     ...(planning ? [{ label: c.food, value: `${s.resources.food_kg.toFixed(2)} kg`, target: `≥ ${planning.food_reserve_target_kg.toFixed(1)} kg`, met: s.resources.food_kg >= planning.food_reserve_target_kg }] : []),
+    ...(mars && !s.rules_version.endsWith("1.0.0") ? [{label:c.radio,value:`${s.reported_data_points ?? 0}/12`,target:"12",met:s.reported_data_points >= 12}] : []),
   ];
   return <aside className="bevel-inset min-w-0 px-3 py-2" aria-label={c.goals}>
-    <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-4">
+    <dl className={`grid grid-cols-2 gap-x-3 gap-y-2 ${goals.length > 4 ? "sm:grid-cols-5" : "sm:grid-cols-4"}`}>
       {goals.map(goal => <div key={goal.label} className="min-w-0">
-        <p className="text-sm text-steel-200">{goal.label}</p>
-        <p className="font-pixel text-lg tabular-nums">{goal.value} <span className={`text-xs ${goal.met ? "text-lime" : "text-amber"}`}>{c.reserve} {goal.target}</span></p>
+        <dt className="text-sm text-steel-200">{goal.label}</dt>
+        <dd className="font-pixel text-lg tabular-nums">{goal.value} <span className={`text-xs ${goal.met ? "text-lime" : "text-amber"}`}>{c.reserve} {goal.target}</span></dd>
       </div>)}
-    </div>
+    </dl>
     <details className="mt-1 text-base"><summary className="cursor-pointer py-1 text-neon-cyan">{c.details}</summary>
       <div className="flex flex-col gap-1 pb-1 text-steel-200">
         <p>{s.practice_mode === "training" ? review.training : review.historicalMode} · {s.rules_version} · {c.seed}: {s.seed}</p>

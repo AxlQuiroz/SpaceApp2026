@@ -21,6 +21,31 @@ def free_port():
         return sock.getsockname()[1]
 
 
+def stop_processes(children, *, windows=os.name == "nt"):
+    """Cierra sólo los procesos iniciados aquí y espera a liberar sus registros.
+
+    El ejecutable de un venv de Windows puede redirigir a otro intérprete. Matar
+    únicamente ese ejecutable deja el servidor hijo con el archivo de log abierto.
+    """
+    for child in children:
+        if child.poll() is not None:
+            continue
+        if windows:
+            subprocess.run(["taskkill", "/PID", str(child.pid), "/T", "/F"],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                           timeout=10, check=False)
+            if child.poll() is None:
+                child.kill()
+        else:
+            child.terminate()
+    for child in children:
+        try:
+            child.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            child.kill()
+            child.wait()
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--live", action="store_true", help="Descargar también las tres referencias históricas desde NASA.")
@@ -78,15 +103,7 @@ def main():
             print((temp / "processes.log").read_text(encoding="utf-8"), file=sys.stderr)
             raise
         finally:
-            for child in children:
-                if child.poll() is None:
-                    child.terminate()
-            for child in children:
-                try:
-                    child.wait(timeout=10)
-                except subprocess.TimeoutExpired:
-                    child.kill()
-                    child.wait()
+            stop_processes(children)
 
 
 if __name__ == "__main__":

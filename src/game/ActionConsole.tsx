@@ -15,9 +15,9 @@ export type FlightCommand = {
 };
 
 /** La misma consola legible en escritorio y en la hoja móvil. Elegir sólo abre la previsión. */
-export function ActionConsole({ commands, actionsLeft, maxActions, guidance, hotkeys = false, onSelect }: {
+export function ActionConsole({ commands, actionsLeft, maxActions, guidance, hotkeys = false, compact = false, onSelect }: {
   commands: FlightCommand[]; actionsLeft: number; maxActions: number; guidance: string;
-  hotkeys?: boolean; onSelect?: (command: FlightCommand) => void;
+  hotkeys?: boolean; compact?: boolean; onSelect?: (command: FlightCommand) => void;
 }) {
   const { locale } = useI18n(), { play } = useAudio();
   const c = flightText(locale), prefix = useId(), root = useRef<HTMLElement>(null);
@@ -45,10 +45,10 @@ export function ActionConsole({ commands, actionsLeft, maxActions, guidance, hot
 
   return <section ref={root} aria-label={c.decisions} className="flex min-w-0 flex-col gap-3" data-testid="action-console">
     <header className="flex flex-wrap items-start justify-between gap-2">
-      <div><p className="font-tiny text-xs text-steel-200 uppercase">{c.control}</p><h2 className="font-pixel text-xl text-neon-cyan">{c.decisions}</h2></div>
-      <span className={`bevel-inset px-2 py-1 font-pixel text-lg ${actionsLeft ? "text-lime" : "text-amber"}`} aria-label={`${actionsLeft} / ${maxActions} ${c.remaining}`}>
+      <div>{!compact && <p className="font-tiny text-xs text-steel-200 uppercase">{c.control}</p>}<h2 className="font-pixel text-xl text-neon-cyan">{c.decisions}</h2></div>
+      {!compact && <span className={`bevel-inset px-2 py-1 font-pixel text-lg ${actionsLeft ? "text-lime" : "text-amber"}`} aria-label={`${actionsLeft} / ${maxActions} ${c.remaining}`}>
         {actionsLeft}<span className="text-steel-400">/{maxActions}</span> <span className="text-sm">{c.remaining}</span>
-      </span>
+      </span>}
       <p className="w-full text-base text-steel-200">{c.steps}</p>
     </header>
     <aside className="bevel-inset flex items-start gap-2 p-2" aria-label={c.guidance}>
@@ -65,7 +65,7 @@ export function ActionConsole({ commands, actionsLeft, maxActions, guidance, hot
           event.preventDefault(); setSelectedGroup(groups[next]); document.getElementById(`${prefix}-tab-${groups[next]}`)?.focus();
         }}
         className={`bevel pixel-btn min-w-0 px-1 py-2 font-pixel text-sm ${selectedGroup === group ? "text-neon-cyan" : "text-steel-200"}`}
-        style={{["--bevel-fill" as string]:selectedGroup === group ? "var(--color-cyan-dark)" : "var(--color-steel-900)"}}>
+        style={{["--bevel-fill" as string]:selectedGroup === group ? "var(--color-steel-800)" : "var(--color-steel-900)",["--bevel-light" as string]:selectedGroup === group ? "var(--color-neon-cyan)" : "var(--color-steel-600)"}}>
         {c.tabs[group]} {recommended?.group === group && <span aria-hidden className="text-amber">◆</span>}
       </button>)}
     </div>
@@ -74,7 +74,7 @@ export function ActionConsole({ commands, actionsLeft, maxActions, guidance, hot
       if (!items.length) return null;
       return <section key={group} id={`${prefix}-panel-${group}`} role="tabpanel" aria-labelledby={`${prefix}-tab-${group}`} hidden={selectedGroup !== group}>
         <h3 id={`${prefix}-${group}`} className="mb-2 border-b-2 border-steel-700 pb-1 font-pixel text-base text-steel-200">{c.groups[group]}</h3>
-        <div className={`grid gap-2 ${items.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+        <div className={`grid grid-cols-1 gap-2 ${items.length > 1 ? "sm:grid-cols-2" : ""}`}>
           {items.map(command => {
             const index = commands.indexOf(command), detailId = `${prefix}-${command.id}`;
             return <button key={command.id} type="button" data-action-id={command.id} aria-label={command.label} aria-describedby={detailId}
@@ -82,13 +82,15 @@ export function ActionConsole({ commands, actionsLeft, maxActions, guidance, hot
               onClick={() => activate(command)} className={`bevel pixel-btn action-choice flex min-w-0 flex-col gap-1 p-2 text-left ${command.locked ? "action-unavailable" : ""} ${command.recommended && !command.locked ? "action-priority" : ""}`}>
               <span className="flex w-full items-start gap-2"><PixelSprite icon={command.icon} scale={2} className="shrink-0" />
                 <span className="min-w-0 flex-1 font-pixel text-base leading-tight text-steel-50">{command.label}</span>
-                {hotkeys && <kbd className="hidden bg-steel-950 px-1 font-tiny text-xs text-steel-400 lg:block" aria-hidden>{HOTKEYS[index]}</kbd>}
               </span>
               <span id={detailId} className="flex flex-1 flex-col gap-1">
                 {command.state && <span className="text-sm text-neon-cyan">● {command.state}</span>}
                 {command.recommended && !command.locked && <span className="font-pixel text-sm text-amber">◆ {c.recommended}</span>}
                 <span className="text-base leading-tight text-steel-200">{command.hint}</span>
-                {command.locked && command.reason ? <span className="mt-auto text-sm text-amber">⊘ {command.reason}</span> : <span className="mt-auto text-sm text-neon-cyan">1 {c.action} · {command.costs || c.noCost}</span>}
+                <span className="mt-auto flex items-end justify-between gap-1">
+                  {command.locked && command.reason ? <span className="text-sm text-amber">⊘ {command.reason}</span> : <span className="text-sm text-neon-cyan">1 {c.action} · {command.costs || c.noCost}</span>}
+                  {hotkeys && <kbd className="hidden shrink-0 bg-steel-950 px-1 font-tiny text-xs text-steel-400 lg:block" aria-hidden>{HOTKEYS[index]}</kbd>}
+                </span>
               </span>
             </button>;
           })}

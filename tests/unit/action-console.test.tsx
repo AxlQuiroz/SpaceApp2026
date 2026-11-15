@@ -6,6 +6,7 @@ import { Coach } from "@/game/LearningCards";
 import { MockMissionClient } from "@/lib/orbita/mock";
 import { Providers } from "@/lib/providers";
 import { SettingsBar } from "@/components/hud/SettingsBar";
+import { MissionPlan } from "@/game/MissionPlan";
 
 beforeEach(() => {
   window.matchMedia = vi.fn().mockReturnValue({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() });
@@ -100,4 +101,14 @@ it("un rechazo de pantalla completa se comunica sin romper el juego", async () =
   fireEvent.click(screen.getByRole("button",{name:"Pantalla completa"}));
   await waitFor(()=>expect(screen.getByRole("status").textContent).toContain("Puedes continuar jugando"));
   Object.defineProperty(document,"fullscreenEnabled",{configurable:true,value:false});
+});
+
+it("el plan hace visible compartir datos en Marte sin imponerlo a partidas anteriores", async () => {
+  const {mission}=await new MockMissionClient().createMission({scenario_id:"mars-outpost-v1"});
+  const parameters={turns:12,actions_per_turn:2,energy_capacity_kwh:50,oxygen_capacity_kg:6,water_capacity_l:30,food_capacity_kg:6,science_target:30};
+  const view=render(<Providers><MissionPlan mission={mission} parameters={parameters} /></Providers>);
+  expect(screen.getByText("Datos compartidos")).toBeTruthy();
+  mission.state.rules_version="mars-1.0.0";
+  view.rerender(<Providers><MissionPlan mission={mission} parameters={parameters} /></Providers>);
+  expect(screen.queryByText("Datos compartidos")).toBeNull();
 });

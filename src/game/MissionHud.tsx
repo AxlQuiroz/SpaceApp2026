@@ -526,7 +526,7 @@ export function MissionHud({ game }: Props) {
       </nav>
 
       <Modal open={actionsOpen} title={`${t.game.actionsLeft} · ${actionsLeft}/${p.actions_per_turn}`} onClose={() => setActionsOpen(false)}>
-        <ActionConsole commands={commands} actionsLeft={actionsLeft} maxActions={p.actions_per_turn} guidance={guidance.text} onSelect={command => { setActionsOpen(false); command.onActivate(); }} />
+        <ActionConsole compact commands={commands} actionsLeft={actionsLeft} maxActions={p.actions_per_turn} guidance={guidance.text} onSelect={command => { setActionsOpen(false); command.onActivate(); }} />
       </Modal>
 
       {/* ================= NARRACIÓN (una cosa a la vez) ================= */}
