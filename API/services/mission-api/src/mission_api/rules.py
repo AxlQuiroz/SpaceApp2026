@@ -56,6 +56,9 @@ class Rules:
     water_leak_turn: int = 2
     panel_damage_turn: int = 8
     power_protection_factor: float = 0.3
+    exposure_target_points: float | None = None
+    protection_score_weight: int = 10
+    radio_planning_enabled: bool = False
 
 
 RULES = Rules()
@@ -70,11 +73,15 @@ MARS_RULES = Rules(
     science_target=30, earth_reply_science=6,
 )
 LEGACY_RULESETS = {LUNAR: RULES, MARS: MARS_RULES}
-RULESETS = {
+V11_RULESETS = {
     LUNAR: replace(RULES, version="lunar-1.1.0", food_reserve_target_kg=0.8),
     MARS: replace(MARS_RULES, version="mars-1.1.0", food_reserve_target_kg=0.8, required_transmitted_data=12),
 }
-VERSIONED_RULESETS = {r.version: r for r in (*LEGACY_RULESETS.values(), *RULESETS.values())}
+RULESETS = {
+    LUNAR: replace(V11_RULESETS[LUNAR], version="lunar-1.2.0", exposure_target_points=20, protection_score_weight=20),
+    MARS: replace(V11_RULESETS[MARS], version="mars-1.2.0", protection_score_weight=20, radio_planning_enabled=True),
+}
+VERSIONED_RULESETS = {r.version: r for r in (*LEGACY_RULESETS.values(), *V11_RULESETS.values(), *RULESETS.values())}
 TERMINAL = {"completed", "failed", "aborted"}
 
 
@@ -109,7 +116,7 @@ def _original_catalog(scenario_id: str = LUNAR) -> dict:
     if scenario_id == MARS:
         return _mars_catalog()
     return {
-        "id": "lunar-outpost-v1", "title": "Órbita: primer turno lunar",
+        "id": "lunar-outpost-v1", "title": "RockieOS: primer turno lunar",
         "description": "Mantén una base de cuatro tripulantes durante una práctica de 24 horas.",
         "rules_version": RULES.version, "duration_hours": 24, "turn_hours": 2,
         "difficulties": ["cadet", "commander"], "science_target": RULES.science_target,
@@ -134,7 +141,7 @@ def _original_catalog(scenario_id: str = LUNAR) -> dict:
 
 def _mars_catalog() -> dict:
     return {
-        "id": MARS, "title": "Órbita: un sol en Marte",
+        "id": MARS, "title": "RockieOS: jornada en Marte",
         "description": "Mantén una base de cuatro tripulantes en Marte durante el 20 de mayo de 2024, "
                        "el día en que el rover Curiosity midió la mayor tormenta de radiación solar en la superficie marciana.",
         "rules_version": MARS_RULES.version, "duration_hours": 24, "turn_hours": 2,
@@ -172,10 +179,13 @@ def scenario_catalog(scenario_id: str = LUNAR) -> dict:
     catalog.update(rules_version=current.version, parameters=asdict(current))
     catalog["objectives"] += ["Conservar alimento para la siguiente jornada (0.8 kg en cadete; 0.6 kg en comandante)"]
     catalog["practice_modes"] = ["historical", "training"]
+    if current.exposure_target_points is not None:
+        catalog["objectives"] += [f"Terminar con exposición de juego de {current.exposure_target_points:g} puntos o menos"]
     catalog["assumptions"] += [
         "La reserva alimentaria final es un objetivo didáctico; no una recomendación nutricional.",
         "Entrenamiento varía sólo incidentes simulados con la semilla; conserva la secuencia real de mediciones NASA.",
         "La pérdida eléctrica lunar representa un modo de protección simulado, no una nube que tape el Sol.",
+        "Cada acción consume una de las dos oportunidades del turno, incluso si no gasta depósitos.",
     ]
     if scenario_id == MARS:
         catalog["facts"]["radio_delay_minutes_one_way"] = [3, 22]
@@ -184,6 +194,7 @@ def scenario_catalog(scenario_id: str = LUNAR) -> dict:
         catalog["assumptions"] += [
             "Se eligen 20 minutos por sentido para practicar el retraso, dentro del rango de referencia de 3–22; no es una efeméride del 20 de mayo.",
             "Los 40 minutos de ida y vuelta se resuelven al avanzar dos horas; la tripulación debe actuar antes si hay peligro.",
+            "El informe de la Tierra anticipa hasta dos turnos de este ejercicio histórico y el polvo simulado; no es una predicción NASA en vivo.",
         ]
         catalog["tutorial"][-1] = "Envía datos nuevos a la Tierra: cada lote sólo puede acreditarse una vez. Una consulta sin datos aporta consejo, no ciencia."
     return catalog

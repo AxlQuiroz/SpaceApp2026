@@ -1,4 +1,6 @@
-# SpaceApp2026 · Órbita — Backend v0.3.0
+# SpaceApp2026 · RockieOS — Backend v0.4.0
+
+El [MVP actual](../docs/MVP.md) añade reglas 1.2, aviso radiológico sostenido, objetivo de protección lunar e informe de radio con vigencia. Las partidas 1.0 y 1.1 mantienen sus resultados. La raíz incluye la [configuración completa de publicación](../docs/despliegue.md).
 
 Backend del entrenador de decisiones y recursos para bases lunares y marcianas. Incluye motor, API de partidas, guardado y conexión con recursos NASA. El frontend **Next.js y React** está integrado en la raíz del repositorio.
 

@@ -1,0 +1,56 @@
+services:
+  resources:
+    build: ./API/services/resource-api
+    environment:
+      RESOURCE_API_TOKEN: ${RESOURCE_API_TOKEN:?Run python scripts/setup_production.py first}
+      RESOURCE_DATA_MODE: snapshot
+      RESOURCE_CACHE_PATH: /app/data/resources.sqlite3
+    volumes:
+      - resource-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health/ready', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+  missions:
+    build: ./API/services/mission-api
+    environment:
+      RESOURCE_API_TOKEN: ${RESOURCE_API_TOKEN:?Missing resource token}
+      MISSION_PROXY_TOKEN: ${MISSION_PROXY_TOKEN:?Missing proxy token}
+      MISSION_RESOURCE_API_URL: http://resources:8001
+      MISSION_ALLOW_INTERNAL_HTTP: "true"
+      MISSION_ALLOWED_HOSTS: '["missions","localhost","127.0.0.1"]'
+      MISSION_DATABASE_PATH: /app/data/missions.sqlite3
+    volumes:
+      - mission-data:/app/data
+    depends_on:
+      resources:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+  web:
+    build: .
+    environment:
+      ORBITA_API_URL: http://missions:8000
+      ORBITA_PROXY_TOKEN: ${MISSION_PROXY_TOKEN:?Missing proxy token}
+      APP_ORIGIN: ${APP_ORIGIN:?Missing public origin}
+    ports:
+      - "127.0.0.1:${ROCKIEOS_PORT:-3000}:3000"
+    depends_on:
+      missions:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  resource-data:
+  mission-data:

@@ -29,6 +29,16 @@ export type DecisionDifference = {
   "current": Array<"repair_water_loop" | "repair_solar_panels" | "enter_shelter" | "leave_shelter" | "explore" | "activate_oxygen_reserve" | "activate_water_reserve" | "toggle_greenhouse" | "toggle_oxygen_generator" | "contact_earth">;
 };
 
+export type EarthGuidance = {
+  "received_turn": number;
+  "valid_until_turn": number;
+  "advice_code": "shelter_now" | "save_power" | "clean_panels" | "research_window";
+  "next_turn_dose_rate_ugy_h": (number | null);
+  "suggested_eva_turn": (number | null);
+  "dust_start_turn": (number | null);
+  "dust_end_turn": (number | null);
+};
+
 export type ErrorDetail = {
   "field": string;
   "message": string;
@@ -93,7 +103,7 @@ export type MissionList = {
 export type MissionState = {
   "id": string;
   "scenario_id": "lunar-outpost-v1" | "mars-outpost-v1";
-  "rules_version": "lunar-1.0.0" | "mars-1.0.0" | "lunar-1.1.0" | "mars-1.1.0";
+  "rules_version": "lunar-1.0.0" | "mars-1.0.0" | "lunar-1.1.0" | "mars-1.1.0" | "lunar-1.2.0" | "mars-1.2.0";
   "version": number;
   "status": "active" | "paused" | "completed" | "failed" | "aborted";
   "difficulty": "cadet" | "commander";
@@ -112,6 +122,7 @@ export type MissionState = {
   "practice_mode": "historical" | "training";
   "radiation_profile_ugy_h": Array<number>;
   "radiation_profile_source_hash": (string | null);
+  "earth_guidance": (EarthGuidance | null);
   "resources": Resources;
   "systems": Systems;
   "created_at": string;
@@ -147,6 +158,8 @@ export type PlanningIndicators = {
   "food_reserve_target_kg": number;
   "pending_reply_minutes": (number | null);
   "radio_round_trip_minutes": number;
+  "shelter_recommended": boolean;
+  "exposure_target_points": (number | null);
 };
 
 export type Preview = {

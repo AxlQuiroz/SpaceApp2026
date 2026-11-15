@@ -2,13 +2,17 @@
 
 **RockieOS** es un entrenador de decisiones y recursos para bases en la Luna y Marte, con referencias científicas de NASA. El frontend (juego pixel art para niños de 7 a 12 años) está en la raíz del repo con Next.js; el backend, en `API/`.
 
-El **backend v0.3.0** se encuentra en [`API/`](API/README.md). Incluye la API interna de recursos NASA, el motor lunar y marciano, partidas persistentes en SQLite, el contrato OpenAPI, un cliente TypeScript y el adaptador para Next.js App Router.
+El **MVP 0.4.0** incluye el juego Next.js en la raíz y el backend Python en [`API/`](API/README.md): recursos NASA, motor lunar y marciano, partidas SQLite, OpenAPI, cliente TypeScript y proxy Next.js.
 
-## Actualización 0.3 y reglas 1.1
+## MVP 0.4 y reglas 1.2
+
+Los avisos siguen activos durante toda la radiación elevada prevista. La misión lunar exige también una meta de protección y la puntuación le da más peso. La radio entrega un informe útil y fechado, con una vigencia de dos turnos, a cambio de tiempo, una acción y energía. La medalla de reparar a tiempo reconoce el turno real de la fuga. El Plan Familiar se muestra como propuesta sin cobros.
+
+Consulta [alcance y uso del MVP](docs/MVP.md), [publicación con los tres servicios](docs/despliegue.md), [ficha de entrega](docs/project-submission.md) y [créditos](CREDITS.md). El código tiene licencia MIT; datos y terceros conservan sus términos, ver [NOTICE](NOTICE).
 
 Las misiones nuevas exigen ciencia obtenida de datos nuevos y una reserva alimentaria final. La previsualización compara el siguiente turno con y sin la acción. El archivo radiométrico y su transformación quedan fijados en cada partida. Repetir un intento permite comparar resultados y decisiones; el entrenamiento variado cambia sólo incidentes simulados.
 
-Las partidas anteriores mantienen las reglas 1.0. Para jugar con el balance nuevo, crea una misión desde el menú. Consulta el [detalle de las correcciones](docs/correcciones-auditoria.md), la [ficha de entrega](docs/project-submission.md) y los [créditos de datos e IA](CREDITS.md).
+Las partidas anteriores mantienen las reglas 1.0 o 1.1. Para jugar con el balance nuevo, crea una misión desde el menú. Consulta también el [historial de correcciones](docs/correcciones-auditoria.md).
 
 ## Empezar
 
@@ -26,7 +30,7 @@ GitHub Actions verifica Python en Linux y Windows, contratos, frontend, compilac
 ## Frontend · RockieOS
 
 Entrenador de decisiones (7–12 años) para bases lunares y marcianas, con HUD pixel art de estrategia sci-fi.
-Especificación de diseño: [`Claude.md`](./Claude.md).
+Alcance, decisiones y validación: [documentación del MVP](docs/MVP.md).
 
 ### Arrancar
 

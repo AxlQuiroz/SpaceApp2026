@@ -1,4 +1,4 @@
-# RockieOS — project submission draft
+# RockieOS — MVP 0.4 project description
 
 **Challenge:** Build a Junior Astronaut Mission Trainer  
 **Final project:** https://github.com/AxlQuiroz/SpaceApp2026
@@ -26,6 +26,10 @@ Power, consumption, food targets, shielding factors, health and points remain ex
 Turning off a subsystem can save battery while reducing later supplies. Crops represent an established harvest, so players can compare a short-term energy saving with tomorrow's reserve. Research reports earn a bonus only for newly collected data. A request with no new data earns no science. The radio exercise models a chosen 20-minute one-way delay; players must act autonomously if danger arrives before a reply.
 
 The final evaluation checks duration, health, science and food reserve, plus sharing new research on Mars. Words, short explanations, optional questions and outcome comparisons support reflection. Learning effectiveness remains a hypothesis until observed user testing is completed.
+
+The current lunar mission also requires meeting a game exposure goal. Protection carries twenty percent of the score, so full crew health alone is not enough. Mars warnings remain visible throughout elevated next-turn radiation. Earth replies provide a dated two-turn planning report with archived readings, a lower-reading exploration window where one exists, and simulated dust timing. With one action left, transmitting data and waiting can earn research credit and planning information, while sheltering instead reduces exposure; neither choice is free.
+
+The Family Plan is visibly labeled as a future proposal, with no active sales or charges. The MVP includes the basic printable diploma and family conversation prompts. MIT covers the team's application code; scientific data and third-party material retain their original terms.
 
 ## Data and references
 

@@ -1,4 +1,6 @@
-# API de partidas · v0.3.0
+# API de partidas · v0.4.0
+
+Las nuevas misiones usan reglas 1.2. `MissionView.planning` añade `shelter_recommended` y `exposure_target_points`. `MissionState.earth_guidance` conserva el informe recibido, sus turnos de vigencia, código de consejo, lectura siguiente, ventana exterior y polvo previsto por el ejercicio. Vale null antes de recibir un informe y en las reglas antiguas. `Evaluation.objectives.radiation_protection` se incluye para Luna 1.2. Los contratos generados conservan los valores 1.0 y 1.1 para leer y reiniciar partidas anteriores.
 
 Base local: `http://127.0.0.1:8000`; prefijo `/api/v1`. [OpenAPI](mission-api-openapi.json). JSON UTF-8 y fechas UTC ISO 8601. Partidas y claves de idempotencia usan UUID.
 

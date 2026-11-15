@@ -4,8 +4,8 @@
 export const es = {
   app: {
     title: "RockieOS",
-    subtitle: "Sobrevive en la Luna y aprende ciencia espacial",
-    comingSoon: "Fase 1 en construcción",
+    subtitle: "Dirige tu base en la Luna y Marte y aprende ciencia espacial",
+    comingSoon: "MVP de entrenamiento",
   },
   resources: {
     oxygen: "Oxígeno",
@@ -31,6 +31,7 @@ export const es = {
     suggested: "R0-B1 sugiere",
     idleHelp: "Pasa el ratón o usa Tab sobre una acción para saber qué hace. Al elegirla, R0-B1 te enseña qué pasaría antes de hacerla.",
     spends: "Gasta",
+    actionCost: "1 acción",
     free: "No gasta recursos",
     whyNot: "¿Por qué no se puede?",
     tags: {
@@ -47,7 +48,7 @@ export const es = {
       blocked: "Ahora no",
     },
     why: {
-      shelter_warning: "Se acerca radiación del Sol. ¡Al refugio!",
+      shelter_warning: "La radiación seguirá elevada. Refugiarse reduce la exposición del próximo turno.",
       leak: "Hay una fuga: perdemos agua cada turno.",
       oxygen_off: "Queda poco oxígeno y la máquina está apagada.",
       oxygen_low: "Queda poco oxígeno: usa el tanque de emergencia.",
@@ -148,7 +149,7 @@ export const es = {
     retry: "Reintentar",
     demo: "Ver en modo demo",
     demoNote: "Modo demo: números aproximados, sólo para ver la interfaz.",
-    goal: "Objetivo: sobrevive 12 turnos (24 horas), mantén la salud en 60 o más y consigue 24 puntos de ciencia.",
+    goal: "Cuida la base durante 24 horas: salud de 60 o más, ciencia, comida para mañana y protección.",
   },
   game: {
     turn: "Turno",
@@ -308,8 +309,8 @@ export const es = {
     mars: "Marte",
     marsDesc: "Base Ares. Radiación real medida por el rover Curiosity, tormenta de polvo y llamadas a la Tierra.",
     recommended: "Empieza aquí",
-    goalMoon: "Objetivo: sobrevive 12 turnos (24 horas), mantén la salud en 60 o más y consigue 24 puntos de ciencia.",
-    goalMars: "Objetivo: sobrevive 12 turnos (un sol marciano), mantén la salud en 60 o más y consigue 30 puntos de ciencia.",
+    goalMoon: "Cuida la base durante 24 horas: salud de 60 o más, 24 puntos de ciencia, comida para mañana y exposición de juego de 20 puntos o menos.",
+    goalMars: "Cuida la base durante 24 horas: salud de 60 o más, 30 puntos de ciencia, comida para mañana y datos nuevos compartidos con la Tierra.",
   },
   mars: {
     actions: {
@@ -343,8 +344,8 @@ export const es = {
     family: "Para familias",
     familyHint: "Plan Familiar y diploma",
     planTitle: "Plan Familiar",
-    planBadge: "Nuevo",
-    planPitch: "Trajes nuevos cada mes, decoración para la base, diploma decorado y retos para jugar en familia.",
+    planBadge: "En diseño",
+    planPitch: "Conoce la propuesta de trajes, decoraciones y actividades para familias. Todavía no se vende ni se cobra.",
     planFor: "Para madres, padres y personas tutoras",
     planCta: "Conocer el plan",
     credits: "Fuentes y créditos",
@@ -381,12 +382,12 @@ export const es = {
   },
   family: {
     title: "Para familias",
-    heroBadge: "Suscripción mensual",
-    heroTitle: "Más aventuras cada mes, en familia",
-    heroBody: "Novedades cada mes para que tu tripulación luzca única, más un diploma decorado y retos para jugar juntos. El juego sigue siendo gratis y completo.",
+    heroBadge: "Propuesta · sin cobros",
+    heroTitle: "Un futuro Plan Familiar",
+    heroBody: "Estamos diseñando extras de apariencia y actividades para compartir. Las misiones, el diploma básico y el aprendizaje del MVP ya son gratis.",
     tabs: { pass: "Plan Familiar", diploma: "Diploma", together: "Jugar juntos", schools: "Escuelas" },
     passIntro:
-      "RockieOS es gratis y completo. El Plan Familiar es una suscripción mensual y opcional: mientras está activa, añade cosas para verse, novedades cada mes y extras para compartir en casa. Nunca da ventajas, recursos ni misiones.",
+      "El Plan Familiar es una propuesta de suscripción opcional. Los extras de esta lista están previstos para una etapa futura; no se pueden contratar en este MVP. Nunca darían ventajas, recursos ni misiones.",
     freeTitle: "Gratis para siempre",
     freeItems: [
       "Las misiones de la Luna y de Marte",
@@ -395,7 +396,7 @@ export const es = {
       "Trajes que se ganan con medallas",
       "Fuentes NASA y las misiones futuras",
     ],
-    passTitle: "Qué incluye cada mes",
+    passTitle: "Extras propuestos · aún no disponibles",
     passItems: [
       ["Vestidor ampliado", "Trajes de dos tonos para la tripulación y aspectos para R0-B1."],
       ["Decoración de la base", "Banderas, pósteres, una mascota robot y temas de color del HUD."],
@@ -406,15 +407,16 @@ export const es = {
       ["Resumen para la familia", "Qué palabras aprendió y qué medallas ganó este mes, calculado en este navegador."],
     ] as [string, string][],
     passSuits: "Trajes del plan (vista previa)",
-    price: "Suscripción mensual: 5 USD al mes. Se cancela cuando quieras.",
-    cancelTitle: "Si cancelas el plan",
+    price: "Precio previsto por el equipo: 5 USD al mes. No hay suscripción ni cargos activos.",
+    cancelTitle: "Cómo se propone manejar la cancelación",
     cancelItems: [
       "Se conserva todo lo ganado jugando: medallas, bitácora y trajes de medallas.",
       "Los trajes, decoraciones y extras del plan se desactivan al terminar el mes ya pagado.",
       "Puedes volver a activarlo cuando quieras y todo lo del plan reaparece.",
     ],
-    buy: "Suscribirse",
-    buySoon: "Todavía no cobramos el plan: estamos probando el juego con familias. ¡Gracias por tu interés!",
+    buy: "Qué falta para lanzarlo",
+    buySoon: "Propuesta en validación. Este MVP no vende suscripciones ni recoge datos de pago.",
+    launchNeeds: "Antes de lanzarlo faltan el contenido mensual, la activación para adultos y el sistema de suscripciones. El diploma básico y las preguntas para jugar juntos ya funcionan gratis.",
     rulesTitle: "Nuestras reglas",
     rules: [
       "Tu hija o hijo nunca ve precios ni botones de compra dentro del juego.",
@@ -427,7 +429,7 @@ export const es = {
     ],
     diplomaIntro:
       "Crea un diploma para imprimir con las medallas ganadas en este navegador. El nombre no se guarda ni se envía a ningún lado.",
-    diplomaFree: "Durante la fase de prueba, el diploma es gratis.",
+    diplomaFree: "El diploma básico es gratis.",
     diplomaName: "Nombre para el diploma",
     diplomaPlaceholder: "Ej.: Ana",
     diplomaPrint: "Imprimir diploma",
@@ -532,9 +534,9 @@ type DeepString<T> = { [K in keyof T]: T[K] extends string ? string : DeepString
 
 export const en: DeepString<Dict> = {
   app: {
-    title: "Selene Base",
-    subtitle: "Survive on the Moon and learn space science",
-    comingSoon: "Phase 1 under construction",
+    title: "RockieOS",
+    subtitle: "Run a Moon or Mars base and learn space science",
+    comingSoon: "Mission trainer MVP",
   },
   resources: {
     oxygen: "Oxygen",
@@ -560,6 +562,7 @@ export const en: DeepString<Dict> = {
     suggested: "R0-B1 suggests",
     idleHelp: "Hover over an action (or use Tab) to see what it does. When you pick it, R0-B1 shows you what would happen before doing it.",
     spends: "Uses",
+    actionCost: "1 action",
     free: "Uses no supplies",
     whyNot: "Why not?",
     tags: {
@@ -576,7 +579,7 @@ export const en: DeepString<Dict> = {
       blocked: "Not now",
     },
     why: {
-      shelter_warning: "Radiation from the Sun is coming. To the shelter!",
+      shelter_warning: "Radiation will remain elevated. Shelter reduces next-turn exposure.",
       leak: "There's a leak: we lose water every turn.",
       oxygen_off: "Oxygen is low and the machine is off.",
       oxygen_low: "Oxygen is low: use the emergency tank.",
@@ -677,7 +680,7 @@ export const en: DeepString<Dict> = {
     retry: "Retry",
     demo: "Try demo mode",
     demoNote: "Demo mode: approximate numbers, only to preview the interface.",
-    goal: "Goal: survive 12 turns (24 hours), keep health at 60 or more and earn 24 science points.",
+    goal: "Care for the base for 24 hours: health of at least 60, research, food for tomorrow and protection.",
   },
   game: {
     turn: "Turn",
@@ -837,8 +840,8 @@ export const en: DeepString<Dict> = {
     mars: "Mars",
     marsDesc: "Ares Base. Real radiation measured by the Curiosity rover, a dust storm and calls to Earth.",
     recommended: "Start here",
-    goalMoon: "Goal: survive 12 turns (24 hours), keep health at 60 or more and earn 24 science points.",
-    goalMars: "Goal: survive 12 turns (one Martian sol), keep health at 60 or more and earn 30 science points.",
+    goalMoon: "Care for the base for 24 hours: health of at least 60, 24 science points, food for tomorrow and game exposure of 20 points or less.",
+    goalMars: "Care for the base for 24 hours: health of at least 60, 30 science points, food for tomorrow and new data shared with Earth.",
   },
   mars: {
     actions: {
@@ -872,8 +875,8 @@ export const en: DeepString<Dict> = {
     family: "For families",
     familyHint: "Family Plan and diploma",
     planTitle: "Family Plan",
-    planBadge: "New",
-    planPitch: "New suits every month, base decorations, a decorated diploma and challenges to play as a family.",
+    planBadge: "In design",
+    planPitch: "Explore proposed suits, decorations and family activities. Nothing is sold or charged yet.",
     planFor: "For parents and guardians",
     planCta: "See the plan",
     credits: "Sources and credits",
@@ -910,12 +913,12 @@ export const en: DeepString<Dict> = {
   },
   family: {
     title: "For families",
-    heroBadge: "Monthly subscription",
-    heroTitle: "More adventures every month, as a family",
-    heroBody: "Something new every month so your crew looks one of a kind, plus a decorated diploma and challenges to play together. The game stays free and complete.",
+    heroBadge: "Proposal · no charges",
+    heroTitle: "A future Family Plan",
+    heroBody: "We are designing appearance extras and activities to share. MVP missions, the basic diploma and learning are already free.",
     tabs: { pass: "Family Plan", diploma: "Diploma", together: "Play together", schools: "Schools" },
     passIntro:
-      "RockieOS is free and complete. The Family Plan is an optional monthly subscription: while it's active it adds things to look at, something new every month and extras to share at home. It never gives advantages, resources or missions.",
+      "The Family Plan is a proposed optional subscription. These extras are planned for a future stage and cannot be purchased in this MVP. They would never give advantages, resources or missions.",
     freeTitle: "Free forever",
     freeItems: [
       "The Moon and Mars missions",
@@ -924,7 +927,7 @@ export const en: DeepString<Dict> = {
       "Suits earned with medals",
       "NASA sources and future missions",
     ],
-    passTitle: "What you get each month",
+    passTitle: "Proposed extras · not available yet",
     passItems: [
       ["Bigger wardrobe", "Two-tone suits for the crew and looks for R0-B1."],
       ["Base decorations", "Flags, posters, a robot pet and HUD color themes."],
@@ -935,15 +938,16 @@ export const en: DeepString<Dict> = {
       ["Family summary", "Which words they learned and which medals they won this month, computed in this browser."],
     ] as [string, string][],
     passSuits: "Plan suits (preview)",
-    price: "Monthly subscription: 5 USD per month. Cancel anytime.",
-    cancelTitle: "If you cancel the plan",
+    price: "Team's planned price: 5 USD per month. No subscriptions or charges are active.",
+    cancelTitle: "Proposed cancellation policy",
     cancelItems: [
       "Everything earned by playing stays: medals, logbook and medal suits.",
       "Plan suits, decorations and extras switch off when the paid month ends.",
       "You can turn it back on anytime and everything from the plan comes back.",
     ],
-    buy: "Subscribe",
-    buySoon: "We're not charging for the plan yet: we're testing the game with families. Thanks for your interest!",
+    buy: "What is needed to launch",
+    buySoon: "Proposal being evaluated. This MVP does not sell subscriptions or collect payment information.",
+    launchNeeds: "Monthly content, adult activation and a subscription system are still needed. The basic diploma and questions for playing together already work for free.",
     rulesTitle: "Our rules",
     rules: [
       "Your child never sees prices or buy buttons inside the game.",
@@ -956,7 +960,7 @@ export const en: DeepString<Dict> = {
     ],
     diplomaIntro:
       "Create a printable diploma with the medals earned in this browser. The name is never saved or sent anywhere.",
-    diplomaFree: "During the test phase, the diploma is free.",
+    diplomaFree: "The basic diploma is free.",
     diplomaName: "Name for the diploma",
     diplomaPlaceholder: "E.g. Ana",
     diplomaPrint: "Print diploma",

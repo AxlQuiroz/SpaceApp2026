@@ -22,4 +22,4 @@ El arte pixelado del repositorio está definido mediante código y SVG; la sínt
 
 ## Autoría y componentes
 
-El historial Git conserva la autoría de las aportaciones. Next.js, React, Python y las demás dependencias mantienen sus propios avisos y licencias. Los recursos científicos conservan la atribución de sus proveedores e investigadores. La elección de una licencia general para las aportaciones del equipo debe acordarse entre sus autores; esta actualización no cambia la licencia del material preexistente.
+El historial Git conserva la autoría de las aportaciones. El código de aplicación del equipo se distribuye con licencia MIT (LICENSE). Next.js, React, Python y las demás dependencias mantienen sus propios avisos y licencias. Las fuentes, publicaciones y capturas científicas conservan los términos y atribuciones de sus proveedores e investigadores; no se relicencian bajo MIT. Ver NOTICE.

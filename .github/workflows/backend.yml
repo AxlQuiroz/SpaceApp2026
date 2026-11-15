@@ -99,4 +99,20 @@ jobs:
         with:
           name: informes-lanzador-windows
           path: RockieOS entrega/reports/rockieos/
+  compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python scripts/setup_production.py
+      - run: docker compose --env-file .env.production up --build -d --wait --wait-timeout 180
+      - run: |
+          curl --fail http://localhost:3000/api/health
+          curl --fail http://localhost:3000/api/mission/scenarios > /dev/null
+      - run: docker compose --env-file .env.production logs --no-color --tail 80
+        if: failure()
+      - run: docker compose --env-file .env.production down
+        if: always()
 

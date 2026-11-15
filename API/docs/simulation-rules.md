@@ -1,6 +1,14 @@
-# Reglas actuales 1.1 y compatibilidad
+# Reglas actuales 1.2 y compatibilidad
 
-Las partidas nuevas usan lunar-1.1.0 o mars-1.1.0. Los valores de consumo y producción de 1.0 se conservan salvo las diferencias descritas aquí. Los bloques 1.0 posteriores son la referencia histórica de las partidas antiguas.
+Las partidas nuevas usan `lunar-1.2.0` o `mars-1.2.0`. Conservan los consumos, producción y archivo radiométrico de 1.1. La Luna añade el objetivo `radiation_protection`: terminar con un índice de juego de 20 puntos o menos. La puntuación 1.2 reparte 30 por duración, 20 por salud, 20 por ciencia, 20 por protección y 10 por alimento. Todos los objetivos deben cumplirse para lograr `success`.
+
+En Marte, `planning.shelter_recommended` considera la lectura del bloque siguiente y conserva el aviso durante el pico y su descenso. Los niveles de aviso de 20 y 100 uGy/h son umbrales de presentación elegidos para el ejercicio, no límites de seguridad humana. La radio entrega `state.earth_guidance`: turno recibido, vigencia de dos turnos, lectura siguiente, ventana de menor lectura si existe y turnos del polvo simulado. Consultar cuesta una acción y 1 kWh. Esperar avanza dos horas con producción, consumo y exposición; no detiene el peligro. Un informe vencido conserva su registro, pero la interfaz ya no presenta su consejo como vigente.
+
+Las versiones guardadas 1.0 y 1.1 conservan su balance, objetivos y puntuación. Una partida 1.1 no recibe las nuevas reglas del informe de radio. El reinicio preserva la versión; para probar 1.2 se crea una misión nueva.
+
+## Referencia 1.1 conservada
+
+Las partidas creadas en la versión 0.3 usan lunar-1.1.0 o mars-1.1.0. Los valores de consumo y producción de 1.0 se conservan salvo las diferencias descritas aquí. Los bloques 1.0 posteriores son la referencia histórica de las partidas antiguas.
 
 - Ciencia: explorar produce 12 puntos y datos nuevos. En Marte, enviar un lote nuevo aporta 6 puntos cuando llega la respuesta; enviarlo lo retira de la cola pendiente. Una consulta sin datos devuelve consejo y cero puntos. Los datos nuevos recogidos después del envío permanecen pendientes.
 - Objetivos: además de duración, salud y ciencia, conservar 0.8 kg de alimento en cadete o 0.6 kg en comandante. Marte requiere compartir datos de al menos una exploración (12 puntos). Son márgenes didácticos para la jornada siguiente, no una dieta real ni alimento para 24 horas completas.

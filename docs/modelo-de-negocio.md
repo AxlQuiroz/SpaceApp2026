@@ -1,4 +1,6 @@
-# Modelo de negocio · Base Selene / Órbita
+# Modelo de negocio · RockieOS
+
+**Estado del MVP 0.4:** el Plan Familiar es una propuesta sin suscripciones activas, pasarela ni cobros. La interfaz distingue los extras futuros del diploma básico y las preguntas que ya funcionan gratis. Las políticas comerciales siguientes describen el diseño futuro, no servicios ya contratables.
 
 Público: niñas y niños de 7 a 12 años. Quien paga: **sus familias**. Condiciones que pidió el equipo: nada de pagar para avanzar, ninguna ventaja para quien paga, poco invasivo y atractivo. Desde el 15 de noviembre de 2026 el plan para familias es **una suscripción mensual**, no un pago único.
 

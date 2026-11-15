@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Órbita — Backend de misiones",
+    "title": "RockieOS — Backend de misiones",
     "description": "Motor lunar y API para Next.js/React. Partidas aisladas, reglas versionadas y fuentes históricas atribuidas.",
-    "version": "0.3.0"
+    "version": "0.4.0"
   },
   "paths": {
     "/health/live": {
@@ -2277,6 +2277,95 @@
         ],
         "title": "DecisionDifference"
       },
+      "EarthGuidance": {
+        "properties": {
+          "received_turn": {
+            "type": "integer",
+            "maximum": 12.0,
+            "minimum": 0.0,
+            "title": "Received Turn"
+          },
+          "valid_until_turn": {
+            "type": "integer",
+            "maximum": 12.0,
+            "minimum": 0.0,
+            "title": "Valid Until Turn"
+          },
+          "advice_code": {
+            "type": "string",
+            "enum": [
+              "shelter_now",
+              "save_power",
+              "clean_panels",
+              "research_window"
+            ],
+            "title": "Advice Code"
+          },
+          "next_turn_dose_rate_ugy_h": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Turn Dose Rate Ugy H"
+          },
+          "suggested_eva_turn": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 11.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Eva Turn"
+          },
+          "dust_start_turn": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 12.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dust Start Turn"
+          },
+          "dust_end_turn": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 12.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dust End Turn"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "received_turn",
+          "valid_until_turn",
+          "advice_code",
+          "next_turn_dose_rate_ugy_h",
+          "suggested_eva_turn",
+          "dust_start_turn",
+          "dust_end_turn"
+        ],
+        "title": "EarthGuidance"
+      },
       "ErrorDetail": {
         "properties": {
           "field": {
@@ -2595,7 +2684,9 @@
               "lunar-1.0.0",
               "mars-1.0.0",
               "lunar-1.1.0",
-              "mars-1.1.0"
+              "mars-1.1.0",
+              "lunar-1.2.0",
+              "mars-1.2.0"
             ],
             "title": "Rules Version",
             "default": "lunar-1.0.0"
@@ -2725,6 +2816,16 @@
             ],
             "title": "Radiation Profile Source Hash"
           },
+          "earth_guidance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EarthGuidance"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "resources": {
             "$ref": "#/components/schemas/Resources"
           },
@@ -2792,6 +2893,7 @@
           "practice_mode",
           "radiation_profile_ugy_h",
           "radiation_profile_source_hash",
+          "earth_guidance",
           "resources",
           "systems",
           "created_at",
@@ -2937,6 +3039,23 @@
           "radio_round_trip_minutes": {
             "type": "integer",
             "title": "Radio Round Trip Minutes"
+          },
+          "shelter_recommended": {
+            "type": "boolean",
+            "title": "Shelter Recommended",
+            "default": false
+          },
+          "exposure_target_points": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exposure Target Points"
           }
         },
         "additionalProperties": false,
@@ -2945,7 +3064,9 @@
           "food_autonomy_hours",
           "food_reserve_target_kg",
           "pending_reply_minutes",
-          "radio_round_trip_minutes"
+          "radio_round_trip_minutes",
+          "shelter_recommended",
+          "exposure_target_points"
         ],
         "title": "PlanningIndicators"
       },

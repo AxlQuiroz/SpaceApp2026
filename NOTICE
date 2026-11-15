@@ -1,0 +1,9 @@
+RockieOS / SpaceApp2026
+
+LICENSE applies to the team's application code and documentation. It does not
+relicense NASA/agency datasets, publications, third-party dependencies, fonts,
+trademarks or logos. Those materials retain their original terms and attribution.
+Scientific snapshots preserve source URLs and hashes in their manifest.
+See CREDITS.md and API/docs/scientific-sources.md.
+
+This independent project is not endorsed or certified by NASA.

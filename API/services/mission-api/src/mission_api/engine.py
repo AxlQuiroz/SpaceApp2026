@@ -4,7 +4,7 @@ from datetime import UTC, datetime, timedelta
 
 from .errors import MissionError
 from .models import (ActionOption, Command, CreateMission, Evaluation, MissionState, MissionView,
-                     MutationResult, Resources, TimelineEvent, PlanningIndicators)
+                     MutationResult, Resources, TimelineEvent, PlanningIndicators, EarthGuidance)
 from .rules import MARS, TERMINAL, rules_for, rules_for_state
 from . import legacy_engine
 
@@ -93,6 +93,9 @@ def view(s: MissionState) -> MissionView:
     if s.rules_version.endswith("1.0.0"):
         return legacy_engine.view(s)
     mars = s.scenario_id == MARS
+    R = rules_for_state(s)
+    profile = s.radiation_profile_ugy_h or R.radiation_profile_ugy_h
+    shelter_recommended = s.turn < R.turns and (profile[s.turn] >= 20 if mars else s.turn == 5)
     alerts = []
     if s.systems.water_leak_active:
         alerts.append("Fuga activa: el agua se pierde cada turno hasta repararla.")
@@ -103,6 +106,8 @@ def view(s: MissionState) -> MissionView:
         alerts.append("Tormenta de polvo: llega muy poca luz a los paneles.")
     if mars and s.turn == 2:
         alerts.append("El próximo avance trae la radiación de una eyección solar real: considera entrar al refugio.")
+    elif mars and shelter_recommended:
+        alerts.append("La radiación sigue elevada: permanece en el refugio o entra antes de avanzar.")
     if mars and s.turn == rules_for_state(s).dust_storm_turns[0] - 1:
         alerts.append("Se acerca una tormenta de polvo: ahorra batería antes del próximo avance.")
     if not mars and s.turn == 5:
@@ -115,13 +120,34 @@ def view(s: MissionState) -> MissionView:
     ]:
         if getattr(s.resources, field) < threshold:
             alerts.append(message)
-    R = rules_for_state(s)
     planning = PlanningIndicators(
         food_autonomy_hours=round(s.resources.food_kg / (s.crew_count * R.crew_food_kg_per_person_hour), 2),
         food_reserve_target_kg=R.food_reserve_target_kg * (0.75 if s.difficulty == "commander" else 1),
         pending_reply_minutes=max(0, s.systems.earth_reply_due_minutes - s.elapsed_hours * 60) if s.systems.earth_reply_due_minutes is not None else None,
-        radio_round_trip_minutes=2 * R.radio_delay_minutes_one_way)
+        radio_round_trip_minutes=2 * R.radio_delay_minutes_one_way,
+        shelter_recommended=shelter_recommended, exposure_target_points=R.exposure_target_points)
     return MissionView(state=s, available_actions=action_options(s), alerts=alerts, planning=planning)
+
+
+def _earth_guidance(s: MissionState) -> EarthGuidance:
+    """Informe del ejercicio: archivo radiométrico fijado y sucesos simulados, sin red."""
+    R = rules_for_state(s)
+    profile = s.radiation_profile_ugy_h or R.radiation_profile_ugy_h
+    next_dose = profile[s.turn] if s.turn < R.turns else None
+    # La ventana es una recomendación entre las próximas dos decisiones, no una garantía de seguridad.
+    candidates = list(range(s.turn, min(R.turns, s.turn + 2)))
+    best = min(candidates, key=lambda turn: profile[turn]) if candidates else None
+    if best is not None and profile[best] >= 20:
+        best = None
+    dust_future = R.dust_storm_turns and R.dust_storm_turns[-1] > s.turn
+    code = ("shelter_now" if next_dose is not None and next_dose >= 100 else
+            "save_power" if dust_future and R.dust_storm_turns[0] <= s.turn + 2 else
+            "clean_panels" if s.systems.solar_integrity_pct < 100 else
+            "shelter_now" if next_dose is not None and next_dose >= 20 else "research_window")
+    return EarthGuidance(received_turn=s.turn, valid_until_turn=min(R.turns, s.turn + 2),
+        advice_code=code, next_turn_dose_rate_ugy_h=next_dose, suggested_eva_turn=best,
+        dust_start_turn=R.dust_storm_turns[0] if dust_future else None,
+        dust_end_turn=R.dust_storm_turns[-1] if dust_future else None)
 
 
 def transition(original: MissionState, command: Command, now: datetime) -> MutationResult:
@@ -202,6 +228,7 @@ def transition(original: MissionState, command: Command, now: datetime) -> Mutat
         r, sy = s.resources, s.systems
         before = r.model_dump()
         dose_rate = None
+        radio_reply = None
         if mars:
             storm, dose_rate = False, (s.radiation_profile_ugy_h or R.radiation_profile_ugy_h)[s.turn - 1]
             if sy.earth_message_pending:
@@ -210,11 +237,9 @@ def transition(original: MissionState, command: Command, now: datetime) -> Mutat
                 bonus = R.earth_reply_science if data_points > 0 else 0
                 s.science_points += bonus
                 s.reported_data_points += data_points
-                emit("earth_reply", "Llegó la respuesta de la Tierra. Sólo los datos nuevos reciben puntos; ante un peligro debes actuar sin esperar instrucciones.",
-                     {"science_points": bonus, "data_points": data_points,
+                radio_reply = {"science_points": bonus, "data_points": data_points,
                       "radio_delay_minutes_one_way": R.radio_delay_minutes_one_way,
-                      "reply_due_elapsed_minutes": sy.earth_reply_due_minutes,
-                      "advice_code": "act_before_hazard"})
+                      "reply_due_elapsed_minutes": sy.earth_reply_due_minutes}
                 sy.earth_message_data_points = 0
                 sy.earth_reply_due_minutes = None
             if s.turn == 2:
@@ -304,6 +329,13 @@ def transition(original: MissionState, command: Command, now: datetime) -> Mutat
                        "observation_start_utc": (datetime(2024, 5, 20, tzinfo=UTC) + timedelta(hours=(s.turn - 1) * R.turn_hours)).isoformat(),
                        "observation_end_utc": (datetime(2024, 5, 20, tzinfo=UTC) + timedelta(hours=s.turn * R.turn_hours)).isoformat(),
                        "historical_replay": True}
+        if radio_reply is not None:
+            if R.radio_planning_enabled:
+                s.earth_guidance = _earth_guidance(s)
+            radio_reply["advice_code"] = s.earth_guidance.advice_code if s.earth_guidance else "act_before_hazard"
+            if s.earth_guidance:
+                radio_reply["planning_report"] = s.earth_guidance.model_dump()
+            emit("earth_reply", "Llegó la respuesta de la Tierra. Sólo los datos nuevos reciben puntos; ante un peligro debes actuar sin esperar instrucciones.", radio_reply)
         emit("turn_advanced", "Se calcularon dos horas de producción y consumo.", payload)
         if s.crew_health_pct <= 0:
             s.status, s.end_reason = "failed", "La salud de la tripulación llegó a cero en el modelo didáctico."
@@ -339,8 +371,11 @@ def evaluate(s: MissionState) -> Evaluation:
                   "food_reserve": s.resources.food_kg + 1e-6 >= reserve_target}
     if mars:
         objectives["science_shared"] = s.reported_data_points >= R.required_transmitted_data
-    score = round(35 * s.turn / R.turns + 25 * s.crew_health_pct / 100
-                  + 20 * min(1, s.science_points / R.science_target) + 10 * (1 - s.exposure_risk_index / 100)
+    if R.exposure_target_points is not None:
+        objectives["radiation_protection"] = s.exposure_risk_index <= R.exposure_target_points
+    new_balance = R.protection_score_weight == 20
+    score = round((30 if new_balance else 35) * s.turn / R.turns + (20 if new_balance else 25) * s.crew_health_pct / 100
+                  + 20 * min(1, s.science_points / R.science_target) + R.protection_score_weight * (1 - s.exposure_risk_index / 100)
                   + 10 * min(1, s.resources.food_kg / reserve_target))
     outcome = "in_progress"
     if s.status == "completed":
@@ -352,6 +387,8 @@ def evaluate(s: MissionState) -> Evaluation:
         notes.append(("repair_leak", "Reparar pronto una fuga conserva agua para los turnos siguientes."))
     if s.exposure_risk_index > 20:
         notes.append(("plan_shelter", "Planificar el refugio antes del incidente reduce el índice de exposición simulado."))
+    if objectives.get("radiation_protection") is False:
+        notes.append(("protection_target", "La salud no cuenta toda la historia: usa el refugio para cumplir la meta de exposición del ejercicio."))
     if not objectives["science_target"]:
         notes.append(("research_mars" if mars else "research_lunar", "Explora para reunir datos nuevos. En Marte, un informe científico nuevo también aporta puntos." if mars else "Dos exploraciones alcanzan el objetivo científico; cada una consume suministros."))
     if not objectives["food_reserve"]:
