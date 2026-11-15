@@ -231,7 +231,9 @@ export function MissionHud({ game }: Props) {
   const coachInfo = coachStep !== null && !COACH_STEPS[coachStep].wait;
   /** Mientras R0-B1 explica un paso, lo demás espera; en los pasos de práctica se ve todo. */
   const showQueue = queue.length > 0 && !coachInfo;
-  const overlayOpen = showQueue || !!pendingAction || menuOpen || sourcesOpen || medalsOpen || logbookOpen || actionsOpen || coachInfo;
+  // La lista móvil es el propio control de acciones; sólo bloquea los controles de fondo.
+  const commandsBlocked = showQueue || !!pendingAction || menuOpen || sourcesOpen || medalsOpen || logbookOpen || coachInfo;
+  const overlayOpen = commandsBlocked || actionsOpen;
 
   /* ---------- "¿Qué pasaría si…?" ---------- */
   const askPreview = useCallback(
@@ -269,7 +271,7 @@ export function MissionHud({ game }: Props) {
   /* ---------- Tarjeta de comandos ---------- */
   const commands: Command[] = commandLayout(mission).map(({ id, icon }) => {
     const opt = mission.available_actions.find((a) => a.id === id);
-    const enabled = !!opt?.enabled && actionsLeft > 0 && active && !busy && !game.hasPending && !overlayOpen;
+    const enabled = !!opt?.enabled && actionsLeft > 0 && active && !busy && !game.hasPending && !commandsBlocked;
     const reason = !opt?.enabled
       ? locale === "es"
         ? (opt?.disabled_reason ?? t.game.unavailable)
