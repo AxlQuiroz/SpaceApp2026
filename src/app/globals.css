@@ -1,0 +1,280 @@
+@import "tailwindcss";
+
+/* =====================================================================
+   PALETA PIXEL (24 colores). Única fuente de verdad de color.
+   Tailwind v4 genera utilidades a partir de @theme: bg-steel-900, text-neon-cyan…
+   ===================================================================== */
+@theme {
+  /* Acero / fondos */
+  --color-void: #0a0e16;
+  --color-steel-950: #11161f;
+  --color-steel-900: #1b2330;
+  --color-steel-800: #2b3648;
+  --color-steel-700: #3d4b63;
+  --color-steel-600: #56667f;
+  --color-steel-400: #8796ad;
+  --color-steel-200: #c3cedc;
+  --color-steel-50: #eef3f8;
+
+  /* Acentos */
+  --color-neon-cyan: #3ee6f0;
+  --color-cyan-dark: #1a8c9e;
+  --color-lime: #9be43a;
+  --color-lime-dark: #4f8a1d;
+  --color-amber: #ffb23e;
+  --color-orange: #f27a2a;
+  --color-alert: #ff4057;
+  --color-alert-dark: #a3132a;
+
+  /* Superficie / cielo */
+  --color-regolith: #8b8378;
+  --color-regolith-dark: #5a544c;
+  --color-mars: #c2562f;
+  --color-mars-dark: #7a2f1a;
+  --color-sky: #141a3a;
+  --color-star: #fff6d6;
+  --color-skin: #f2c09a;
+
+  /* Tipografías (cargadas con next/font en layout.tsx) */
+  --font-pixel: var(--font-pixelify), "Silkscreen", monospace;
+  --font-mono-read: var(--font-vt323), monospace;
+  --font-tiny: var(--font-silkscreen), monospace;
+}
+
+/* =====================================================================
+   UNIDAD DE PÍXEL
+   Todo el HUD se mide en múltiplos enteros de --px para que los bordes
+   nunca caigan en medios píxeles (=> nada borroso). Escala 2x, 3x, 4x.
+   ===================================================================== */
+:root {
+  --px: 2px;
+  color-scheme: dark;
+}
+@media (min-width: 1280px) {
+  :root { --px: 3px; }
+}
+@media (min-width: 2200px) {
+  :root { --px: 4px; }
+}
+
+html,
+body {
+  background: var(--color-void);
+  color: var(--color-steel-50);
+  font-family: var(--font-mono-read);
+  font-size: 20px; /* VT323 es pequeña: 20px ≈ 16px visuales de otras fuentes */
+  line-height: 1.25;
+  -webkit-font-smoothing: none;
+  font-smooth: never;
+}
+
+img,
+canvas,
+svg.pixel {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* =====================================================================
+   PANEL BISELADO
+   Decisión: box-shadow por capas en lugar de border-image/9-slice.
+   - No requiere imágenes externas, se recolorea con variables.
+   - Escala con --px (múltiplos enteros).
+   - Fácil de mantener: un solo bloque CSS.
+   Capas: luz arriba-izquierda, sombra abajo-derecha, contorno oscuro.
+   ===================================================================== */
+.bevel {
+  --bevel-light: var(--color-steel-400);
+  --bevel-dark: var(--color-steel-950);
+  --bevel-fill: var(--color-steel-800);
+  background: var(--bevel-fill);
+  box-shadow:
+    inset var(--px) var(--px) 0 0 var(--bevel-light),
+    inset calc(var(--px) * -1) calc(var(--px) * -1) 0 0 var(--bevel-dark),
+    0 0 0 var(--px) var(--color-void);
+}
+.bevel-inset {
+  background: var(--color-steel-950);
+  box-shadow:
+    inset var(--px) var(--px) 0 0 var(--color-void),
+    inset calc(var(--px) * -1) calc(var(--px) * -1) 0 0 var(--color-steel-600);
+}
+
+/* Remaches en las esquinas (4 pseudo-puntos con un solo gradiente) */
+.rivets {
+  position: relative;
+}
+.rivets::after {
+  content: "";
+  position: absolute;
+  inset: calc(var(--px) * 3);
+  pointer-events: none;
+  --r: calc(var(--px) * 2);
+  background:
+    linear-gradient(var(--color-steel-200), var(--color-steel-200)) top left / var(--r) var(--r) no-repeat,
+    linear-gradient(var(--color-steel-200), var(--color-steel-200)) top right / var(--r) var(--r) no-repeat,
+    linear-gradient(var(--color-steel-200), var(--color-steel-200)) bottom left / var(--r) var(--r) no-repeat,
+    linear-gradient(var(--color-steel-200), var(--color-steel-200)) bottom right / var(--r) var(--r) no-repeat;
+}
+
+/* Scanlines muy sutiles */
+.scanlines {
+  position: relative;
+}
+.scanlines::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0.025) 0,
+    rgb(255 255 255 / 0.025) var(--px),
+    transparent var(--px),
+    transparent calc(var(--px) * 2)
+  );
+  z-index: 1;
+}
+
+/* Brillo en elementos activos */
+.glow {
+  filter: drop-shadow(0 0 calc(var(--px) * 2) rgb(62 230 240 / 0.55));
+}
+
+/* =====================================================================
+   BOTÓN PIXEL: hover con borde brillante, clic "presionado" 2px.
+   ===================================================================== */
+.pixel-btn {
+  min-width: 44px;
+  min-height: 44px;
+  cursor: pointer;
+  transition: none;
+  outline: none;
+}
+.pixel-btn:hover:not(:disabled),
+.pixel-btn:focus-visible {
+  --bevel-light: var(--color-neon-cyan);
+  outline: var(--px) solid var(--color-neon-cyan);
+  outline-offset: var(--px);
+}
+.pixel-btn:active:not(:disabled),
+.pixel-btn[data-pressed="true"] {
+  transform: translate(2px, 2px);
+  box-shadow:
+    inset var(--px) var(--px) 0 0 var(--color-steel-950),
+    inset calc(var(--px) * -1) calc(var(--px) * -1) 0 0 var(--color-steel-600);
+}
+.pixel-btn:disabled {
+  cursor: not-allowed;
+  filter: grayscale(1) brightness(0.6);
+}
+
+/* =====================================================================
+   ANIMACIONES (secas, por pasos)
+   ===================================================================== */
+@keyframes blink {
+  50% { opacity: 0.25; }
+}
+.blink {
+  animation: blink 0.8s steps(1, end) infinite;
+}
+@keyframes alert-flash {
+  50% { background-color: var(--color-alert-dark); }
+}
+.alert-flash {
+  animation: alert-flash 0.6s steps(1, end) infinite;
+}
+@keyframes caret {
+  50% { opacity: 0; }
+}
+.caret::after {
+  content: "▮";
+  margin-left: 2px;
+  animation: caret 0.6s steps(1, end) infinite;
+}
+@keyframes pop-in {
+  0% { transform: scale(0.9); opacity: 0; }
+  50% { transform: scale(1.02); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.pop-in {
+  animation: pop-in 180ms steps(3, end);
+}
+
+/* ---------- Gameplay ---------- */
+
+/* Número flotante (+0.4 / −2) sobre un recurso */
+@keyframes float-up {
+  0% { transform: translateY(0); opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateY(-24px); opacity: 0; }
+}
+.float-up {
+  animation: float-up 2.4s steps(12, end) forwards;
+}
+
+/* Explorador cruzando la superficie */
+@keyframes walk-across {
+  from { left: 8%; }
+  to { left: 62%; }
+}
+.walk-across {
+  animation: walk-across 4s steps(32, end) forwards;
+}
+
+/* Partículas de tormenta solar cayendo en diagonal */
+@keyframes fall {
+  from { transform: translate(0, -20px); }
+  to { transform: translate(-60px, 140px); }
+}
+.storm-particle {
+  animation: fall 1.2s steps(10, end) infinite;
+}
+
+/* Módulo que se enciende/apaga */
+@keyframes flicker {
+  0%, 40%, 80% { filter: brightness(1.8); }
+  20%, 60%, 100% { filter: brightness(1); }
+}
+.flicker {
+  animation: flicker 0.6s steps(1, end);
+}
+
+/* Cartel de "TURNO N" */
+@keyframes turn-banner {
+  0% { transform: scaleY(0); opacity: 0; }
+  15% { transform: scaleY(1); opacity: 1; }
+  80% { transform: scaleY(1); opacity: 1; }
+  100% { transform: scaleY(0); opacity: 0; }
+}
+.turn-banner {
+  animation: turn-banner 1.4s steps(7, end) forwards;
+}
+
+/* =====================================================================
+   ACCESIBILIDAD: movimiento reducido => sin parpadeos ni scanlines.
+   ===================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .blink,
+  .alert-flash,
+  .caret::after,
+  .pop-in,
+  .flicker,
+  .float-up {
+    animation: none !important;
+  }
+  .storm-particle,
+  .turn-banner {
+    display: none;
+  }
+  .walk-across {
+    animation: none !important;
+    left: 62%;
+  }
+  .scanlines::before {
+    display: none;
+  }
+  * {
+    scroll-behavior: auto !important;
+  }
+}

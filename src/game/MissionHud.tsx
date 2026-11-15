@@ -1,0 +1,486 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  AlertBanner,
+  Badge,
+  CommandCard,
+  DialogBox,
+  Minimap,
+  Modal,
+  PixelButton,
+  PixelSprite,
+  ResourceCounter,
+  SettingsBar,
+  SpaceWeather,
+  UnitPanel,
+  type Command,
+  type UnitStat,
+} from "@/components/hud";
+import type { MissionView } from "@/lib/orbita/schema";
+import { useAudio, useI18n } from "@/lib/providers";
+import { BaseScene } from "./BaseScene";
+import { EndModal, GlossaryModal, SourcesModal, Tutorial } from "./GameModals";
+import {
+  COMMAND_LAYOUT,
+  CREW,
+  DANGER,
+  crewAnim,
+  crewPlacement,
+  deriveModules,
+  isAlarm,
+  localizeAlert,
+  spaceWeather,
+  activityFor,
+  type Activity,
+  type ModuleId,
+  type TurnPayload,
+} from "./model";
+import { TurnReport } from "./TurnReport";
+import { isDemo, type ActionId, type MissionController, type ScenarioParams } from "./useMission";
+
+type Narration = { kind: "text"; text: string } | { kind: "report"; turn: number; payload: TurnPayload };
+
+const TUTORIAL_KEY = "selene.tutorialDone";
+
+const COST_UNITS: Record<string, [string, number]> = {
+  energy_kwh: ["kWh", 1],
+  oxygen_kg: ["kg O₂", 2],
+  water_l: ["L", 1],
+  food_kg: ["kg", 1],
+  spare_parts: ["⚙", 0],
+};
+
+function formatCosts(costs: Record<string, number>) {
+  return Object.entries(costs)
+    .filter(([, v]) => v > 0)
+    .map(([k, v]) => {
+      const [unit, d] = COST_UNITS[k] ?? [k, 1];
+      return `−${v.toFixed(d)} ${unit}`;
+    })
+    .join(" · ");
+}
+
+type Props = { game: MissionController & { mission: MissionView } };
+
+export function MissionHud({ game }: Props) {
+  const { t, locale } = useI18n();
+  const { play } = useAudio();
+  const { mission, log, latest, busy, scenario } = game;
+  const s = mission.state;
+  const p: ScenarioParams = scenario?.parameters ?? {
+    turns: 12,
+    actions_per_turn: 2,
+    energy_capacity_kwh: 50,
+    oxygen_capacity_kg: 6,
+    water_capacity_l: 30,
+    food_capacity_kg: 6,
+    science_target: 24,
+  };
+
+  const modules = useMemo(() => deriveModules(mission), [mission]);
+  const weather = spaceWeather(mission, log);
+  const actionsLeft = Math.max(0, p.actions_per_turn - s.actions_used);
+  const active = s.status === "active";
+
+  const [selected, setSelected] = useState<ModuleId | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [glossaryOpen, setGlossaryOpen] = useState(false);
+  const [sourcesOpen, setSourcesOpen] = useState(false);
+  const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
+
+  /* ---------- Reacción a los eventos de la última orden ---------- */
+  // Cola: mensajes de R0-B1 e informes de turno, en el orden en que los emitió el backend.
+  const [queue, setQueue] = useState<Narration[]>([]);
+  const [activity, setActivity] = useState<Activity | null>(null);
+  const [deltas, setDeltas] = useState<{ key: number; values: Record<string, number> } | null>(null);
+  const [turnBanner, setTurnBanner] = useState<{ key: number; text: string } | null>(null);
+
+  useEffect(() => {
+    if (!latest.length) return;
+    const key = Date.now();
+    const items: Narration[] = [];
+    for (const e of latest) {
+      if (e.type === "action_applied") {
+        const id = e.payload.action_id as ActionId;
+        setActivity(activityFor(id, key));
+        setDeltas({ key, values: (e.payload.resource_delta ?? {}) as Record<string, number> });
+      } else if (e.type === "turn_advanced") {
+        const payload = e.payload as unknown as TurnPayload;
+        setDeltas({ key, values: payload.resource_delta });
+        setTurnBanner({ key, text: `${t.game.turn} ${e.turn}` });
+        items.push({ kind: "report", turn: e.turn, payload });
+      } else if (e.type in t.events) {
+        items.push({ kind: "text", text: t.events[e.type as keyof typeof t.events] });
+      }
+    }
+    // Los incidentes se narran antes que el informe (más dramático y así lo emite el backend).
+    if (items.length) setQueue((q) => [...q, ...items]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [latest]);
+
+  // La animación de la acción dura ~3 s y luego el astronauta vuelve a su módulo.
+  useEffect(() => {
+    if (!activity) return;
+    const id = window.setTimeout(() => setActivity(null), 4500);
+    return () => window.clearTimeout(id);
+  }, [activity]);
+  useEffect(() => {
+    if (!turnBanner) return;
+    const id = window.setTimeout(() => setTurnBanner(null), 1500);
+    return () => window.clearTimeout(id);
+  }, [turnBanner]);
+
+  const nextNarration = useCallback(() => setQueue((q) => q.slice(1)), []);
+  const delta = (k: string) => (deltas && deltas.values[k] !== undefined ? { value: deltas.values[k], key: deltas.key } : null);
+
+  /* ---------- Banner sólo para alertas NUEVAS ---------- */
+  const prevAlerts = useRef<string[]>(mission.alerts);
+  const [banner, setBanner] = useState<string | null>(null);
+  useEffect(() => {
+    const fresh = mission.alerts.find((a) => !prevAlerts.current.includes(a));
+    prevAlerts.current = mission.alerts;
+    if (fresh) setBanner(fresh);
+  }, [mission.alerts]);
+
+  /* ---------- Tutorial la primera vez ---------- */
+  useEffect(() => {
+    let done = false;
+    try {
+      done = localStorage.getItem(TUTORIAL_KEY) === "1";
+    } catch {}
+    if (!done && s.turn === 0) setTutorialOpen(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const closeTutorial = useCallback(() => {
+    setTutorialOpen(false);
+    try {
+      localStorage.setItem(TUTORIAL_KEY, "1");
+    } catch {}
+  }, []);
+
+  /* ---------- Espacio = avanzar turno ---------- */
+  const canAdvance = active && !busy;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== "Space" || tutorialOpen || queue.length) return;
+      const el = e.target as HTMLElement;
+      if (el.closest("button, input, textarea, select, dialog[open]")) return;
+      e.preventDefault();
+      if (canAdvance) void game.advance();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [canAdvance, game, tutorialOpen, queue.length]);
+
+  /* ---------- Tarjeta de comandos ---------- */
+  const commands: Command[] = COMMAND_LAYOUT.map(({ id, icon }) => {
+    const opt = mission.available_actions.find((a) => a.id === id);
+    const enabled = !!opt?.enabled && actionsLeft > 0 && active && !busy;
+    const reason = !opt?.enabled
+      ? locale === "es"
+        ? (opt?.disabled_reason ?? t.game.unavailable)
+        : t.game.unavailable
+      : actionsLeft === 0
+        ? t.game.noActionsLeft
+        : null;
+    const costs = opt ? formatCosts(opt.costs) : "";
+    return {
+      id,
+      icon,
+      label: t.actions[id].label,
+      hint: [t.actions[id].hint, costs && `${t.game.cost}: ${costs}`, reason && `✖ ${reason}`].filter(Boolean).join("\n"),
+      locked: !enabled,
+      onActivate: () => void game.act(id),
+    };
+  });
+
+  /* ---------- Panel central: módulo seleccionado o tripulación ---------- */
+  const health = Math.round(s.crew_health_pct);
+  const exposure = Math.round(s.exposure_risk_index * 10) / 10;
+  const crewStats: UnitStat[] = [
+    { label: t.game.health, value: health },
+    { label: t.game.exposure, value: exposure, color: "var(--color-orange)", inverse: true },
+    { label: t.game.science, value: s.science_points, max: p.science_target, color: "var(--color-neon-cyan)" },
+  ];
+  const r = s.resources;
+  const pct = (v: number, max: number) => Math.round((v / max) * 100);
+  const moduleStats: Record<ModuleId, UnitStat[]> = {
+    solar: [{ label: t.game.integrity, value: s.systems.solar_integrity_pct, color: "var(--color-amber)" }],
+    habitat: [{ label: t.resources.energy, value: pct(r.energy_kwh, p.energy_capacity_kwh), color: "var(--color-amber)" }],
+    oxygen: [{ label: t.resources.oxygen, value: pct(r.oxygen_kg, p.oxygen_capacity_kg), color: "var(--color-neon-cyan)" }],
+    water: [{ label: t.game.water, value: pct(r.water_l, p.water_capacity_l), color: "var(--color-neon-cyan)" }],
+    greenhouse: [{ label: t.game.food, value: pct(r.food_kg, p.food_capacity_kg) }],
+    shelter: [{ label: t.game.exposure, value: exposure, color: "var(--color-orange)", inverse: true }],
+  };
+  const sel = selected ? modules.find((m) => m.id === selected) : null;
+
+  const minimapModules = modules.map((m) => ({
+    id: m.id,
+    label: t.modules[m.id].name,
+    alert: isAlarm(m.status),
+    ...m.map,
+  }));
+  const placement = crewPlacement(mission);
+  const crewDots = CREW.map((c, i) => {
+    const mm = modules.find((m) => m.id === placement[i])!.map;
+    const color = { c1: "#f27a2a", c2: "#3ee6f0", c3: "#9be43a", c4: "#ffb23e" }[c.id];
+    return { id: c.id, x: mm.x + 3 + (i % 2) * 5 + (placement[i] === "shelter" ? i * 4 : 0), y: mm.y + 6, color };
+  });
+
+  const hour = String(s.elapsed_hours).padStart(2, "0");
+
+  return (
+    <div className="flex min-h-dvh flex-col gap-2 p-2 pb-24 md:p-3 lg:pb-3">
+      {/* ================= BARRA SUPERIOR ================= */}
+      <header className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <PixelButton className="whitespace-nowrap" onClick={() => setMenuOpen(true)} aria-haspopup="dialog">
+            ☰ {t.game.menu}
+          </PixelButton>
+          <div className="bevel flex items-center gap-3 px-3 py-1" role="status" aria-label={`${t.game.turn} ${s.turn} / ${p.turns}`}>
+            <PixelSprite icon="day" scale={2} />
+            <div className="flex flex-col leading-none">
+              <span className="font-tiny text-xs text-steel-200 uppercase">{t.game.turn}</span>
+              <span className="font-pixel text-2xl tabular-nums">
+                {s.turn}
+                <span className="text-base text-steel-400">/{p.turns}</span>
+              </span>
+            </div>
+            <div className="flex flex-col leading-none">
+              <span className="font-tiny text-xs text-steel-200 uppercase">{t.game.hour}</span>
+              <span className="font-pixel text-2xl tabular-nums">{hour}:00</span>
+            </div>
+          </div>
+          {isDemo() && (
+            <Badge tone="warn">DEMO</Badge>
+          )}
+        </div>
+        <div className="bevel flex flex-wrap gap-1 px-1 py-1" data-tour="resources">
+          <ResourceCounter icon="energy" label={t.resources.energy} value={r.energy_kwh} unit="kWh" decimals={1} max={p.energy_capacity_kwh} dangerBelow={DANGER.energy_kwh} delta={delta("energy_kwh")} />
+          <ResourceCounter
+            icon="oxygen"
+            label={t.resources.oxygen}
+            value={r.oxygen_kg}
+            unit="kg"
+            decimals={2}
+            max={p.oxygen_capacity_kg}
+            dangerBelow={DANGER.oxygen_kg}
+            delta={delta("oxygen_kg")}
+            sub={`${t.game.reserve}: ${r.reserve_oxygen_kg.toFixed(1)}`}
+          />
+          <ResourceCounter
+            icon="food"
+            label={t.game.water}
+            value={r.water_l}
+            unit="L"
+            decimals={1}
+            max={p.water_capacity_l}
+            dangerBelow={DANGER.water_l}
+            delta={delta("water_l")}
+            sub={`${t.game.reserve}: ${r.reserve_water_l.toFixed(1)}`}
+          />
+          <ResourceCounter icon="ration" label={t.game.food} value={r.food_kg} unit="kg" decimals={2} max={p.food_capacity_kg} dangerBelow={DANGER.food_kg} delta={delta("food_kg")} />
+          <ResourceCounter icon="gear" label={t.game.parts} value={r.spare_parts} delta={delta("spare_parts")} />
+        </div>
+      </header>
+
+      {banner && <AlertBanner icon="warning" message={localizeAlert(banner, locale)} onDismiss={() => setBanner(null)} />}
+      {game.error && (
+        <div role="alert" className="bevel flex items-center gap-3 px-3 py-2" style={{ ["--bevel-fill" as string]: "var(--color-alert-dark)" }}>
+          <span className="flex-1">{game.error}</span>
+          <PixelButton onClick={() => void game.retry()}>{t.menu.retry}</PixelButton>
+        </div>
+      )}
+
+      {/* ================= ESCENA ================= */}
+      <main className="flex-1" data-tour="base">
+        <BaseScene
+          mission={mission}
+          modules={modules}
+          weather={weather}
+          selected={selected}
+          onSelect={setSelected}
+          activity={activity}
+          turnBanner={turnBanner}
+        />
+      </main>
+
+      {/* ================= CONSOLA INFERIOR ================= */}
+      <footer className="bevel rivets grid gap-3 p-3 lg:grid-cols-[auto_1fr_auto]">
+        {/* Izquierda: minimapa + clima */}
+        <section className="flex flex-col gap-2" aria-label={t.minimap.label}>
+          <Minimap modules={minimapModules} crew={crewDots} />
+          <SpaceWeather level={weather} />
+        </section>
+
+        {/* Centro: selección */}
+        <section className="min-w-0" data-tour="crew" aria-live="polite">
+          {sel ? (
+            <div className="flex flex-col gap-2">
+              <UnitPanel
+                name={t.modules[sel.id].name}
+                description={t.modules[sel.id].desc}
+                icon={sel.icon}
+                sprite={sel.sprite?.name}
+                anim={sel.sprite?.anim}
+                stats={moduleStats[sel.id]}
+              />
+              <PixelButton variant="ghost" className="self-start" onClick={() => setSelected(null)}>
+                ← {t.game.crew}
+              </PixelButton>
+            </div>
+          ) : (
+            <UnitPanel
+              name={t.game.crew}
+              description={`${t.game.selectHint} ${t.game.exposureNote}`}
+              sprite="astronaut"
+              anim={crewAnim(mission)}
+              stats={crewStats}
+              badges={
+                <>
+                  {s.systems.crew_in_shelter && <Badge tone="info">{t.game.inShelter}</Badge>}
+                  {mission.alerts.map((a) => (
+                    <Badge key={a} tone="warn">
+                      {localizeAlert(a, locale)}
+                    </Badge>
+                  ))}
+                </>
+              }
+            />
+          )}
+        </section>
+
+        {/* Derecha: comandos + avanzar */}
+        <section className="hidden flex-col items-center gap-2 lg:flex">
+          <div data-tour="commands" className="flex flex-col items-center gap-1">
+            <span className="font-tiny flex items-center gap-1 text-xs text-steel-200 uppercase" aria-label={`${t.game.actionsLeft}: ${actionsLeft}`}>
+              {t.game.actionsLeft}
+              {Array.from({ length: p.actions_per_turn }, (_, i) => (
+                <span key={i} aria-hidden className="inline-block h-3 w-3" style={{ background: i < actionsLeft ? "var(--color-lime)" : "var(--color-steel-700)" }} />
+              ))}
+            </span>
+            <CommandCard commands={commands} hotkeys={!tutorialOpen && !queue.length && !menuOpen} />
+          </div>
+          <PixelButton
+            data-tour="advance"
+            variant="primary"
+            className="w-full"
+            disabled={!canAdvance}
+            onClick={() => {
+              play("success");
+              void game.advance();
+            }}
+            title={t.game.advanceHint}
+            aria-keyshortcuts="Space"
+            icon={<PixelSprite icon="next" scale={2} />}
+          >
+            {busy ? "…" : t.game.advance}
+          </PixelButton>
+          <span className="font-tiny text-xs text-steel-400">[{t.game.advanceKey}]</span>
+        </section>
+      </footer>
+
+      {/* ================= DOCK MÓVIL (comandos siempre a mano) ================= */}
+      <nav
+        aria-label={t.game.actionsLeft}
+        className="bevel fixed inset-x-0 bottom-0 z-30 flex gap-2 p-2 lg:hidden"
+        style={{ ["--bevel-fill" as string]: "var(--color-steel-900)" }}
+      >
+        <PixelButton
+          data-tour="commands"
+          className="flex-1"
+          disabled={!active || busy}
+          onClick={() => setActionsOpen(true)}
+          aria-haspopup="dialog"
+          icon={<PixelSprite icon="explore" scale={2} />}
+        >
+          {t.game.actionsLeft}
+          <span aria-hidden className="flex gap-1">
+            {Array.from({ length: p.actions_per_turn }, (_, i) => (
+              <span key={i} className="inline-block h-3 w-3" style={{ background: i < actionsLeft ? "var(--color-lime)" : "var(--color-steel-700)" }} />
+            ))}
+          </span>
+        </PixelButton>
+        <PixelButton
+          data-tour="advance"
+          variant="primary"
+          className="flex-1"
+          disabled={!canAdvance}
+          onClick={() => {
+            play("success");
+            void game.advance();
+          }}
+          icon={<PixelSprite icon="next" scale={2} />}
+        >
+          {busy ? "…" : t.game.advance}
+        </PixelButton>
+      </nav>
+
+      <Modal open={actionsOpen} title={`${t.game.actionsLeft} · ${actionsLeft}/${p.actions_per_turn}`} onClose={() => setActionsOpen(false)}>
+        <ul className="flex max-h-[65vh] flex-col gap-2 overflow-y-auto pr-1">
+          {commands.map((c) => (
+            <li key={c.id}>
+              <button
+                type="button"
+                disabled={c.locked}
+                onClick={() => {
+                  setActionsOpen(false);
+                  c.onActivate?.();
+                }}
+                className="bevel pixel-btn flex w-full items-start gap-3 p-3 text-left"
+              >
+                <PixelSprite icon={c.locked ? "lock" : c.icon} scale={2} />
+                <span className="flex flex-col">
+                  <span className="font-pixel text-lg text-neon-cyan">{c.label}</span>
+                  <span className="whitespace-pre-line text-lg text-steel-200">{c.hint}</span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </Modal>
+
+      {/* ================= NARRACIÓN ================= */}
+      {queue[0]?.kind === "text" && !tutorialOpen && (
+        <div className="fixed inset-x-2 bottom-2 z-40 mx-auto max-w-2xl">
+          <DialogBox key={queue[0].text + queue.length} speaker={t.assistant.name} text={queue[0].text} onConfirm={nextNarration} />
+        </div>
+      )}
+      {queue[0]?.kind === "report" && !tutorialOpen && (
+        <div className="fixed inset-0 z-40 grid place-items-center overflow-y-auto bg-void/60 p-2">
+          <div className="w-full max-w-3xl">
+            <TurnReport
+              key={queue[0].turn}
+              turn={queue[0].turn}
+              payload={queue[0].payload}
+              params={p}
+              systemsOn={{ habitat: true, oxygen: s.systems.oxygen_generator_on, water: true, greenhouse: s.systems.greenhouse_on }}
+              storm={log.some((e) => e.type === "solar_incident" && e.turn === (queue[0] as { turn: number }).turn)}
+              onClose={nextNarration}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODALES ================= */}
+      <Modal open={menuOpen} title={t.game.menu} onClose={() => setMenuOpen(false)}>
+        <div className="flex flex-col gap-2">
+          <PixelButton onClick={() => { setMenuOpen(false); setTutorialOpen(true); }}>{t.game.tutorial}</PixelButton>
+          <PixelButton onClick={() => { setMenuOpen(false); setGlossaryOpen(true); }}>{t.game.glossary}</PixelButton>
+          <PixelButton onClick={() => { setMenuOpen(false); setSourcesOpen(true); }}>{t.game.sources}</PixelButton>
+          <SettingsBar />
+          <PixelButton variant="ghost" onClick={() => { setMenuOpen(false); game.exitToMenu(); }}>{t.game.exit}</PixelButton>
+          {active && (
+            <PixelButton variant="danger" onClick={() => { setMenuOpen(false); void game.abort(); }}>{t.game.abort}</PixelButton>
+          )}
+        </div>
+      </Modal>
+      <GlossaryModal open={glossaryOpen} onClose={() => setGlossaryOpen(false)} />
+      <SourcesModal open={sourcesOpen} onClose={() => setSourcesOpen(false)} load={game.science} />
+      <EndModal evaluation={queue.length ? null : game.evaluation} onAgain={() => void game.restart()} onMenu={game.exitToMenu} />
+      <Tutorial open={tutorialOpen} onClose={closeTutorial} />
+    </div>
+  );
+}
