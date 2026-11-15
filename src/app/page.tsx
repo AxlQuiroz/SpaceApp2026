@@ -145,8 +145,8 @@ export default function Home() {
         <Panel rivets={false}>
           <footer className="flex flex-wrap items-center justify-between gap-3">
             <p className="flex items-center gap-2 text-lg text-steel-200">
-              <PixelSprite icon="heart" scale={2} />
-              {t.home.promise}
+              <PixelSprite sprite="robot" anim="talk" scale={2} label="R0-B1" />
+              {t.home.goodLuck}
             </p>
             <SettingsBar />
           </footer>

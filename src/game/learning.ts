@@ -196,6 +196,46 @@ export const TERMS: Term[] = [
       en: "Messages travel by radio at the speed of light, the fastest there is! Even so, Mars is so far away that they take 3 to 22 minutes to arrive. You can't chat live with Earth.",
     },
   },
+  {
+    id: "temperature",
+    icon: "sun",
+    on: ["turn:3@lunar", "turn:5@mars"],
+    term: { es: "Temperatura", en: "Temperature" },
+    text: {
+      es: "En la Luna el suelo llega a unos 120 °C al sol y baja a −170 °C en la noche. En Marte la media es de unos −60 °C. Por eso el hábitat gasta energía todo el tiempo: nos mantiene a unos 21 °C, como en casa.",
+      en: "On the Moon the ground reaches about 120 °C in sunlight and drops to −170 °C at night. On Mars it averages about −60 °C. That's why the habitat always uses power: it keeps us at about 21 °C, like at home.",
+    },
+  },
+  {
+    id: "lunar_night",
+    icon: "day",
+    on: ["turn:4@lunar"],
+    term: { es: "Noche lunar", en: "Lunar night" },
+    text: {
+      es: "Un día completo en la Luna dura casi un mes: unas 2 semanas de luz y unas 2 de noche. Sin Sol, los paneles no producen nada. Esta misión ocurre de día; una base real necesitaría baterías enormes para la noche.",
+      en: "A full day on the Moon lasts almost a month: about 2 weeks of light and 2 of night. With no Sun, panels make nothing. This mission happens in daylight; a real base would need huge batteries for the night.",
+    },
+  },
+  {
+    id: "co2",
+    icon: "oxygen",
+    on: ["turn:5@lunar", "turn:10@mars"],
+    term: { es: "Dióxido de carbono (CO₂)", en: "Carbon dioxide (CO₂)" },
+    text: {
+      es: "Al respirar soltamos CO₂. En un lugar cerrado se acumula y da dolor de cabeza. La Estación Espacial tiene filtros que lo atrapan: fabricar oxígeno es solo la mitad. En el juego, esa limpieza va dentro del hábitat.",
+      en: "When we breathe out we release CO₂. In a closed room it builds up and causes headaches. The Space Station has filters that trap it: making oxygen is only half the job. In the game, that cleaning is part of the habitat.",
+    },
+  },
+  {
+    id: "artemis",
+    icon: "explore",
+    on: ["turn:6@lunar", "turn:11@mars"],
+    term: { es: "Programa Artemis", en: "Artemis program" },
+    text: {
+      es: "Artemis es el plan de la NASA para volver a la Luna y quedarse más tiempo, cerca del polo sur. Allí hay hielo en cráteres siempre en sombra: podría dar agua, oxígeno y combustible. Es práctica para ir a Marte.",
+      en: "Artemis is NASA's plan to return to the Moon and stay longer, near the south pole. There's ice in craters that are always in shadow: it could give water, oxygen and fuel. It's practice for going to Mars.",
+    },
+  },
 ];
 
 /* ------------------------------------------------------------------ */

@@ -6,7 +6,7 @@ Guía para quien edite textos, preguntas o medallas. El contenido vive en `src/g
 
 | Pieza | Cuándo aparece | Dónde se guarda |
 | --- | --- | --- |
-| **Palabra nueva** (15) | La primera vez que ocurre algo relacionado: R0-B1 la explica con una comparación cotidiana | Bitácora (menú) |
+| **Palabra nueva** (19) | La primera vez que ocurre algo relacionado: R0-B1 la explica con una comparación cotidiana | Bitácora (menú) |
 | **Pregunta de R0-B1** (7) | Después de un suceso; tres opciones, sin castigo, siempre con explicación. Si se falla, vuelve a salir en otra partida | Cuenta para la medalla «Mente brillante» |
 | **¿Qué pasaría si…?** | Antes de confirmar cualquier acción: el backend calcula el resultado sin guardarlo | — |
 | **Informe del turno** | Al avanzar dos horas; en Marte incluye la lectura real de RAD | — |

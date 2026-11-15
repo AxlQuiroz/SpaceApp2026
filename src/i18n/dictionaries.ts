@@ -359,6 +359,7 @@ export const es = {
     trainingPending: "Te espera en tu primera misión",
     factTitle: "Dato de R0-B1",
     nextFact: "Otro dato",
+    goodLuck: "¡Mucha suerte en tu misión, cadete! La tripulación cuenta contigo.",
     facts: [
       "La Luna no tiene aire: los astronautas llevan el oxígeno que respiran o lo fabrican separando el agua.",
       "Un día en Marte dura 24 horas y 40 minutos. ¡Casi igual que en la Tierra!",
@@ -368,7 +369,6 @@ export const es = {
       "El rover Curiosity mide la radiación en Marte con un instrumento llamado RAD.",
       "El experimento MOXIE fabricó oxígeno con el aire de Marte, que es casi todo dióxido de carbono.",
     ],
-    promise: "Promesa AstraNova: el juego completo es gratis y nunca se paga para avanzar.",
   },
   wardrobe: {
     title: "Vestidor",
@@ -890,6 +890,7 @@ export const en: DeepString<Dict> = {
     trainingPending: "Waiting in your first mission",
     factTitle: "R0-B1 fact",
     nextFact: "Another fact",
+    goodLuck: "Good luck on your mission, cadet! The crew is counting on you.",
     facts: [
       "The Moon has no air: astronauts bring the oxygen they breathe or make it by splitting water.",
       "A day on Mars lasts 24 hours and 40 minutes. Almost the same as on Earth!",
@@ -899,7 +900,6 @@ export const en: DeepString<Dict> = {
       "The Curiosity rover measures radiation on Mars with an instrument called RAD.",
       "The MOXIE experiment made oxygen from the Martian air, which is mostly carbon dioxide.",
     ],
-    promise: "AstraNova promise: the full game is free and you never pay to get ahead.",
   },
   wardrobe: {
     title: "Wardrobe",
