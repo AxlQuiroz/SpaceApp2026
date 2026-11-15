@@ -36,8 +36,16 @@ export function WardrobeModal({ open, onClose, medals, look, dress }: Props) {
             type="button"
             role="radio"
             aria-checked={crew === i}
+            tabIndex={crew === i ? 0 : -1}
             data-autofocus={i === 0 ? true : undefined}
             onClick={() => setCrew(i)}
+            onKeyDown={event => {
+              const next = ["ArrowRight", "ArrowDown"].includes(event.key) ? (i + 1) % look.length : ["ArrowLeft", "ArrowUp"].includes(event.key) ? (i + look.length - 1) % look.length : event.key === "Home" ? 0 : event.key === "End" ? look.length - 1 : null;
+              if (next === null) return;
+              event.preventDefault(); setCrew(next);
+              const buttons = event.currentTarget.parentElement?.querySelectorAll<HTMLElement>('[role="radio"]');
+              buttons?.[next]?.focus();
+            }}
             className={`bevel pixel-btn flex flex-col items-center gap-1 p-2 ${crew === i ? "glow" : ""}`}
             style={{ ["--bevel-fill" as string]: crew === i ? "var(--color-cyan-dark)" : "var(--color-steel-800)" }}
           >

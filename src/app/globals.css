@@ -169,6 +169,38 @@ svg.pixel {
   filter: grayscale(1) brightness(0.6);
 }
 
+/* Consola de decisiones: nombre y consecuencias visibles, también sin hover. */
+.flight-console {
+  background: linear-gradient(135deg, #24364a 0%, var(--color-steel-900) 55%);
+}
+.action-choice {
+  min-height: 108px;
+  overflow-wrap: anywhere;
+}
+.action-choice:hover:not([aria-disabled="true"]) {
+  --bevel-fill: #30455b;
+}
+.action-priority {
+  --bevel-fill: #244346;
+  --bevel-light: var(--color-amber);
+}
+.action-unavailable {
+  --bevel-fill: var(--color-steel-900);
+  cursor: not-allowed;
+}
+.action-unavailable > :first-child {
+  opacity: 0.65;
+}
+summary:focus-visible, input[type="radio"]:focus-visible,
+[role="radio"]:focus-visible, [role="tab"]:focus-visible {
+  outline: 2px solid var(--color-neon-cyan);
+  outline-offset: 3px;
+}
+label:has(> input:focus-visible) {
+  outline: 2px solid var(--color-neon-cyan);
+  outline-offset: 3px;
+}
+
 /* =====================================================================
    ANIMACIONES (secas, por pasos)
    ===================================================================== */

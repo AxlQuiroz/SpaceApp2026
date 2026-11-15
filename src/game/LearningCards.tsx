@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Badge, Modal, PixelButton, PixelSprite } from "@/components/hud";
 import type { PreviewResult } from "@/lib/orbita/schema";
-import { useFocusTrap } from "@/lib/hooks";
+import { useBodyScrollLock, useFocusTrap } from "@/lib/hooks";
 import { reviewText } from "./reviewText";
 import { useAudio, useI18n } from "@/lib/providers";
 import type { IconName } from "@/sprites/sprites.config";
@@ -14,10 +14,11 @@ import { MEDALS, TERMS, type Lang, type Medal, type Progress, type Quiz, type Te
 /* Marco común: R0-B1 a la izquierda, contenido a la derecha           */
 /* ------------------------------------------------------------------ */
 
-function RobotCard({ tag, tone, children, talking = false }: { tag: string; tone: string; children: ReactNode; talking?: boolean }) {
-  const trap = useFocusTrap<HTMLElement>();
+function RobotCard({ tag, tone, children, talking = false, modal = true }: { tag: string; tone: string; children: ReactNode; talking?: boolean; modal?: boolean }) {
+  const trap = useFocusTrap<HTMLElement>(modal);
+  useBodyScrollLock(modal);
   return (
-    <section ref={trap} role="dialog" aria-modal="true" aria-label={tag} className="bevel rivets pop-in flex gap-3" style={{ padding: "calc(var(--px) * 5)" }}>
+    <section ref={trap} role={modal ? "dialog" : "region"} aria-modal={modal || undefined} aria-label={tag} className="bevel rivets pop-in flex max-h-[90dvh] gap-3 overflow-y-auto overscroll-contain" style={{ padding: "calc(var(--px) * 5)" }}>
       <div className="bevel-inset scanlines shrink-0 self-start p-2">
         <PixelSprite sprite="robot" anim={talking ? "talk" : "idle"} scale={4} label="R0-B1" />
       </div>
@@ -194,6 +195,7 @@ type PreviewProps = {
 };
 
 export function PreviewPanel({ label, hint, icon, result, current, names, note, busy, onConfirm, onCancel, onRetry }: PreviewProps) {
+  useBodyScrollLock(true);
   const { t, locale } = useI18n();
   const copy = reviewText(locale);
   const trap = useFocusTrap<HTMLElement>();
@@ -398,7 +400,7 @@ export function Coach({ step, hidden, onNext, onSkip }: CoachProps) {
         />
       )}
       <div className={`pointer-events-auto absolute inset-x-0 mx-auto w-[min(94vw,640px)] ${boxAtTop ? "top-4" : "bottom-28 lg:bottom-4"}`}>
-        <RobotCard tag={`${t.coach.title} · ${step + 1}/${COACH_STEPS.length}`} tone="var(--color-neon-cyan)" talking>
+        <RobotCard tag={`${t.coach.title} · ${step + 1}/${COACH_STEPS.length}`} tone="var(--color-neon-cyan)" talking modal={!wait}>
           <p className="text-xl" aria-live="polite">
             {t.coach.steps[step]}
           </p>

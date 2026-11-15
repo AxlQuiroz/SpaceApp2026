@@ -56,7 +56,7 @@ export function EndModal({
           <PixelSprite sprite="astronaut" anim={outcome === "success" ? "celebrate" : outcome === "failed" ? "sick" : "idle"} scale={5} />
           <div>
             <span className="font-tiny text-sm text-steel-200 uppercase">{t.end.score}</span>
-            <p className="font-pixel text-6xl text-amber">{Math.round(evaluation.score)}</p>
+            <p className="font-pixel text-6xl text-amber">{Math.round(evaluation.score)}<span className="ml-1 text-2xl text-steel-200">/100</span></p>
           </div>
         </div>
         <section>

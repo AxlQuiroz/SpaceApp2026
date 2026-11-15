@@ -16,6 +16,8 @@ En Windows, con **Python 3.12 y Node.js 24** instalados, abre **[`RockieOS.cmd`]
 
 Consulta la [guía del lanzador y presentación](docs/lanzador-windows.md). También puedes seguir la [instalación manual del backend](API/docs/backend-installation-windows.md).
 
+Para preparar la entrega, usa el [guion de presentación y los planes de ensayo](docs/guion-presentacion.md). La [consola de acciones](docs/pulido-interfaz.md) muestra nombres, costes, estado y motivos de bloqueo en escritorio y móvil.
+
 - [Conectar el frontend Next.js](API/docs/nextjs-integration.md).
 - [Contrato de partidas](API/docs/mission-api-contract.md).
 - [Reglas del simulador](API/docs/simulation-rules.md).

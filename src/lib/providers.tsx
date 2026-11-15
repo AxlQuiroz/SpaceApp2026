@@ -44,8 +44,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const l = readStorage("selene.locale");
     if (l === "es" || l === "en") setLocaleState(l);
-    const v = Number(readStorage("selene.volume"));
-    if (!Number.isNaN(v) && v > 0) setVolumeState(Math.min(1, v));
+    const savedVolume = readStorage("selene.volume");
+    const v = Number(savedVolume);
+    if (savedVolume !== null && Number.isFinite(v) && v >= 0) setVolumeState(Math.min(1, v));
     if (readStorage("selene.muted") === "false") setMutedState(false);
   }, []);
 
