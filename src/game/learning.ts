@@ -336,7 +336,8 @@ export const MEDALS: Medal[] = [
     icon: "shelter",
     name: { es: "A salvo de la tormenta", en: "Safe from the storm" },
     how: { es: "Termina con menos de 40 puntos de exposición y cumple la meta de protección de tu misión.", en: "Finish below 40 exposure points and meet your mission's protection goal." },
-    earned: (i) => done(i) && i.mission.state.exposure_risk_index < 40 && i.evaluation?.objectives.radiation_protection !== false,
+    earned: (i) => done(i) && i.mission.state.exposure_risk_index < 40 &&
+      (i.mission.planning?.exposure_target_points == null || i.mission.state.exposure_risk_index <= i.mission.planning.exposure_target_points),
   },
   {
     id: "scientist",

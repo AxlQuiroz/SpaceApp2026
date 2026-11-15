@@ -143,6 +143,9 @@ test("el aviso persiste durante el pico y la radio entrega un informe útil", as
   await action(page, "Llamar a la Tierra");
   await advance(page, 1);
   await expect(page.getByTestId("earth-report")).toContainText("3.93");
+  await page.reload();
+  await expect(page.getByTestId("mission-hud")).toHaveAttribute("data-turn", "1");
+  await expect(page.getByTestId("earth-report")).toContainText("3.93");
   for (let turn = 2; turn <= 4; turn++) await advance(page, turn);
   await expect(page.getByTestId("radiation-alert")).toBeVisible();
   await expect(page.getByTestId("radiation-alert")).toContainText("seguirá elevada");

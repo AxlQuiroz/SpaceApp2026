@@ -78,7 +78,7 @@ export function suggestAction(
   const enabled = new Set(m.available_actions.filter((a) => a.enabled).map((a) => a.id as ActionId));
   // Python mira el bloque siguiente: una tormenta marciana puede durar varios turnos.
   const warned = m.planning?.shelter_recommended ?? (m.alerts.some((a) => a.includes("refugio")) || weather === "active" || weather === "storm");
-  const calm = !warned && weather === "calm";
+  const calm = !warned && (m.planning != null || weather === "calm");
   const candidates: [boolean, ActionId, string][] = [
     [warned && !sy.crew_in_shelter, "enter_shelter", why.shelter_warning],
     [sy.water_leak_active, "repair_water_loop", why.leak],

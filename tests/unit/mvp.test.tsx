@@ -25,6 +25,9 @@ it("recomienda refugio en pleno pico y respeta la previsión del backend al term
   expect(suggestAction(dictionaries.es, m, "storm")?.id).toBe("enter_shelter");
   m.planning!.shelter_recommended = false;
   expect(suggestAction(dictionaries.es, m, "storm")?.id).not.toBe("enter_shelter");
+  m.state.systems.crew_in_shelter = true;
+  m.available_actions.find(a => a.id === "leave_shelter")!.enabled = true;
+  expect(suggestAction(dictionaries.es, m, "storm")?.id).toBe("leave_shelter");
   expect(costText(dictionaries.es, {})).toContain("1 acción");
 });
 
@@ -45,6 +48,16 @@ it("un informe conserva sus datos y deja de aconsejar cuando está vencido", () 
   rerender(<Providers><RadioReport report={report} turn={5} /></Providers>);
   expect(screen.getByText(/Informe anterior/)).toBeTruthy();
   expect(screen.queryByText(/246.39/)).toBeNull();
+});
+
+it("la medalla de protección espera la meta aunque todavía no llegue la evaluación", async () => {
+  const mission = (await new MockMissionClient().createMission({})).mission;
+  mission.state.status = "completed";
+  mission.state.exposure_risk_index = 33;
+  const medal = MEDALS.find(m => m.id === "storm_safe")!;
+  expect(medal.earned({ mission, evaluation: null, progress, log: [] })).toBe(false);
+  mission.state.exposure_risk_index = 7;
+  expect(medal.earned({ mission, evaluation: null, progress, log: [] })).toBe(true);
 });
 
 it("las pestañas para familias se recorren con flechas, Home y End", () => {

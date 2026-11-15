@@ -149,7 +149,7 @@ export const es = {
     retry: "Reintentar",
     demo: "Ver en modo demo",
     demoNote: "Modo demo: números aproximados, sólo para ver la interfaz.",
-    goal: "Objetivo: sobrevive 12 turnos (24 horas), mantén la salud en 60 o más y consigue 24 puntos de ciencia.",
+    goal: "Cuida la base durante 24 horas: salud de 60 o más, ciencia, comida para mañana y protección.",
   },
   game: {
     turn: "Turno",
@@ -309,8 +309,8 @@ export const es = {
     mars: "Marte",
     marsDesc: "Base Ares. Radiación real medida por el rover Curiosity, tormenta de polvo y llamadas a la Tierra.",
     recommended: "Empieza aquí",
-    goalMoon: "Objetivo: sobrevive 12 turnos (24 horas), mantén la salud en 60 o más y consigue 24 puntos de ciencia.",
-    goalMars: "Objetivo: sobrevive 12 turnos (un sol marciano), mantén la salud en 60 o más y consigue 30 puntos de ciencia.",
+    goalMoon: "Cuida la base durante 24 horas: salud de 60 o más, 24 puntos de ciencia, comida para mañana y exposición de juego de 20 puntos o menos.",
+    goalMars: "Cuida la base durante 24 horas: salud de 60 o más, 30 puntos de ciencia, comida para mañana y datos nuevos compartidos con la Tierra.",
   },
   mars: {
     actions: {
@@ -680,7 +680,7 @@ export const en: DeepString<Dict> = {
     retry: "Retry",
     demo: "Try demo mode",
     demoNote: "Demo mode: approximate numbers, only to preview the interface.",
-    goal: "Goal: survive 12 turns (24 hours), keep health at 60 or more and earn 24 science points.",
+    goal: "Care for the base for 24 hours: health of at least 60, research, food for tomorrow and protection.",
   },
   game: {
     turn: "Turn",
@@ -840,8 +840,8 @@ export const en: DeepString<Dict> = {
     mars: "Mars",
     marsDesc: "Ares Base. Real radiation measured by the Curiosity rover, a dust storm and calls to Earth.",
     recommended: "Start here",
-    goalMoon: "Goal: survive 12 turns (24 hours), keep health at 60 or more and earn 24 science points.",
-    goalMars: "Goal: survive 12 turns (one Martian sol), keep health at 60 or more and earn 30 science points.",
+    goalMoon: "Care for the base for 24 hours: health of at least 60, 24 science points, food for tomorrow and game exposure of 20 points or less.",
+    goalMars: "Care for the base for 24 hours: health of at least 60, 30 science points, food for tomorrow and new data shared with Earth.",
   },
   mars: {
     actions: {
