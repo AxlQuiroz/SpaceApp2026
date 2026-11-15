@@ -3,7 +3,7 @@
 
 export const es = {
   app: {
-    title: "RockieOS",
+    title: "AstraNova",
     subtitle: "Dirige tu base en la Luna y Marte y aprende ciencia espacial",
     comingSoon: "MVP de entrenamiento",
   },
@@ -368,7 +368,7 @@ export const es = {
       "El rover Curiosity mide la radiación en Marte con un instrumento llamado RAD.",
       "El experimento MOXIE fabricó oxígeno con el aire de Marte, que es casi todo dióxido de carbono.",
     ],
-    promise: "Promesa RockieOS: el juego completo es gratis y nunca se paga para avanzar.",
+    promise: "Promesa AstraNova: el juego completo es gratis y nunca se paga para avanzar.",
   },
   wardrobe: {
     title: "Vestidor",
@@ -462,7 +462,7 @@ export const es = {
   },
   credits: {
     title: "Fuentes y créditos",
-    intro: "RockieOS usa datos históricos reales de la NASA como referencia para sus eventos.",
+    intro: "AstraNova usa datos históricos reales de la NASA como referencia para sus eventos.",
     sources: [
       ["DONKI (NASA CCMC)", "Clima espacial: llamaradas, eyecciones de masa coronal y tormentas de mayo de 2024."],
       ["RadLab · MSL-RAD", "Radiación medida por el rover Curiosity en la superficie de Marte."],
@@ -534,7 +534,7 @@ type DeepString<T> = { [K in keyof T]: T[K] extends string ? string : DeepString
 
 export const en: DeepString<Dict> = {
   app: {
-    title: "RockieOS",
+    title: "AstraNova",
     subtitle: "Run a Moon or Mars base and learn space science",
     comingSoon: "Mission trainer MVP",
   },
@@ -899,7 +899,7 @@ export const en: DeepString<Dict> = {
       "The Curiosity rover measures radiation on Mars with an instrument called RAD.",
       "The MOXIE experiment made oxygen from the Martian air, which is mostly carbon dioxide.",
     ],
-    promise: "RockieOS promise: the full game is free and you never pay to get ahead.",
+    promise: "AstraNova promise: the full game is free and you never pay to get ahead.",
   },
   wardrobe: {
     title: "Wardrobe",
@@ -993,7 +993,7 @@ export const en: DeepString<Dict> = {
   },
   credits: {
     title: "Sources and credits",
-    intro: "RockieOS uses real historical NASA data as a reference for its events.",
+    intro: "AstraNova uses real historical NASA data as a reference for its events.",
     sources: [
       ["DONKI (NASA CCMC)", "Space weather: flares, coronal mass ejections and storms from May 2024."],
       ["RadLab · MSL-RAD", "Radiation measured by the Curiosity rover on the surface of Mars."],

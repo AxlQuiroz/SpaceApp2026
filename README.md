@@ -1,6 +1,6 @@
-# SpaceApp2026 · RockieOS
+# SpaceApp2026 · AstraNova
 
-**RockieOS** es un entrenador de decisiones y recursos para bases en la Luna y Marte, con referencias científicas de NASA. El frontend (juego pixel art para niños de 7 a 12 años) está en la raíz del repo con Next.js; el backend, en `API/`.
+**AstraNova** es un entrenador de decisiones y recursos para bases en la Luna y Marte, con referencias científicas de NASA. El frontend (juego pixel art para niños de 7 a 12 años) está en la raíz del repo con Next.js; el backend, en `API/`.
 
 El **MVP 0.4.0** incluye el juego Next.js en la raíz y el backend Python en [`API/`](API/README.md): recursos NASA, motor lunar y marciano, partidas SQLite, OpenAPI, cliente TypeScript y proxy Next.js.
 
@@ -27,7 +27,7 @@ Consulta la [guía del lanzador y presentación](docs/lanzador-windows.md). Tamb
 
 GitHub Actions verifica Python en Linux y Windows, contratos, frontend, compilación de producción y partidas completas desde Chromium en escritorio y móvil. Las pruebas usan capturas históricas, sin claves NASA ni acceso a sus proveedores. Consulta [pruebas y recuperación](docs/pruebas-del-proyecto.md).
 
-## Frontend · RockieOS
+## Frontend · AstraNova
 
 Entrenador de decisiones (7–12 años) para bases lunares y marcianas, con HUD pixel art de estrategia sci-fi.
 Alcance, decisiones y validación: [documentación del MVP](docs/MVP.md).

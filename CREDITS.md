@@ -1,6 +1,6 @@
 # Créditos, datos y desarrollo asistido
 
-RockieOS es un proyecto independiente del equipo de SpaceApp2026 para **Build a Junior Astronaut Mission Trainer**. NASA no avala ni certifica el producto. Los consumos, capacidades, puntuación y efectos sobre la salud son reglas educativas.
+AstraNova es un proyecto independiente del equipo de SpaceApp2026 para **Build a Junior Astronaut Mission Trainer**. NASA no avala ni certifica el producto. Los consumos, capacidades, puntuación y efectos sobre la salud son reglas educativas.
 
 ## Fuentes incorporadas
 

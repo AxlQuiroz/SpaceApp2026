@@ -1,4 +1,4 @@
-# Pruebas y recuperación de RockieOS
+# Pruebas y recuperación de AstraNova
 
 El MVP 0.4 incorpora regresiones de aviso durante el pico marciano, protección lunar, compatibilidad 1.1, elección entre radio/refugio, vigencia del informe, medalla de fuga variable y navegación de las pestañas de familias. El flujo de CI también arranca la configuración completa de Docker Compose y comprueba `/api/health` y el catálogo a través del proxy.
 

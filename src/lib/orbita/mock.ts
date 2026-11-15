@@ -59,7 +59,7 @@ const BASE_PARAMS = { turns: 12, actions_per_turn: 2, energy_capacity_kwh: 50, o
 const SCENARIOS = [
   {
     id: "lunar-outpost-v1",
-    title: "RockieOS: primer turno lunar (DEMO)",
+    title: "AstraNova: primer turno lunar (DEMO)",
     description: "Modo demo sin backend.",
     objectives: ["Completar 12 turnos", "Salud final de al menos 60", "Conseguir 24 puntos científicos"],
     assumptions: ["Modo demo: imita las reglas del backend."],
@@ -67,7 +67,7 @@ const SCENARIOS = [
   },
   {
     id: "mars-outpost-v1",
-    title: "RockieOS: jornada en Marte (DEMO)",
+    title: "AstraNova: jornada en Marte (DEMO)",
     description: "Modo demo sin backend.",
     objectives: ["Completar 12 turnos", "Salud final de al menos 60", "Conseguir 30 puntos científicos"],
     assumptions: ["Modo demo: imita las reglas del backend."],

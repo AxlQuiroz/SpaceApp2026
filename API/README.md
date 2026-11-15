@@ -1,4 +1,4 @@
-# SpaceApp2026 · RockieOS — Backend v0.4.0
+# SpaceApp2026 · AstraNova — Backend v0.4.0
 
 El [MVP actual](../docs/MVP.md) añade reglas 1.2, aviso radiológico sostenido, objetivo de protección lunar e informe de radio con vigencia. Las partidas 1.0 y 1.1 mantienen sus resultados. La raíz incluye la [configuración completa de publicación](../docs/despliegue.md).
 

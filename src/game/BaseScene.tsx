@@ -41,7 +41,7 @@ function Room({ m, crew, anim, selected, name, label, badge, onSelect, flicker, 
       onClick={() => onSelect(m.id)}
       aria-pressed={selected}
       aria-label={label}
-      className={`bevel pixel-btn relative flex min-h-24 flex-col items-stretch p-2 text-left md:min-h-28 ${
+      className={`bevel pixel-btn relative flex min-h-24 flex-col items-stretch p-2 text-left md:min-h-24 ${
         alarm ? "alert-flash" : ""
       } ${className}`}
       style={{
@@ -133,7 +133,7 @@ export function BaseScene({ mission, modules, weather, selected, onSelect, activ
         onClick={() => onSelect("solar")}
         aria-pressed={selected === "solar"}
         aria-label={`${name("solar")}: ${mission.state.systems.solar_integrity_pct}%${dust ? `. ${t.game.dustStorm}` : ""}`}
-        className="bevel-inset pixel-btn relative h-28 overflow-hidden md:h-36"
+        className="bevel-inset pixel-btn relative h-28 overflow-hidden md:h-32 lg:h-28"
         style={{ outline: selected === "solar" ? "var(--px) solid var(--color-amber)" : undefined }}
       >
         <Starfield className="absolute inset-0" />

@@ -31,43 +31,46 @@ export default function Home() {
   const quizzes = QUIZZES.filter((q) => progress.quizzes[q.id] === true).length;
 
   return (
-    <main className="relative min-h-dvh overflow-x-hidden px-4 py-6">
+    <main className="relative min-h-dvh overflow-x-hidden px-4 py-6 lg:py-4">
       <div className="fixed inset-0">
         <Starfield />
       </div>
 
-      <div className="relative z-10 mx-auto flex max-w-5xl flex-col gap-4">
+      <div className="relative z-10 mx-auto flex max-w-5xl flex-col gap-4 xl:max-w-7xl">
         {/* ================= TÍTULO ================= */}
         <Panel scanlines>
-          <header className="flex flex-col items-center gap-3 p-2 text-center">
+          <header className="flex flex-col items-center gap-3 p-2 text-center md:flex-row md:justify-center md:gap-6 md:text-left">
             <div className="flex items-end gap-4">
               <PixelSprite sprite="astronaut" anim="celebrate" scale={5} swap={suitSwap(look[0])} />
               <PixelSprite sprite="greenhouse" anim="normal" scale={5} />
               <PixelSprite sprite="robot" anim="idle" scale={5} />
             </div>
-            <h1 className="font-pixel text-5xl text-neon-cyan">{t.app.title}</h1>
-            <p className="max-w-2xl text-2xl text-steel-200">{t.home.tagline}</p>
+            <div className="flex flex-col gap-2">
+              <h1 className="font-pixel text-5xl text-neon-cyan">{t.app.title}</h1>
+              <p className="max-w-2xl text-2xl text-steel-200 md:text-xl">{t.home.tagline}</p>
+            </div>
           </header>
         </Panel>
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)]">
           {/* ================= MENÚ ================= */}
           <Panel title={<><PixelSprite icon="gear" scale={2} /> {t.home.menuTitle}</>}>
             <nav aria-label={t.home.menuTitle} className="flex flex-col gap-3">
               <MenuEntry href="/mision" primary icon="next" label={t.home.play} hint={t.home.playHint} />
-              <MenuEntry icon="medal" label={t.home.medals} hint={t.home.medalsHint} count={`${medals}/${MEDALS.length}`} onClick={() => setOpen("medals")} />
-              <MenuEntry icon="heart" label={t.home.wardrobe} hint={t.home.wardrobeHint} onClick={() => setOpen("wardrobe")} sprite />
-              <MenuEntry icon="book" label={t.home.logbook} hint={t.home.logbookHint} count={`${words}/${TERMS.length}`} onClick={() => setOpen("logbook")} />
+              {/* Entradas secundarias compactas en dos columnas: menos scroll. */}
               <div className="grid gap-3 sm:grid-cols-2">
+                <MenuEntry icon="medal" label={t.home.medals} hint={t.home.medalsHint} count={`${medals}/${MEDALS.length}`} onClick={() => setOpen("medals")} compact />
+                <MenuEntry icon="heart" label={t.home.wardrobe} hint={t.home.wardrobeHint} onClick={() => setOpen("wardrobe")} sprite compact />
+                <MenuEntry icon="book" label={t.home.logbook} hint={t.home.logbookHint} count={`${words}/${TERMS.length}`} onClick={() => setOpen("logbook")} compact />
                 <MenuEntry icon="shelter" label={t.home.family} hint={t.home.familyHint} onClick={() => setOpen("family")} compact />
-                <MenuEntry icon="antenna" label={t.home.credits} hint={t.home.creditsHint} onClick={() => setOpen("credits")} compact />
+                <div className="sm:col-span-2"><MenuEntry icon="antenna" label={t.home.credits} hint={t.home.creditsHint} onClick={() => setOpen("credits")} compact /></div>
               </div>
             </nav>
           </Panel>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 xl:grid xl:grid-cols-2 xl:items-start xl:[grid-template-areas:'crew_plan''fact_plan']">
             {/* ================= PLAN FAMILIAR (promoción para adultos; sin precio aquí) ================= */}
-            <Panel title={<><PixelSprite icon="heart" scale={2} /> {t.home.planTitle}</>}>
+            <Panel className="xl:[grid-area:plan]" title={<><PixelSprite icon="heart" scale={2} /> {t.home.planTitle}</>}>
               <button
                 type="button"
                 onClick={() => setOpen("family")}
@@ -90,7 +93,7 @@ export default function Home() {
             </Panel>
 
             {/* ================= TRIPULACIÓN ================= */}
-            <Panel title={<><PixelSprite icon="rest" scale={2} /> {t.home.crewTitle}</>}>
+            <Panel className="xl:[grid-area:crew]" title={<><PixelSprite icon="rest" scale={2} /> {t.home.crewTitle}</>}>
               <button
                 type="button"
                 onClick={() => setOpen("wardrobe")}
@@ -120,7 +123,7 @@ export default function Home() {
             </Panel>
 
             {/* ================= DATO DE R0-B1 ================= */}
-            <Panel title={<><PixelSprite icon="flask" scale={2} /> {t.home.factTitle}</>}>
+            <Panel className="xl:[grid-area:fact]" title={<><PixelSprite icon="flask" scale={2} /> {t.home.factTitle}</>}>
               <div className="flex gap-3">
                 <div className="bevel-inset shrink-0 self-start p-2">
                   <PixelSprite sprite="robot" anim="talk" scale={3} label="R0-B1" />
@@ -177,7 +180,7 @@ type EntryProps = {
 /** Botón grande del menú: icono + texto siempre juntos, objetivo táctil amplio. */
 function MenuEntry({ icon, label, hint, count, primary, compact, sprite, href, onClick }: EntryProps) {
   const { play } = useAudio();
-  const className = `bevel pixel-btn flex w-full items-center gap-3 text-left ${compact ? "p-2" : "p-3"} ${primary ? "glow" : ""}`;
+  const className = `bevel pixel-btn flex w-full items-center gap-3 text-left ${compact ? "p-2" : "p-3 lg:p-2"} ${primary ? "glow" : ""}`;
   const style = { ["--bevel-fill" as string]: primary ? "var(--color-cyan-dark)" : "var(--color-steel-800)" };
   const body: ReactNode = (
     <>

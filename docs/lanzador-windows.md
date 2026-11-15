@@ -1,4 +1,4 @@
-# RockieOS: ejecución, pruebas y presentación
+# AstraNova: ejecución, pruebas y presentación
 
 ## Primera vez
 

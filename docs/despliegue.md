@@ -1,4 +1,4 @@
-# RockieOS · ejecución y publicación del MVP
+# AstraNova · ejecución y publicación del MVP
 
 La presentación local en Windows usa RockieOS.cmd. Para un servidor con Docker Engine y Compose v2, la raíz incluye los tres servicios, almacenamiento persistente y comprobaciones de disponibilidad.
 

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "orbita-mission-api"
 version = "0.4.0"
-description = "Motor de simulación y API de partidas de RockieOS"
+description = "Motor de simulación y API de partidas de AstraNova"
 requires-python = ">=3.12"
 dependencies = [
   "fastapi==0.141.1",

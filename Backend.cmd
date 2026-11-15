@@ -3,7 +3,7 @@ rem Enciende solo el backend de Python (puertos 8000 y 8001) para usarlo con "np
 rem No lo uses junto con RockieOS.cmd present/dev: el lanzador ya arranca su propio backend.
 setlocal
 cd /d "%~dp0"
-title RockieOS - Backend
+title AstraNova - Backend
 if not exist "API\.venv\Scripts\python.exe" (
   echo Falta el entorno de Python del backend.
   echo Abre RockieOS.cmd y elige "1. Preparar / actualizar dependencias".

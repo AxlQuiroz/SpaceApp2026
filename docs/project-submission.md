@@ -1,11 +1,11 @@
-# RockieOS — MVP 0.4 project description
+# AstraNova — MVP 0.4 project description
 
 **Challenge:** Build a Junior Astronaut Mission Trainer  
 **Final project:** https://github.com/AxlQuiroz/SpaceApp2026
 
 ## High-level summary
 
-RockieOS is a decision and resource trainer for children aged 7–12. Players operate a lunar or Martian outpost, balancing power, life support, radiation protection, food reserves and delayed communication. Every turn reveals the consequences of their choices. Before committing an action, players can compare the next turn with and without it.
+AstraNova is a decision and resource trainer for children aged 7–12. Players operate a lunar or Martian outpost, balancing power, life support, radiation protection, food reserves and delayed communication. Every turn reveals the consequences of their choices. Before committing an action, players can compare the next turn with and without it.
 
 ## What we built
 
@@ -52,7 +52,7 @@ ChatGPT/Codex assisted with architecture, implementation, review, documentation 
 | 4–11 s | Toggle and forecast | “Save power now—or keep producing supplies for tomorrow.” |
 | 11–19 s | Mars radiation and shelter | “Real Curiosity readings shape the challenge. Your shelter decision changes the outcome.” |
 | 19–25 s | Outcome comparison | “Try again with the same conditions and learn what your decisions changed.” |
-| 25–29 s | Name and source credits | “RockieOS. Real data, meaningful decisions.” |
+| 25–29 s | Name and source credits | “AstraNova. Real data, meaningful decisions.” |
 
 An alternative presentation can use seven slides: problem, audience, decision loop, NASA data, trade-off example, working prototype and evidence/next steps. Do not describe planned user studies as completed.
 

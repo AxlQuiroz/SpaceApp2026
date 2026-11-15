@@ -391,7 +391,7 @@ export function MissionHud({ game }: Props) {
         {mission.planning.exposure_target_points !== null && <span>{copy.exposureTarget}: {mission.planning.exposure_target_points} {copy.points}</span>}
         {mars && <span>{copy.data}: {s.unreported_data_points}</span>}
         {mission.planning.pending_reply_minutes !== null && <span className="text-amber">{copy.pendingRadio}: {mission.planning.pending_reply_minutes} {copy.minutes}</span>}
-        <details className="w-full"><summary className="cursor-pointer py-2">{copy.simulation} · {s.practice_mode === "training" ? copy.training : copy.historicalMode}</summary><p>{copy.harvestNote} {mars && copy.radioNote}</p></details>
+        <details className="basis-full lg:basis-auto"><summary className="cursor-pointer">{copy.simulation} · {s.practice_mode === "training" ? copy.training : copy.historicalMode}</summary><p>{copy.harvestNote} {mars && copy.radioNote}</p></details>
       </aside>}
       {radiationAlert && <p role="status" data-testid="radiation-alert" className="bevel border-l-4 border-amber px-3 py-2 text-lg text-amber">{copy.shelterAlert}</p>}
       {mars && <RadioReport report={s.earth_guidance} turn={s.turn} />}
@@ -403,8 +403,11 @@ export function MissionHud({ game }: Props) {
         </div>
       )}
 
+      {/* En pantallas grandes: escena y consola a la izquierda; acciones siempre visibles a la derecha. */}
+      <div className="flex flex-1 flex-col gap-2 lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start lg:gap-3">
+      <div className="flex min-w-0 flex-col gap-2">
       {/* ================= ESCENA ================= */}
-      <main className="flex-1" data-tour="base">
+      <main data-tour="base">
         <BaseScene
           mission={mission}
           modules={modules}
@@ -417,7 +420,7 @@ export function MissionHud({ game }: Props) {
       </main>
 
       {/* ================= CONSOLA INFERIOR ================= */}
-      <footer className="bevel rivets grid gap-3 p-3 lg:grid-cols-[auto_1fr_auto]">
+      <footer className="bevel rivets grid gap-3 p-3 md:grid-cols-[auto_1fr]">
         {/* Izquierda: minimapa + clima */}
         <section className="flex flex-col gap-2" aria-label={t.minimap.label}>
           <Minimap modules={minimapModules} crew={crewDots} />
@@ -461,8 +464,11 @@ export function MissionHud({ game }: Props) {
           )}
         </section>
 
-        {/* Derecha: comandos + avanzar */}
-        <section className="hidden flex-col items-center gap-2 lg:flex">
+      </footer>
+      </div>
+
+        {/* Derecha: comandos + avanzar (fija al hacer scroll) */}
+        <section className="bevel rivets hidden flex-col items-center gap-2 p-3 lg:sticky lg:top-2 lg:flex">
           <div data-tour="commands" className="flex flex-col items-center gap-1">
             <span className="font-tiny flex items-center gap-1 text-xs text-steel-200 uppercase" aria-label={`${t.game.actionsLeft}: ${actionsLeft}`}>
               {t.game.actionsLeft}
@@ -489,7 +495,7 @@ export function MissionHud({ game }: Props) {
           </PixelButton>
           <span className="font-tiny text-xs text-steel-400">[{t.game.advanceKey}]</span>
         </section>
-      </footer>
+      </div>
 
       {/* ================= DOCK MÓVIL (comandos siempre a mano) ================= */}
       <nav

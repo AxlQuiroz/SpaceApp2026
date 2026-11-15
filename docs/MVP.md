@@ -1,6 +1,6 @@
-# RockieOS · MVP 0.4.0
+# AstraNova · MVP 0.4.0
 
-RockieOS permite dirigir una base lunar o marciana durante doce turnos de dos horas. El MVP está delimitado a una práctica educativa de recursos y decisiones para edades de 7 a 12 años. No pretende simular una misión espacial completa ni calcular seguridad humana.
+AstraNova permite dirigir una base lunar o marciana durante doce turnos de dos horas. El MVP está delimitado a una práctica educativa de recursos y decisiones para edades de 7 a 12 años. No pretende simular una misión espacial completa ni calcular seguridad humana.
 
 ## Uso para la presentación
 

@@ -116,7 +116,7 @@ def _original_catalog(scenario_id: str = LUNAR) -> dict:
     if scenario_id == MARS:
         return _mars_catalog()
     return {
-        "id": "lunar-outpost-v1", "title": "RockieOS: primer turno lunar",
+        "id": "lunar-outpost-v1", "title": "AstraNova: primer turno lunar",
         "description": "Mantén una base de cuatro tripulantes durante una práctica de 24 horas.",
         "rules_version": RULES.version, "duration_hours": 24, "turn_hours": 2,
         "difficulties": ["cadet", "commander"], "science_target": RULES.science_target,
@@ -141,7 +141,7 @@ def _original_catalog(scenario_id: str = LUNAR) -> dict:
 
 def _mars_catalog() -> dict:
     return {
-        "id": MARS, "title": "RockieOS: jornada en Marte",
+        "id": MARS, "title": "AstraNova: jornada en Marte",
         "description": "Mantén una base de cuatro tripulantes en Marte durante el 20 de mayo de 2024, "
                        "el día en que el rover Curiosity midió la mayor tormenta de radiación solar en la superficie marciana.",
         "rules_version": MARS_RULES.version, "duration_hours": 24, "turn_hours": 2,

@@ -1,4 +1,4 @@
-"""Lanzador local de RockieOS. Python 3.12; el menú sólo usa la biblioteca estándar."""
+"""Lanzador local de AstraNova. Python 3.12; el menú sólo usa la biblioteca estándar."""
 import argparse
 import contextlib
 import hashlib
@@ -386,7 +386,7 @@ class Launcher:
                 catalog = json.loads(self.wait_ready(APP_URL + "/api/mission/scenarios", processes))
                 if not {"lunar-outpost-v1", "mars-outpost-v1"} <= {item["id"] for item in catalog}:
                     raise LauncherError("El backend conectado no ofrece ambas misiones: Luna y Marte.")
-                print(f"\nRockieOS listo: {APP_URL}/mision\nBackend: http://127.0.0.1:8000/docs\n"
+                print(f"\nAstraNova listo: {APP_URL}/mision\nBackend: http://127.0.0.1:8000/docs\n"
                       "Luna y Marte disponibles. Ctrl+C detiene los tres servicios.", flush=True)
                 if smoke:
                     print("Arranque verificado; cerrando los servicios de prueba.", flush=True)
@@ -398,7 +398,7 @@ class Launcher:
                         raise LauncherError("Un servicio se detuvo. Consulta los archivos .log del informe.")
                     time.sleep(0.3)
             except KeyboardInterrupt:
-                print("\nCerrando RockieOS...", flush=True)
+                print("\nCerrando AstraNova...", flush=True)
             finally:
                 for process in reversed(processes):
                     process.stop()
@@ -420,10 +420,10 @@ class Launcher:
                        f'<td>{step["seconds"]}</td><td><a href="{step["log"]}">Registro</a></td></tr>' for step in self.steps)
         # Los registros de servidores existen sólo para las acciones de arranque.
         logs = " ".join(f'<a href="{name}.log">{name}</a>' for name in ("backend", "frontend") if (self.directory / f"{name}.log").exists())
-        page = ('<!doctype html><html lang="es"><meta charset="utf-8"><title>RockieOS · Informe</title>'
+        page = ('<!doctype html><html lang="es"><meta charset="utf-8"><title>AstraNova · Informe</title>'
                 '<style>body{font:16px system-ui;max-width:1000px;margin:40px auto;padding:20px;background:#101826;color:#eee}'
                 'a{color:#5de2ff}table{border-collapse:collapse;width:100%}td,th{text-align:left;padding:12px;border-bottom:1px solid #465265}</style>'
-                f'<h1>RockieOS · {html.escape(self.action)}</h1><p>Resultado: <strong>{status}</strong></p>'
+                f'<h1>AstraNova · {html.escape(self.action)}</h1><p>Resultado: <strong>{status}</strong></p>'
                 f'<p>{html.escape(message)}</p><table><tr><th>Comprobación</th><th>Salida</th><th>Segundos</th><th>Detalle</th></tr>'
                 f'{rows}</table><p>{logs}</p><p>{html.escape(data["note"])}</p></html>')
         (self.directory / "index.html").write_text(page, encoding="utf-8")
@@ -470,7 +470,7 @@ def main(argv=None):
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8", errors="replace")
-    parser = argparse.ArgumentParser(description="RockieOS: presentación, desarrollo y pruebas desde un menú.")
+    parser = argparse.ArgumentParser(description="AstraNova: presentación, desarrollo y pruebas desde un menú.")
     parser.add_argument("action", nargs="?", choices=["prepare", "present", "dev", "test", "check", "report"])
     parser.add_argument("--quick", action="store_true", help="Omitir compilación y navegador en test.")
     parser.add_argument("--no-browser", action="store_true", help="No abrir el navegador automáticamente.")

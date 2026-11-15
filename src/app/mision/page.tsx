@@ -141,7 +141,7 @@ export default function MissionPage() {
           )}
 
           <SettingsBar />
-          {/* Volver a la portada de RockieOS (medallas, vestidor, familias…). */}
+          {/* Volver a la portada de AstraNova (medallas, vestidor, familias…). */}
           {game.phase !== "connecting" && (
             <Link href="/" className="bevel pixel-btn font-pixel inline-flex items-center px-4 py-2 text-lg uppercase">
               ⌂ {t.game.homeFull}

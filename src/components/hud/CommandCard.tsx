@@ -154,7 +154,7 @@ export function CommandCard({ commands, hotkeys = true, suggestion }: Props) {
       </div>
 
       {/* Panel de ayuda: siempre visible, mismo ancho que la cuadrícula. */}
-      <div className="bevel-inset min-h-[6.5rem] px-3 py-2 text-lg leading-snug" data-testid="command-help">
+      <div className="bevel-inset min-h-[5.5rem] px-3 py-2 text-base leading-snug" data-testid="command-help">
         {shown ? (
           // Los lectores de pantalla ya lo reciben por aria-describedby de cada botón.
           <div aria-hidden>

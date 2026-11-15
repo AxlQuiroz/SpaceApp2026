@@ -49,7 +49,7 @@ def create_app(settings: Settings | None = None, resource_transport: httpx.Async
             app.state.resources = ResourceClient(client)
             yield
 
-    app = FastAPI(title="RockieOS — Backend de misiones", version=__version__, lifespan=lifespan,
+    app = FastAPI(title="AstraNova — Backend de misiones", version=__version__, lifespan=lifespan,
         description="Motor lunar y API para Next.js/React. Partidas aisladas, reglas versionadas y fuentes históricas atribuidas.",
         responses={code: {"model": ErrorResponse} for code in [401, 404, 409, 413, 422, 429, 500, 502, 503]})
     app.add_middleware(RequestGuard, settings=settings)

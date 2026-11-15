@@ -8,7 +8,7 @@ const silkscreen = Silkscreen({ subsets: ["latin"], weight: ["400", "700"], vari
 const vt323 = VT323({ subsets: ["latin"], weight: "400", variable: "--font-vt323", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "RockieOS · Luna y Marte",
+  title: "AstraNova · Luna y Marte",
   description: "Entrenador de decisiones y recursos en bases de la Luna y Marte para niños de 7 a 12 años.",
 };
 

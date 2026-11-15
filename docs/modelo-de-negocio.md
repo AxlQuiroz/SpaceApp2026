@@ -1,4 +1,4 @@
-# Modelo de negocio · RockieOS
+# Modelo de negocio · AstraNova
 
 **Estado del MVP 0.4:** el Plan Familiar es una propuesta sin suscripciones activas, pasarela ni cobros. La interfaz distingue los extras futuros del diploma básico y las preguntas que ya funcionan gratis. Las políticas comerciales siguientes describen el diseño futuro, no servicios ya contratables.
 
