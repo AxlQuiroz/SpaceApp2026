@@ -28,7 +28,7 @@ GitHub Actions verifica Python en Linux y Windows, contratos, frontend, compilac
 ## Frontend · RockieOS
 
 Entrenador de decisiones (7–12 años) para bases lunares y marcianas, con HUD pixel art de estrategia sci-fi.
-Especificación de diseño: [`Claude.md`](./Claude.md).
+Diseño y navegación: [consola de decisiones y flujo de presentación](docs/pulido-interfaz.md).
 
 ### Arrancar
 
