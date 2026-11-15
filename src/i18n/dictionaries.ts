@@ -104,7 +104,7 @@ export const es = {
   },
   units: {
     nova: { name: "Cmdt. Nova", desc: "Líder de la base. Sabe reparar módulos y calmar a la tripulación." },
-    greenhouse: { name: "Invernadero", desc: "Aquí crecen las plantas que nos dan comida y un poco de oxígeno." },
+    greenhouse: { name: "Invernadero", desc: "Aquí crecen las plantas que nos dan comida." },
   },
   assistant: {
     name: "R0-B1",
@@ -218,7 +218,7 @@ export const es = {
     water_leak: "¡Detecté una fuga en el circuito de agua! Cada turno perdemos agua hasta repararla.",
     solar_warning: "Aviso del clima espacial: el Sol está muy activo. En el próximo turno llegará una tormenta. ¡Prepara el refugio!",
     solar_incident: "¡Tormenta solar! Llegaron partículas de alta energía. El refugio reduce mucho la exposición.",
-    panel_damage: "El polvo lunar cubrió los paneles solares. Ahora producen menos energía.",
+    panel_damage: "El polvo que levantamos al trabajar afuera se pegó a los paneles solares por electricidad estática. Ahora producen menos energía.",
     mission_completed: "¡Misión completada! Sobreviviste las 24 horas.",
     mission_failed: "La salud de la tripulación llegó a cero. ¡Aprendamos y volvamos a intentarlo!",
     mission_aborted: "Misión abandonada.",
@@ -230,8 +230,8 @@ export const es = {
   modules: {
     habitat: { name: "Hábitat", desc: "Donde vive la tripulación. Siempre necesita energía para mantener aire y temperatura." },
     oxygen: { name: "Generador de O₂", desc: "Separa el agua para fabricar oxígeno. Usa agua y energía." },
-    water: { name: "Reciclaje de agua", desc: "Limpia y recupera el agua usada. En la Luna, cada gota cuenta." },
-    greenhouse: { name: "Invernadero", desc: "Las plantas nos dan comida. Necesitan energía para sus luces." },
+    water: { name: "Reciclaje de agua", desc: "Limpia y recupera la mitad del agua usada. En la Luna, cada gota cuenta." },
+    greenhouse: { name: "Invernadero", desc: "Las plantas nos dan comida (en el juego, no oxígeno). Necesitan energía para sus luces." },
     shelter: { name: "Refugio", desc: "Cuarto con paredes gruesas que protege de la radiación solar." },
     solar: { name: "Paneles solares", desc: "Convierten la luz del Sol en electricidad para toda la base." },
   },
@@ -321,7 +321,7 @@ export const es = {
     modules: {
       oxygen: { name: "MOXIE (oxígeno)", desc: "Saca oxígeno del dióxido de carbono del aire marciano. No usa agua, pero es la máquina que más energía gasta." },
       solar: { name: "Paneles solares", desc: "A Marte llega menos de la mitad de la luz solar que a la Tierra, así que estos paneles son enormes." },
-      water: { name: "Reciclaje de agua", desc: "Limpia y recupera el agua usada. En Marte tampoco hay ríos: cada gota cuenta." },
+      water: { name: "Reciclaje de agua", desc: "Limpia y recupera la mitad del agua usada. En Marte tampoco hay ríos: cada gota cuenta." },
     },
     events: {
       mission_created: "¡Bienvenido a Marte! Hoy es 20 de mayo de 2024. Viviremos un día marciano con datos reales de la NASA. Revisa los recursos y elige tus acciones.",
@@ -635,7 +635,7 @@ export const en: DeepString<Dict> = {
   },
   units: {
     nova: { name: "Cmdr. Nova", desc: "Base leader. Can fix modules and keep the crew calm." },
-    greenhouse: { name: "Greenhouse", desc: "Plants grow here. They give us food and a bit of oxygen." },
+    greenhouse: { name: "Greenhouse", desc: "Plants grow here. They give us food." },
   },
   assistant: {
     name: "R0-B1",
@@ -749,7 +749,7 @@ export const en: DeepString<Dict> = {
     water_leak: "I detected a leak in the water loop! We lose water every turn until it's fixed.",
     solar_warning: "Space weather alert: the Sun is very active. A storm arrives next turn. Get the shelter ready!",
     solar_incident: "Solar storm! High-energy particles arrived. The shelter greatly reduces exposure.",
-    panel_damage: "Moon dust covered the solar panels. They now make less energy.",
+    panel_damage: "Dust we kicked up working outside stuck to the solar panels through static electricity. They now make less energy.",
     mission_completed: "Mission complete! You survived all 24 hours.",
     mission_failed: "The crew's health reached zero. Let's learn and try again!",
     mission_aborted: "Mission aborted.",
@@ -761,8 +761,8 @@ export const en: DeepString<Dict> = {
   modules: {
     habitat: { name: "Habitat", desc: "Where the crew lives. It always needs power to keep air and temperature." },
     oxygen: { name: "O₂ generator", desc: "Splits water to make oxygen. Uses water and power." },
-    water: { name: "Water recycler", desc: "Cleans and recovers used water. On the Moon, every drop counts." },
-    greenhouse: { name: "Greenhouse", desc: "Plants give us food. They need power for their lights." },
+    water: { name: "Water recycler", desc: "Cleans and recovers half of the used water. On the Moon, every drop counts." },
+    greenhouse: { name: "Greenhouse", desc: "Plants give us food (in the game, not oxygen). They need power for their lights." },
     shelter: { name: "Shelter", desc: "A room with thick walls that protects against solar radiation." },
     solar: { name: "Solar panels", desc: "Turn sunlight into electricity for the whole base." },
   },
@@ -852,7 +852,7 @@ export const en: DeepString<Dict> = {
     modules: {
       oxygen: { name: "MOXIE (oxygen)", desc: "Pulls oxygen out of the carbon dioxide in Martian air. It uses no water, but it is the hungriest machine for power." },
       solar: { name: "Solar panels", desc: "Mars gets less than half the sunlight Earth does, so these panels are huge." },
-      water: { name: "Water recycler", desc: "Cleans and recovers used water. Mars has no rivers either: every drop counts." },
+      water: { name: "Water recycler", desc: "Cleans and recovers half of the used water. Mars has no rivers either: every drop counts." },
     },
     events: {
       mission_created: "Welcome to Mars! Today is May 20, 2024. We will live one Martian day with real NASA data. Check the supplies and choose your actions.",

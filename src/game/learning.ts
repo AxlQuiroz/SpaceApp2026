@@ -82,8 +82,8 @@ export const TERMS: Term[] = [
     on: ["event:water_leak"],
     term: { es: "Reciclaje de agua", en: "Water recycling" },
     text: {
-      es: "En el espacio no hay ríos ni lluvia, así que el agua se limpia y se vuelve a usar una y otra vez. La Estación Espacial recupera casi 98 de cada 100 gotas. ¡Por eso una fuga es tan grave!",
-      en: "There are no rivers or rain in space, so water is cleaned and used again and again. The Space Station recovers about 98 of every 100 drops. That's why a leak is so serious!",
+      es: "En el espacio no hay ríos ni lluvia: el agua se limpia y se reutiliza. La Estación Espacial recupera casi 98 de cada 100 gotas; nuestra base es más sencilla y solo recupera la mitad. ¡Por eso una fuga es tan grave!",
+      en: "There are no rivers or rain in space: water is cleaned and reused. The Space Station recovers about 98 of every 100 drops; our base is simpler and only recovers half. That's why a leak is so serious!",
     },
   },
   {
@@ -92,8 +92,8 @@ export const TERMS: Term[] = [
     on: ["event:solar_warning@lunar"],
     term: { es: "Llamarada solar", en: "Solar flare" },
     text: {
-      es: "Es una explosión de luz y energía en el Sol. Su luz tarda unos 8 minutos en llegar hasta aquí. El 10 de mayo de 2024 la NASA registró varias muy fuertes: son las que usamos en esta misión.",
-      en: "It's a burst of light and energy on the Sun. Its light takes about 8 minutes to get here. On May 10, 2024 NASA recorded several strong ones: those are the ones in this mission.",
+      es: "Es una explosión de luz en el Sol. Su luz llega en 8 minutos, sin aviso. Después pueden llegar partículas, de minutos a horas más tarde: de ellas protege el refugio. Usamos llamaradas reales del 10 de mayo de 2024.",
+      en: "It's a burst of light on the Sun. Its light arrives in 8 minutes, with no warning. Particles can follow minutes to hours later: the shelter protects us from those. We use real flares from May 10, 2024.",
     },
   },
   {
@@ -112,8 +112,8 @@ export const TERMS: Term[] = [
     on: ["event:panel_damage"],
     term: { es: "Regolito", en: "Regolith" },
     text: {
-      es: "Es el polvo que cubre la Luna. Como allí no hay viento ni agua que lo desgasten, cada granito tiene puntas afiladas como vidrio roto. Se pega a todo: trajes, herramientas y paneles solares.",
-      en: "It's the dust that covers the Moon. With no wind or water to wear it down, every grain has sharp edges like broken glass. It sticks to everything: suits, tools and solar panels.",
+      es: "Es el polvo que cubre la Luna. Sin viento ni agua que lo desgasten, cada grano es afilado como vidrio roto. Aunque no hay viento, se levanta al caminar o explorar y se pega a todo por electricidad estática.",
+      en: "It's the dust that covers the Moon. With no wind or water to wear it down, every grain is sharp like broken glass. There's no wind, but walking or exploring kicks it up and static electricity makes it stick.",
     },
   },
   {
@@ -122,8 +122,8 @@ export const TERMS: Term[] = [
     on: ["action:toggle_greenhouse"],
     term: { es: "Fotosíntesis", en: "Photosynthesis" },
     text: {
-      es: "Es el truco de las plantas: con luz, agua y aire fabrican su comida y sueltan oxígeno. Por eso el invernadero necesita energía para sus lámparas. Los astronautas ya han cultivado y comido lechuga en el espacio.",
-      en: "It's the plants' trick: with light, water and air they make their food and release oxygen. That's why the greenhouse needs power for its lamps. Astronauts have already grown and eaten lettuce in space.",
+      es: "Con luz, agua y aire, las plantas fabrican comida y sueltan oxígeno. En la vida real, alimentar a una persona necesitaría decenas de metros cuadrados de cultivo. Nuestro invernadero de juego es pequeño y solo da comida.",
+      en: "With light, water and air, plants make food and release oxygen. In real life, feeding one person would take dozens of square meters of crops. Our game greenhouse is small and only gives food.",
     },
   },
   {

@@ -38,6 +38,13 @@ Como mucho se muestra **una palabra y una pregunta por orden**, para no saturar.
 
 Lo que **no** es un dato real y el juego lo dice: la tormenta de polvo de la misión (ese día no hubo una), el aviso solar adelantado un turno, los consumos de la base y la conversión de uGy/h a puntos de exposición.
 
+Simplificaciones de la base que los textos explican para no contradecir los datos reales (auditoría del 15-11-2026):
+
+- **Reciclaje de agua:** la base recupera la mitad del agua usada; la Estación Espacial, casi el 98 %.
+- **Invernadero:** solo da comida (no oxígeno) y es mucho más pequeño que uno real, que necesitaría decenas de m² por persona.
+- **Polvo lunar:** en la Luna no hay viento; el polvo se levanta al trabajar afuera y se pega por electricidad estática.
+- **Llamarada vs. partículas:** la luz de una llamarada llega en 8 minutos sin aviso; el refugio protege de las partículas que llegan después.
+
 ## Páginas de referencia
 
 - DONKI: <https://ccmc.gsfc.nasa.gov/tools/DONKI/>
