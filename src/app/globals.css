@@ -68,6 +68,49 @@ body {
   font-smooth: never;
 }
 
+/* =====================================================================
+   BARRA DE SCROLL PIXELADA
+   Se conserva (indica que hay más contenido) pero con la estética del HUD:
+   esquinas rectas, pista hundida y "pulgar" con bisel como los botones.
+   Chrome/Edge/Safari usan ::-webkit-scrollbar; Firefox, scrollbar-color.
+   ===================================================================== */
+::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-void);
+  box-shadow: inset 2px 0 0 var(--color-steel-900);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-steel-600);
+  border-radius: 0;
+  box-shadow:
+    inset 2px 2px 0 var(--color-steel-400),
+    inset -2px -2px 0 var(--color-steel-950),
+    inset 0 0 0 4px var(--color-steel-600);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-cyan-dark);
+  box-shadow:
+    inset 2px 2px 0 var(--color-neon-cyan),
+    inset -2px -2px 0 var(--color-steel-950);
+}
+::-webkit-scrollbar-thumb:active {
+  background: var(--color-neon-cyan);
+}
+::-webkit-scrollbar-corner {
+  background: var(--color-void);
+}
+::-webkit-scrollbar-button {
+  display: none;
+}
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-color: var(--color-steel-600) var(--color-void);
+  }
+}
+
 img,
 canvas,
 svg.pixel {
