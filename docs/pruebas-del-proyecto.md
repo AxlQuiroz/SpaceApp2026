@@ -28,7 +28,7 @@ if (-not (Test-Path .env.local)) { Copy-Item .env.local.example .env.local }
 npm.cmd run dev
 ```
 
-Abre `http://localhost:3000/mision`. El menú muestra las misiones asociadas a la sesión actual; selecciona una para continuar o crea una nueva. Salir al menú no elimina la partida. La pausa impide avanzar hasta reanudarla.
+Abre `http://localhost:3000/mision`. El menú muestra las misiones asociadas a la sesión actual; selecciona una para continuar o crea una nueva. «Elegir otra misión» y «⌂ Inicio» (que vuelve a la portada) no eliminan la partida. La pausa impide avanzar hasta reanudarla.
 
 ## Comprobaciones del frontend
 

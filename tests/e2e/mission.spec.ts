@@ -97,7 +97,7 @@ test("misión real completa, fuentes, recarga y menú", async ({ page }, info) =
   await expect(page.getByTestId("mission-hud")).not.toHaveAttribute("data-mission-id", id!);
   await expect(page.getByTestId("mission-hud")).toHaveAttribute("data-turn", "0");
   await page.getByRole("button", { name: "☰ Menú", exact: true }).click();
-  await page.getByRole("button", { name: "Salir al menú", exact: true }).click();
+  await page.getByRole("button", { name: "Elegir otra misión", exact: true }).click();
   await expect(page.getByRole("button", { name: /Continuar misión · Luna · Turno 12/ })).toBeVisible();
   expect(errors).toEqual([]);
 });

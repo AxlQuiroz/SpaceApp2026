@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Panel, PixelButton, PixelSprite, SettingsBar, Starfield } from "@/components/hud";
 import { MissionHud } from "@/game/MissionHud";
@@ -134,6 +135,12 @@ export default function MissionPage() {
           )}
 
           <SettingsBar />
+          {/* Volver a la portada de RockieOS (medallas, vestidor, familias…). */}
+          {game.phase !== "connecting" && (
+            <Link href="/" className="bevel pixel-btn font-pixel inline-flex items-center px-4 py-2 text-lg uppercase">
+              ⌂ {t.game.homeFull}
+            </Link>
+          )}
         </div>
       </Panel>
     </main>

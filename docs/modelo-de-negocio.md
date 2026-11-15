@@ -49,14 +49,14 @@ Solo apariencia, novedades y recuerdos. Ninguna de estas cosas cambia un número
 
 Así nadie siente que "le quitaron" lo que ganó, y la ventaja del plan es solo seguir recibiendo novedades y extras.
 
-## Precio sugerido
+## Precio
 
-**De 1.99 a 2.99 USD al mes** (o su equivalente local). Es una hipótesis para validar con familias, no un dato de mercado. Opcional, cuando haya datos: un plan anual con descuento para quien lo prefiera, siempre con el mensual como opción principal.
+**5 USD al mes** (o su equivalente local), fijado por el equipo el 15 de noviembre de 2026. Conviene confirmar con familias que lo perciben justo frente a lo que reciben cada mes. Opcional, cuando haya datos: un plan anual con descuento para quien lo prefiera, siempre con el mensual como opción principal.
 
 ## Reglas que hacen que no sea invasivo
 
-1. **El niño nunca ve un precio ni un botón de suscripción dentro de la partida.** La información vive en "Para familias" del menú principal.
-2. **Puerta parental** antes de cualquier enlace de pago (por ejemplo, una multiplicación de dos cifras).
+1. **El niño nunca ve un precio ni un botón de suscripción dentro de la partida.** La información vive en el menú principal: una tarjeta "Plan Familiar" dirigida a madres, padres y tutores (sin precio) y la sección "Para familias" (con precio y botón).
+2. **Confirmación del adulto en el pago.** Desde el 15 de noviembre de 2026 "Para familias" se abre sin la multiplicación (decisión del equipo, para que el plan se vea más). Por eso el cobro real debe pedir siempre la contraseña, huella o PIN del adulto en la tienda o pasarela. Ojo: las tiendas con categoría infantil (Apple Kids, Google Families) exigen una puerta parental antes de compras o enlaces externos; si se publica ahí, habrá que reponerla justo antes del pago.
 3. **Aviso antes de cada cobro mensual** y **cancelación en cualquier momento** en el mismo lugar donde se contrató, sin llamadas ni formularios.
 4. **Sin pruebas gratis que se convierten en cobro sin avisar**, sin ofertas "solo hoy", sin contadores, sin ventanas emergentes y sin notificaciones de venta.
 5. **Los cosméticos también se ganan jugando**: cada medalla desbloquea un traje gratis. El plan solo añade más variedad.
@@ -81,12 +81,12 @@ Los costos fijos son bajos: el frontend es estático y el backend usa SQLite con
 | Supuesto | Valor de ejemplo |
 | --- | --- |
 | Hosting, dominio y herramientas | 40 USD al mes |
-| Precio del plan | 2.49 USD al mes |
+| Precio del plan | 5 USD al mes |
 | Comisión de la pasarela o tienda | 15 a 30 % |
 | Familias que se suscriben, de cada 100 que juegan | 2 a 4 |
 | Bajas mensuales (familias que cancelan cada mes) | 8 a 12 % |
 
-Con 2.49 USD y 30 % de comisión, cada suscripción deja unos 1.74 USD al mes: bastan **unas 23 suscripciones activas** para cubrir 40 USD mensuales. A diferencia del pago único, esas familias pagan otra vez el mes siguiente, así que el ingreso se acumula mientras las bajas sean menores que las altas. Con un 10 % de bajas, una familia se queda en promedio unos 10 meses, que equivalen a unos 17 USD netos por familia, frente a 2.80 USD del pase único anterior.
+Con 5 USD y 30 % de comisión, cada suscripción deja unos 3.50 USD al mes: bastan **unas 12 suscripciones activas** para cubrir 40 USD mensuales. A diferencia del pago único, esas familias pagan otra vez el mes siguiente, así que el ingreso se acumula mientras las bajas sean menores que las altas. Con un 10 % de bajas, una familia se queda en promedio unos 10 meses, que equivalen a unos 35 USD netos por familia, frente a 2.80 USD del pase único anterior.
 
 ## Cómo medir si funciona (sin rastrear a los niños)
 
@@ -99,7 +99,7 @@ Solo contadores agregados y anónimos: misiones iniciadas y completadas, palabra
 | Juego completo gratis, sin cuentas | Hecho |
 | Medallas y bitácora (base de los desbloqueos gratuitos) | Hecho (`src/game/learning.ts`) |
 | Vestidor gratuito ligado a medallas (`src/game/wardrobe.ts`, menú principal) | Hecho; se aplica en la partida |
-| Sección "Para familias" con puerta parental, explicación del Plan Familiar mensual (qué incluye, qué pasa al cancelar), diploma, guía para jugar juntos y licencia escolar (`src/components/menu/FamilyModal.tsx`) | Hecho, sin cobro |
+| Tarjeta "Plan Familiar" en la portada y sección "Para familias" (sin puerta parental desde el 15-11-2026) con presentación destacada del plan, explicación del Plan Familiar mensual (qué incluye, qué pasa al cancelar), diploma, guía para jugar juntos y licencia escolar (`src/components/menu/FamilyModal.tsx`) | Hecho, sin cobro |
 | Saber si el plan está activo (cuenta del adulto o comprobante de la tienda) | Por hacer |
 | Contenido mensual (trajes, decoraciones, retos) y resumen para la familia | Por hacer |
 | Pasarela con suscripciones, avisos de renovación y revisión legal | Por hacer; requiere decisión del equipo |
@@ -107,7 +107,7 @@ Solo contadores agregados y anónimos: misiones iniciadas y completadas, palabra
 ## Orden sugerido
 
 1. Vestidor gratuito ligado a medallas (prueba si a los niños les importa personalizar). Hecho.
-2. Sección "Para familias" con puerta parental, todavía sin cobro. Hecho.
+2. Sección "Para familias", todavía sin cobro, y tarjeta de promoción en la portada. Hecho.
 3. Preparar al menos tres meses de novedades antes de cobrar el primero, para que el plan cumpla lo que promete.
 4. Prueba con 10 a 20 familias: ¿se suscribirían?, ¿cuánto pagarían al mes?, ¿qué los haría cancelar?
 5. Solo entonces: cuenta del adulto, pasarela con suscripciones y revisión legal.

@@ -164,6 +164,10 @@ export function BaseScene({ mission, modules, weather, selected, onSelect, activ
               style={{ left: p.left, top: p.top, animationDelay: p.delay }}
             />
           ))}
+        {/* Rótulo: dónde estamos (los niños confundían la escena con una nave o con la Tierra). */}
+        <span className="font-tiny absolute top-2 left-3 bg-void/70 px-2 py-0.5 text-xs text-neon-cyan uppercase">
+          {mars ? t.game.surfaceMars : t.game.surfaceMoon}
+        </span>
         <div className={`absolute top-2 right-3 ${dust ? "opacity-30" : ""}`}>
           <PixelSprite icon="sun" scale={weather === "storm" ? 4 : 3} className={weather === "storm" ? "blink" : undefined} />
         </div>
@@ -206,6 +210,10 @@ export function BaseScene({ mission, modules, weather, selected, onSelect, activ
 
       {/* ---------- Subsuelo: módulos ---------- */}
       <div className={`grid flex-1 grid-cols-2 gap-[calc(var(--px)*2)] ${groundDark} p-[calc(var(--px)*2)] md:grid-cols-6`}>
+        <p className="col-span-full flex flex-wrap items-baseline gap-x-2 px-1 leading-tight">
+          <span className="font-tiny text-xs text-amber uppercase">▼ {t.game.underground}</span>
+          <span className="text-xs text-steel-200">{t.game.undergroundWhy}</span>
+        </p>
         {room("habitat", "md:col-span-2")}
         {room("oxygen", "md:col-span-2")}
         {room("water", "col-span-2 md:col-span-2")}

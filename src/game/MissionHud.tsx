@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   AlertBanner,
   Badge,
@@ -83,6 +84,8 @@ export function MissionHud({ game }: Props) {
   const [vitalsExpanded, setVitalsExpanded] = useState(false);
   const [selected, setSelected] = useState<ModuleId | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [homeOpen, setHomeOpen] = useState(false);
+  const router = useRouter();
   const [logbookOpen, setLogbookOpen] = useState(false);
   const [medalsOpen, setMedalsOpen] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
@@ -308,6 +311,12 @@ export function MissionHud({ game }: Props) {
   });
 
   const hour = String(s.elapsed_hours).padStart(2, "0");
+  // Nunca se sale con una orden a medio enviar: así la partida guardada queda consistente.
+  const goHome = () => {
+    if (busy || game.hasPending) return;
+    setHomeOpen(false);
+    router.push("/");
+  };
 
   return (
     <div data-testid="mission-hud" data-mission-id={s.id} data-turn={s.turn} data-version={s.version} className="flex min-h-dvh flex-col gap-2 p-2 pb-24 md:p-3 lg:pb-3">
@@ -316,6 +325,9 @@ export function MissionHud({ game }: Props) {
         <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
           <PixelButton disabled={showQueue || !!pendingAction || coachInfo} className="whitespace-nowrap" onClick={() => setMenuOpen(true)} aria-haspopup="dialog">
             ☰ {t.game.menu}
+          </PixelButton>
+          <PixelButton disabled={showQueue || !!pendingAction || coachInfo} variant="ghost" className="whitespace-nowrap" onClick={() => setHomeOpen(true)} aria-haspopup="dialog" aria-label={t.game.homeFull}>
+            ⌂ {t.game.home}
           </PixelButton>
           <div className="bevel flex items-center gap-3 px-3 py-1" role="status" aria-label={`${t.game.turn} ${s.turn} / ${p.turns}`}>
             <PixelSprite icon="day" scale={2} />
@@ -650,19 +662,30 @@ export function MissionHud({ game }: Props) {
               {active ? t.game.pause : t.game.resume}
             </PixelButton>
           )}
+          <PixelButton disabled={busy || game.hasPending} variant="ghost" onClick={() => { setMenuOpen(false); setHomeOpen(true); }}>⌂ {t.game.homeFull}</PixelButton>
           <PixelButton disabled={busy || game.hasPending} variant="ghost" onClick={() => { setMenuOpen(false); game.exitToMenu(); }}>{t.game.exit}</PixelButton>
           {(active || s.status === "paused") && (
             <PixelButton disabled={busy || game.hasPending} variant="danger" onClick={() => { setMenuOpen(false); void game.abort(); }}>{t.game.abort}</PixelButton>
           )}
         </div>
       </Modal>
+      {/* Volver a la portada: la misión ya está guardada en el servidor; «Jugar» la retoma sola (useMission recuerda la última partida). */}
+      <Modal open={homeOpen} title={t.game.homeTitle} onClose={() => setHomeOpen(false)}>
+        <div className="flex flex-col gap-3">
+          <p className="text-xl text-steel-200">{t.game.homeBody}</p>
+          <div className="flex flex-wrap justify-end gap-2">
+            <PixelButton data-autofocus onClick={() => setHomeOpen(false)}>{t.game.stay}</PixelButton>
+            <PixelButton variant="primary" disabled={busy || game.hasPending} onClick={goHome}>⌂ {t.game.homeYes}</PixelButton>
+          </div>
+        </div>
+      </Modal>
       <LogbookModal open={logbookOpen} onClose={() => setLogbookOpen(false)} progress={progress} />
       <MedalsModal open={medalsOpen} onClose={() => setMedalsOpen(false)} progress={progress} />
       <SourcesModal scenarioId={s.scenario_id} key={s.id} open={sourcesOpen} onClose={() => setSourcesOpen(false)} load={game.science} />
-      <EndModal actionName={id => actionText(t, mission, id).label} evaluation={queue.length ? null : game.evaluation} onAgain={() => void game.restart()} onMenu={game.exitToMenu}
+      <EndModal actionName={id => actionText(t, mission, id).label} evaluation={queue.length ? null : game.evaluation} onAgain={() => void game.restart()} onMenu={goHome}
         busy={busy} hasPending={game.hasPending} error={game.error ? missionErrorText(game.error, locale, game.errorCode) : null} retryIn={game.retryIn} onRetry={game.canRetry ? () => void game.retry() : undefined} />
       {coachStep !== null && (
-        <Coach step={coachStep} hidden={(showQueue || !!pendingAction || menuOpen) && !coachInfo} onNext={nextCoach} onSkip={skipCoach} />
+        <Coach step={coachStep} hidden={(showQueue || !!pendingAction || menuOpen || homeOpen) && !coachInfo} onNext={nextCoach} onSkip={skipCoach} />
       )}
     </div>
   );

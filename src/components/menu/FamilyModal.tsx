@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState, type FormEvent } from "react";
+import { useEffect, useId, useState } from "react";
 import { Modal, PixelButton, PixelSprite } from "@/components/hud";
 import { useI18n } from "@/lib/providers";
 import { MEDALS, TERMS, type Lang, type Progress } from "@/game/learning";
@@ -10,40 +10,28 @@ import type { Dict } from "@/i18n/dictionaries";
 
 /**
  * Sección "Para familias" (docs/modelo-de-negocio.md):
- * puerta parental → Plan Familiar mensual (sin pasarela todavía), diploma imprimible,
- * guía para jugar juntos y licencia para escuelas.
+ * Plan Familiar mensual (sin pasarela todavía), diploma imprimible, guía para jugar juntos
+ * y licencia para escuelas. Se abre sin puerta parental (decisión del equipo, 15-11-2026):
+ * cuando exista el cobro, la confirmación del adulto la pone la tienda o pasarela.
  */
 
 type Tab = "pass" | "diploma" | "together" | "schools";
 const TABS: Tab[] = ["pass", "diploma", "together", "schools"];
 
-/** Multiplicación de dos cifras: fácil para un adulto, difícil para un niño de 7 a 12. */
-function newQuestion() {
-  const r = () => 12 + Math.floor(Math.random() * 8); // 12..19
-  return { a: r(), b: r() };
-}
-
 type Props = { open: boolean; onClose: () => void; progress: Progress };
 
 export function FamilyModal({ open, onClose, progress }: Props) {
   const { t } = useI18n();
-  const [unlocked, setUnlocked] = useState(false);
   const [tab, setTab] = useState<Tab>("pass");
 
-  // Cada vez que se abre, la puerta vuelve a cerrarse.
+  // Cada vez que se abre, empieza por el Plan Familiar.
   useEffect(() => {
-    if (open) {
-      setUnlocked(false);
-      setTab("pass");
-    }
+    if (open) setTab("pass");
   }, [open]);
 
   return (
     <Modal open={open} title={t.family.title} onClose={onClose} wide>
-      {!unlocked ? (
-        <ParentalGate open={open} onPass={() => setUnlocked(true)} />
-      ) : (
-        <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3">
           <div role="tablist" aria-label={t.family.title} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {TABS.map((id) => (
               <button
@@ -68,71 +56,12 @@ export function FamilyModal({ open, onClose, progress }: Props) {
             {tab === "schools" && <SchoolsTab />}
           </div>
           <p className="font-tiny text-xs text-steel-400">{t.family.privacy}</p>
-        </div>
-      )}
+      </div>
     </Modal>
   );
 }
 
 /* ------------------------------------------------------------------ */
-
-function ParentalGate({ open, onPass }: { open: boolean; onPass: () => void }) {
-  const { t } = useI18n();
-  const inputId = useId();
-  const [q, setQ] = useState({ a: 13, b: 14 });
-  const [value, setValue] = useState("");
-  const [wrong, setWrong] = useState(false);
-
-  useEffect(() => {
-    if (open) {
-      setQ(newQuestion());
-      setValue("");
-      setWrong(false);
-    }
-  }, [open]);
-
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    if (Number(value) === q.a * q.b) return onPass();
-    setWrong(true);
-    setValue("");
-    setQ(newQuestion());
-  };
-
-  return (
-    <form onSubmit={submit} className="flex flex-col items-center gap-3 text-center">
-      <PixelSprite sprite="robot" anim="idle" scale={4} label="R0-B1" />
-      <h3 className="font-pixel text-2xl text-amber">{t.family.gateTitle}</h3>
-      <p className="text-xl text-steel-200">{t.family.gateBody}</p>
-      <p className="font-pixel text-4xl text-neon-cyan" aria-live="polite">
-        {q.a} × {q.b} = ?
-      </p>
-      <label htmlFor={inputId} className="sr-only">
-        {t.family.gateAnswer}
-      </label>
-      <div className="flex gap-2">
-        <input
-          id={inputId}
-          data-autofocus
-          inputMode="numeric"
-          autoComplete="off"
-          value={value}
-          onChange={(e) => setValue(e.target.value.replace(/\D/g, "").slice(0, 4))}
-          placeholder={t.family.gateAnswer}
-          className="bevel-inset font-pixel h-12 w-36 px-3 text-center text-2xl text-steel-50 outline-none focus-visible:outline-2 focus-visible:outline-neon-cyan"
-        />
-        <PixelButton type="submit" variant="primary" disabled={!value}>
-          {t.family.gateEnter}
-        </PixelButton>
-      </div>
-      {wrong && (
-        <p role="alert" className="text-lg text-amber">
-          {t.family.gateWrong}
-        </p>
-      )}
-    </form>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 
@@ -143,6 +72,30 @@ function PassTab() {
   const passIcons: IconName[] = ["heart", "shelter", "medal", "book", "explore", "day", "flask"];
   return (
     <div className="flex flex-col gap-4">
+      {/* Presentación del plan: lo primero que ve la persona adulta al abrir la sección. */}
+      <section className="bevel glow flex flex-col items-center gap-3 p-4 text-center" style={{ ["--bevel-fill" as string]: "var(--color-steel-900)" }}>
+        <span className="font-tiny bg-amber px-2 py-0.5 text-xs text-void uppercase">{t.family.heroBadge}</span>
+        <h3 className="font-pixel text-3xl text-amber">{t.family.heroTitle}</h3>
+        <p className="max-w-xl text-lg text-steel-200">{t.family.heroBody}</p>
+        <ul className="flex flex-wrap justify-center gap-3" aria-label={t.family.passSuits}>
+          {SUITS.filter((s) => s.unlock.kind === "pass").map((s) => (
+            <li key={s.id} className="bevel-inset flex flex-col items-center gap-1 p-2">
+              <PixelSprite sprite="astronaut" anim="celebrate" scale={3} swap={s.swap} />
+              <span className="font-tiny text-xs">{s.name[lang]}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="text-lg">{t.family.price}</p>
+        <PixelButton variant="primary" className="px-6 text-2xl" onClick={() => setAsked(true)} icon={<PixelSprite icon="heart" scale={2} />}>
+          {t.family.buy}
+        </PixelButton>
+        {asked && (
+          <p role="status" className="text-lg text-amber">
+            {t.family.buySoon}
+          </p>
+        )}
+      </section>
+
       <p className="text-lg text-steel-200">{t.family.passIntro}</p>
 
       <div className="grid gap-3 md:grid-cols-2">
@@ -172,18 +125,6 @@ function PassTab() {
         </section>
       </div>
 
-      <section>
-        <h3 className="font-pixel mb-2 text-lg text-neon-cyan uppercase">{t.family.passSuits}</h3>
-        <ul className="flex flex-wrap gap-3">
-          {SUITS.filter((s) => s.unlock.kind === "pass").map((s) => (
-            <li key={s.id} className="bevel-inset flex flex-col items-center gap-1 p-2">
-              <PixelSprite sprite="astronaut" anim="idle" scale={3} swap={s.swap} />
-              <span className="font-tiny text-xs">{s.name[lang]}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
       <section className="bevel-inset p-3">
         <h3 className="font-pixel mb-2 text-lg text-neon-cyan uppercase">{t.family.cancelTitle}</h3>
         <ul className="flex flex-col gap-1 text-lg">
@@ -195,20 +136,6 @@ function PassTab() {
           ))}
         </ul>
       </section>
-
-      <div className="bevel flex flex-col gap-2 p-3" style={{ ["--bevel-fill" as string]: "var(--color-steel-900)" }}>
-        <p className="text-lg">{t.family.price}</p>
-        <div className="flex flex-wrap items-center gap-3">
-          <PixelButton variant="primary" onClick={() => setAsked(true)} icon={<PixelSprite icon="heart" scale={2} />}>
-            {t.family.buy}
-          </PixelButton>
-          {asked && (
-            <p role="status" className="flex-1 text-lg text-amber">
-              {t.family.buySoon}
-            </p>
-          )}
-        </div>
-      </div>
 
       <section>
         <h3 className="font-pixel mb-2 text-lg text-neon-cyan uppercase">{t.family.rulesTitle}</h3>

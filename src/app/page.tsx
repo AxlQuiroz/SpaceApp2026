@@ -8,7 +8,7 @@ import { FamilyModal } from "@/components/menu/FamilyModal";
 import { WardrobeModal } from "@/components/menu/WardrobeModal";
 import { LogbookModal, MedalsModal } from "@/game/LearningCards";
 import { MEDALS, QUIZZES, TERMS, useProgress } from "@/game/learning";
-import { suitSwap, useCrewLook } from "@/game/wardrobe";
+import { SUITS, suitSwap, useCrewLook } from "@/game/wardrobe";
 import { useAudio, useI18n } from "@/lib/providers";
 import type { IconName } from "@/sprites/sprites.config";
 
@@ -47,14 +47,6 @@ export default function Home() {
             </div>
             <h1 className="font-pixel text-5xl text-neon-cyan">{t.app.title}</h1>
             <p className="max-w-2xl text-2xl text-steel-200">{t.home.tagline}</p>
-            <ul className="flex flex-wrap justify-center gap-2" aria-label={t.home.promise}>
-              {t.home.chips.map((chip, i) => (
-                <li key={chip} className="font-tiny flex items-center gap-1 bg-steel-900 px-2 py-1 text-sm text-lime uppercase">
-                  <PixelSprite icon={(["heart", "shelter", "lock", "antenna"] as IconName[])[i]} scale={1} />
-                  {chip}
-                </li>
-              ))}
-            </ul>
           </header>
         </Panel>
 
@@ -74,6 +66,29 @@ export default function Home() {
           </Panel>
 
           <div className="flex flex-col gap-4">
+            {/* ================= PLAN FAMILIAR (promoción para adultos; sin precio aquí) ================= */}
+            <Panel title={<><PixelSprite icon="heart" scale={2} /> {t.home.planTitle}</>}>
+              <button
+                type="button"
+                onClick={() => setOpen("family")}
+                aria-haspopup="dialog"
+                className="bevel pixel-btn glow relative flex w-full flex-col gap-2 p-3 text-left"
+                style={{ ["--bevel-fill" as string]: "var(--color-steel-800)" }}
+              >
+                <span className="font-tiny absolute top-2 right-2 bg-amber px-2 py-0.5 text-xs text-void uppercase">{t.home.planBadge}</span>
+                <span aria-hidden className="flex items-end justify-around pt-7">
+                  {SUITS.filter((s) => s.unlock.kind === "pass").map((s, i) => (
+                    <PixelSprite key={s.id} sprite="astronaut" anim={i % 2 ? "walk" : "celebrate"} scale={2} swap={s.swap} />
+                  ))}
+                </span>
+                <span className="text-lg">{t.home.planPitch}</span>
+                <span className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-tiny text-xs text-steel-400 uppercase">{t.home.planFor}</span>
+                  <span className="font-pixel bg-amber px-3 py-1 text-lg text-void uppercase">{t.home.planCta} ▸</span>
+                </span>
+              </button>
+            </Panel>
+
             {/* ================= TRIPULACIÓN ================= */}
             <Panel title={<><PixelSprite icon="rest" scale={2} /> {t.home.crewTitle}</>}>
               <button
