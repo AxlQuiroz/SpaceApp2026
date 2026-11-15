@@ -469,7 +469,7 @@ def latest_report(root, open_browser=True):
 def main(argv=None):
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
-            stream.reconfigure(errors="replace")
+            stream.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description="RockieOS: presentación, desarrollo y pruebas desde un menú.")
     parser.add_argument("action", nargs="?", choices=["prepare", "present", "dev", "test", "check", "report"])
     parser.add_argument("--quick", action="store_true", help="Omitir compilación y navegador en test.")

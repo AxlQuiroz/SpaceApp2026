@@ -90,6 +90,12 @@ class LauncherTests(unittest.TestCase):
         self.assertEqual(launcher.steps[0]["exit_code"], 7)
         self.assertIn("diagnóstico", (launcher.directory / "01.log").read_text(encoding="utf-8"))
 
+    def test_redirected_console_output_keeps_spanish_text_in_utf8(self):
+        script = Path(__file__).resolve().parents[1] / "rockieos.py"
+        result = subprocess.run([sys.executable, str(script), "--help"],
+                                env=os.environ.copy() | {"PYTHONIOENCODING": "ascii"}, capture_output=True, check=True)
+        self.assertIn("presentación", result.stdout.decode("utf-8"))
+
     def test_failure_stops_the_pipeline_and_creates_a_reviewable_report(self):
         launcher = Launcher(self.root)
         args = argparse.Namespace(action="test", quick=False, no_browser=True, smoke=False)

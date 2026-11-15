@@ -322,7 +322,7 @@ export function MissionHud({ game }: Props) {
     <div data-testid="mission-hud" data-mission-id={s.id} data-turn={s.turn} data-version={s.version} className="flex min-h-dvh flex-col gap-2 p-2 pb-24 md:p-3 lg:pb-3">
       {/* ================= BARRA SUPERIOR ================= */}
       <header className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
           <PixelButton className="whitespace-nowrap" onClick={() => setMenuOpen(true)} aria-haspopup="dialog">
             ☰ {t.game.menu}
           </PixelButton>
