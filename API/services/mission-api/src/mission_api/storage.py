@@ -9,10 +9,11 @@ from importlib.resources import files
 from pathlib import Path
 from uuid import uuid4
 
-from .engine import new_mission, transition, view
+from .engine import new_mission, transition, view, evaluate
 from .errors import MissionError
 from .models import (Command, CreateMission, EventList, MissionList, MissionState, MissionSummary,
-                     MutationResult, ScienceBundle, SessionCreated, SessionInfo, StoredEvent, TimelineEvent)
+                     MutationResult, ScienceBundle, SessionCreated, SessionInfo, StoredEvent, TimelineEvent,
+                     MissionComparison, DecisionDifference)
 
 
 def fingerprint(value: dict) -> str:
@@ -142,7 +143,10 @@ class Store:
             if existing:
                 return existing
             self._ensure_capacity(c, owner)
-            state = new_mission(str(uuid4()), config, bundle.id, now)
+            derivation = bundle.model_derivations.get("mars_radiation")
+            state = new_mission(str(uuid4()), config, bundle.id, now,
+                                radiation_profile=derivation["values"] if derivation else None,
+                                profile_hash="normalized_sha256:" + derivation["normalized_records_sha256"] if derivation else None)
             c.execute("INSERT OR IGNORE INTO science_bundles VALUES(?,?)", (bundle.id, bundle.model_dump_json()))
             self._insert(c, owner, state)
             events = [TimelineEvent(type="mission_created", turn=0, message="Misión creada con referencias científicas congeladas para esta partida.", occurred_at=now)]
@@ -191,8 +195,10 @@ class Store:
             if old.version != expected_version:
                 raise MissionError("VERSION_CONFLICT", "Consulta la versión actual antes de reiniciar.")
             self._ensure_capacity(c, owner)
-            config = CreateMission(scenario_id=old.scenario_id, difficulty=old.difficulty, seed=old.seed)
-            state = new_mission(str(uuid4()), config, old.science_bundle_id, now, parent_id=old.id)
+            config = CreateMission(scenario_id=old.scenario_id, difficulty=old.difficulty, seed=old.seed, practice_mode=old.practice_mode)
+            state = new_mission(str(uuid4()), config, old.science_bundle_id, now, parent_id=old.id,
+                                rules_version=old.rules_version, radiation_profile=old.radiation_profile_ugy_h,
+                                profile_hash=old.radiation_profile_source_hash)
             self._insert(c, owner, state)
             events = [TimelineEvent(type="mission_restarted", turn=0, message="Nueva misión con la misma semilla y referencias; la anterior se conserva.", occurred_at=now, payload={"parent_mission_id": old.id})]
             self._events(c, state, events)
@@ -216,3 +222,36 @@ class Store:
         if row is None:
             raise MissionError("MISSION_NOT_FOUND", "No se encontró esa misión en tu sesión.", 404)
         return ScienceBundle.model_validate_json(row[0])
+
+
+    def evaluation(self, owner, mission_id, now):
+        with self.connection() as c:
+            c.execute("BEGIN")
+            self._authorize(c, owner, now)
+            current = self._state(c, owner, mission_id)
+            result = evaluate(current)
+            if not current.parent_mission_id or not result.final:
+                return result
+            previous = self._state(c, owner, current.parent_mission_id)
+            if (not evaluate(previous).final or
+                    any(getattr(previous, key) != getattr(current, key) for key in
+                        ("seed", "scenario_id", "rules_version", "science_bundle_id", "difficulty", "practice_mode", "radiation_profile_ugy_h"))):
+                return result
+            def decisions(mission):
+                out = {}
+                for row in c.execute("SELECT payload FROM mission_events WHERE mission_id=? ORDER BY sequence", (mission.id,)):
+                    event = json.loads(row[0])
+                    if event["type"] == "action_applied":
+                        out.setdefault(event["turn"], []).append(event["payload"]["action_id"])
+                return out
+            before, after = decisions(previous), decisions(current)
+            result.comparison = MissionComparison(
+                previous_mission_id=previous.id, previous_turns=previous.turn, current_turns=current.turn,
+                score_delta=result.score - evaluate(previous).score,
+                health_delta=round(current.crew_health_pct - previous.crew_health_pct, 4),
+                exposure_delta=round(current.exposure_risk_index - previous.exposure_risk_index, 4),
+                food_delta_kg=round(current.resources.food_kg - previous.resources.food_kg, 4),
+                energy_delta_kwh=round(current.resources.energy_kwh - previous.resources.energy_kwh, 4),
+                decisions=[DecisionDifference(turn=t, previous=before.get(t, []), current=after.get(t, []))
+                           for t in sorted(before.keys() | after.keys()) if before.get(t, []) != after.get(t, [])])
+            return result

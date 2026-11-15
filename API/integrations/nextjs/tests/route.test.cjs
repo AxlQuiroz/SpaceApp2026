@@ -15,6 +15,7 @@ test.beforeEach(() => {
   process.env.ORBITA_API_URL = "http://backend:8000";
   process.env.APP_ORIGIN = "https://trainer.example";
   process.env.NODE_ENV = "production";
+  delete process.env.ORBITA_PROXY_TOKEN;
 });
 
 test("sesión nueva usa cookie HttpOnly y oculta el token en JSON", async () => {
@@ -111,4 +112,23 @@ test("un fallo de transporte no revela diagnósticos internos", async () => {
   const response = await adapter.GET(request("scenarios"), context("scenarios"));
   assert.equal(response.status, 503);
   assert.doesNotMatch(await response.text(), /private network diagnostic/);
+});
+
+
+test("el proxy firma una identidad de visitante y descarta cabeceras falsas", async () => {
+  const secret = "TEST-ONLY_proxy-token-p5rA8Nv2Wz6Lq0Uc1mT9Bf4Gd7Yh3";
+  process.env.ORBITA_PROXY_TOKEN = secret;
+  let headers;
+  global.fetch = async (_url, init) => { headers = init.headers; return Response.json([]); };
+  const first = await adapter.GET(request("scenarios", "GET", {headers:{"X-Orbita-Visitor":"spoofed", "X-Orbita-Proxy-Token":"spoofed"}}), context("scenarios"));
+  assert.equal(first.status, 200);
+  const id = headers["X-Orbita-Visitor"];
+  assert.match(id, /^[a-f0-9-]{36}$/);
+  assert.equal(headers["X-Orbita-Proxy-Token"], secret);
+  const cookie = first.cookies.get("orbita_visitor").value;
+  await adapter.GET(request("scenarios", "GET", {headers:{cookie: "orbita_visitor=" + cookie}}), context("scenarios"));
+  assert.equal(headers["X-Orbita-Visitor"], id);
+  await adapter.GET(request("scenarios", "GET", {headers:{cookie: "orbita_visitor=" + id + "." + "0".repeat(64)}}), context("scenarios"));
+  assert.notEqual(headers["X-Orbita-Visitor"], id);
+  assert.match(first.headers.get("set-cookie"), /HttpOnly/i);
 });

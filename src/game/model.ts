@@ -175,6 +175,9 @@ export type TurnPayload = {
   /** Sólo Marte: medición real de MSL-RAD para estas dos horas y fracción de luz que pasó. */
   dose_rate_ugy_h?: number;
   sky_factor?: number;
+  power_protection_factor?: number;
+  observation_start_utc?: string;
+  observation_end_utc?: string;
 };
 
 /** Traducciones de las alertas del backend (que llegan en español). */
@@ -184,7 +187,7 @@ const ALERTS_EN: Record<string, string> = {
   "Paneles con polvo: la producción eléctrica está reducida.": "Dusty panels: power production is reduced.",
   "Tormenta de polvo: llega muy poca luz a los paneles.": "Dust storm: very little light reaches the panels.",
   "El próximo avance incluye un incidente solar simulado: considera entrar al refugio.":
-    "The next advance brings a solar storm: consider going to the shelter.",
+    "The next advance brings a simulated solar event: consider going to the shelter.",
   "El próximo avance trae la radiación de una eyección solar real: considera entrar al refugio.":
     "The next advance brings radiation from a real solar eruption: consider going to the shelter.",
   "Se acerca una tormenta de polvo: ahorra batería antes del próximo avance.": "A dust storm is coming: save battery before the next advance.",

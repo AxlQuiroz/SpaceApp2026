@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { PixelSprite } from "./PixelSprite";
 import { PixelButton } from "./PixelButton";
 import { useAudio, useI18n } from "@/lib/providers";
-import { usePrefersReducedMotion } from "@/lib/hooks";
+import { useFocusTrap, usePrefersReducedMotion } from "@/lib/hooks";
 import type { IconName, SpriteName } from "@/sprites/sprites.config";
 
 /* ------------------------------------------------------------------ */
@@ -18,12 +18,14 @@ type DialogBoxProps = {
   onConfirm?: () => void;
   /** ms por carácter */
   speed?: number;
+  modal?: boolean;
 };
 
-export function DialogBox({ speaker, text, sprite = "robot", onConfirm, speed = 28 }: DialogBoxProps) {
+export function DialogBox({ speaker, text, sprite = "robot", onConfirm, speed = 28, modal = false }: DialogBoxProps) {
   const { t } = useI18n();
   const { play } = useAudio();
   const reduced = usePrefersReducedMotion();
+  const trap = useFocusTrap<HTMLDivElement>(modal);
   const [n, setN] = useState(0);
   const done = reduced || n >= text.length;
 
@@ -44,7 +46,7 @@ export function DialogBox({ speaker, text, sprite = "robot", onConfirm, speed = 
   }, [n, done, speed, play]);
 
   return (
-    <div className="bevel rivets flex gap-3" style={{ padding: "calc(var(--px) * 5)" }}>
+    <div ref={trap} role={modal ? "dialog" : undefined} aria-modal={modal || undefined} aria-label={modal ? speaker : undefined} className="bevel rivets flex gap-3" style={{ padding: "calc(var(--px) * 5)" }}>
       <div className="bevel-inset scanlines shrink-0 self-start p-2">
         <PixelSprite sprite={sprite} anim={done ? "idle" : "talk"} scale={4} label={speaker} />
       </div>

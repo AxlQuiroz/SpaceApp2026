@@ -1,5 +1,7 @@
 # Validación del backend v0.2.0
 
+**Informe histórico de la versión 0.2.0.** La interfaz y Marte ya están integrados; la validación actual se resume en [correcciones de la auditoría](../../docs/correcciones-auditoria.md).
+
 Fecha: **14 de noviembre de 2026**. Entorno comprobado: Python 3.12.14, FastAPI 0.141.1, HTTPX 0.28.1 y Pydantic 2.13.4. Integración: Node.js 24.22.1, Next.js 16.4.6, React 19.3.1 y TypeScript 7.0.2.
 
 ## Pruebas automáticas

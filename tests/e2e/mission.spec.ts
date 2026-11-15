@@ -153,3 +153,67 @@ test("503 en una orden reintenta exactamente la misma intención", async ({ page
   expect(retried.headers()["idempotency-key"]).toBe(failedKey);
   await expect(page.getByTestId("mission-hud")).toHaveAttribute("data-turn", "1");
 });
+
+
+test("la previsión fallida bloquea confirmar, se recupera y mantiene el foco", async ({page}) => {
+  await start(page);
+  await page.route("**/api/mission/missions/*/preview", route => route.fulfill({status:503,contentType:"application/json",body:JSON.stringify({error:{code:"BACKEND_UNAVAILABLE",message:"Fallo de previsión de prueba"}})}),{times:1});
+  const mobile=page.getByRole("button",{name:"Acciones",exact:true});
+  if(await mobile.isVisible()) { await mobile.click(); await page.getByRole("dialog").getByRole("button",{name:/^Explorar/}).click(); }
+  else await page.getByRole("button",{name:"Explorar",exact:true}).click();
+  const preview=page.getByTestId("preview");
+  await expect(preview.getByRole("alert")).toBeVisible();
+  await expect(preview.getByRole("button",{name:"¡Hazlo!",exact:true})).toBeDisabled();
+  for(let i=0;i<6;i++){await page.keyboard.press("Tab");expect(await preview.evaluate(el=>el.contains(document.activeElement))).toBe(true);}
+  await preview.getByRole("button",{name:"Recalcular",exact:true}).click();
+  await expect(preview.getByRole("table")).toBeVisible();
+  await expect(preview.getByRole("button",{name:"¡Hazlo!",exact:true})).toBeEnabled();
+  await checkWidth(page);
+  await preview.getByRole("button",{name:"Mejor no",exact:true}).click();
+  await expect(page.getByTestId("mission-hud")).toHaveAttribute("data-version","1");
+});
+
+test("el inglés traduce la procedencia y el siguiente turno conserva el archivo", async ({page}) => {
+  await start(page,"Marte");
+  await page.getByRole("button",{name:"☰ Menú",exact:true}).click();
+  await page.getByRole("button",{name:"EN",exact:true}).click();
+  await page.getByRole("button",{name:"NASA sources",exact:true}).click();
+  await expect(page.getByRole("heading",{name:"RadLab · Curiosity on Mars",exact:true})).toBeVisible();
+  await expect(page.getByText("2024-05-20",{exact:false}).first()).toBeVisible();
+  await checkWidth(page);
+});
+
+test("un reinicio compara las decisiones del intento anterior", async ({page}) => {
+  await start(page);
+  await action(page,"Explorar");
+  const abort = async () => {
+    await page.getByRole("button",{name:"☰ Menú",exact:true}).click();
+    await page.getByRole("button",{name:"Abandonar misión",exact:true}).click();
+    await expect(page.getByTestId("narration")).toBeVisible();
+    await dismissNarration(page);
+    await expect(page.getByRole("button",{name:"Jugar otra vez",exact:true})).toBeVisible();
+  };
+  await abort();
+  const previousId = await page.getByTestId("mission-hud").getAttribute("data-mission-id");
+  await page.getByRole("button",{name:"Jugar otra vez",exact:true}).click();
+  await expect(page.getByTestId("mission-hud")).not.toHaveAttribute("data-mission-id",previousId!);
+  await expect(page.getByTestId("mission-hud")).toHaveAttribute("data-turn","0");
+  await dismissNarration(page);
+  await abort();
+  await expect(page.getByRole("heading",{name:"Comparación con tu intento anterior",exact:true})).toBeVisible();
+  await page.getByText("Decisiones distintas",{exact:true}).click();
+  await expect(page.getByRole("dialog").getByText(/Turno 0: Explorar/)).toBeVisible();
+  await checkWidth(page);
+});
+
+test("25 visitantes independientes pueden iniciar sesión detrás del proxy", async ({browser}) => {
+  for(let i=0;i<25;i++){
+    const context=await browser.newContext();
+    try{
+      const response=await context.request.post("http://localhost:3100/api/mission/sessions",{headers:{Origin:"http://localhost:3100"}});
+      expect(response.status()).toBe(201);
+      expect((await response.json()).access_token).toBeUndefined();
+      expect(response.headers()["set-cookie"]).toContain("orbita_visitor");
+    }finally{await context.close();}
+  }
+});

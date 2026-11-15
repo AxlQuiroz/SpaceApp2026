@@ -90,7 +90,7 @@ Después de cambiar el contrato Python ejecuta `python scripts/export_contracts.
 - [FastAPI: CORS](https://fastapi.tiangolo.com/tutorial/cors/).
 - [FastAPI: ciclo de vida](https://fastapi.tiangolo.com/advanced/events/).
 
-La interfaz externa no está disponible en este repositorio; la conexión visual y su compilación completa se validarán allí. Aquí se incluyen el contrato, SDK y adaptador de servidor para incorporarlos.
+El frontend completo está en la raíz del repositorio. El paquete integrations/nextjs conserva las pruebas aisladas de compatibilidad del adaptador; la aplicación usa los mismos archivos verificados por check:contracts.
 
 ## Comprobar los archivos de integración
 
@@ -109,3 +109,12 @@ python scripts/verify_backend.py --nextjs
 ```
 
 También se puede añadir `--live` para comprobar las descargas a NASA. El cliente TypeScript tiene sus pruebas independientes en `sdk/typescript/tests/client.test.ts`, ejecutables con `node --experimental-strip-types --test sdk/typescript/tests/client.test.ts`.
+
+
+## Cuotas de visitantes detrás de Next.js
+
+El backend admite un secreto independiente MISSION_PROXY_TOKEN. Configura el mismo valor como ORBITA_PROXY_TOKEN en el servidor Next.js. setup_backend.py prepara ambos valores para la instalación local, preservando las otras variables. RockieOS.cmd prepare y el arranque habitual ejecutan esa preparación.
+
+Next.js firma una cookie HttpOnly orbita_visitor y reenvía una identidad de visitante autenticada al backend. No reenvía cabeceras de identidad enviadas por el navegador. Python conserva las cuotas por visitante y un techo global del proxy: MISSION_PROXY_REQUESTS_PER_MINUTE y MISSION_PROXY_SESSIONS_PER_HOUR. La cookie del visitante identifica una cuota anónima; no da acceso a partidas, que siguen requiriendo la sesión del jugador.
+
+En alojamiento remoto, define los dos secretos de proxy mediante la configuración privada de cada servicio y utiliza HTTPS o una red privada controlada. Sin secreto válido, se mantienen los límites conservadores por IP. Nunca configures el secreto como NEXT_PUBLIC_ ni lo incluyas en el repositorio.

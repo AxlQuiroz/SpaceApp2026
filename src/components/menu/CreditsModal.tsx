@@ -1,6 +1,7 @@
 "use client";
 
 import { Modal, PixelSprite } from "@/components/hud";
+import { reviewText } from "@/game/reviewText";
 import { useI18n } from "@/lib/providers";
 import type { IconName } from "@/sprites/sprites.config";
 
@@ -8,7 +9,7 @@ const ICONS: IconName[] = ["sun", "mars", "day", "flask"];
 
 /** Fuentes NASA y créditos, accesibles desde el menú principal sin conexión al backend. */
 export function CreditsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   return (
     <Modal open={open} title={t.credits.title} onClose={onClose}>
       <div className="flex max-h-[60vh] flex-col gap-3 overflow-y-auto pr-2">
@@ -25,6 +26,7 @@ export function CreditsModal({ open, onClose }: { open: boolean; onClose: () => 
           ))}
         </ul>
         <p className="text-lg text-amber">{t.credits.rules}</p>
+        <p className="text-base text-steel-200">{reviewText(locale).aiCredit}</p>
         <div className="flex items-center gap-3">
           <PixelSprite sprite="robot" anim="talk" scale={3} />
           <p className="text-lg">{t.credits.team}</p>

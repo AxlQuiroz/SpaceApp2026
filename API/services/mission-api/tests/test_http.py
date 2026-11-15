@@ -10,6 +10,7 @@ from unittest.mock import patch
 from uuid import uuid4
 
 import httpx
+from pydantic import SecretStr
 
 from mission_api.config import Settings
 from mission_api.main import create_app
@@ -285,6 +286,66 @@ class HttpTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([e["sequence"] for e in events["data"]], list(range(1, events["total"] + 1)))
         self.assertTrue(any(e["event"]["type"] == "solar_incident" for e in events["data"]))
         self.assertEqual((await self.cmd(state)).status_code, 409)
+
+    async def test_forecast_matches_confirmed_next_turn_without_preview_writes(self):
+        state = (await self.create()).json()["mission"]["state"]
+        path = f'/api/v1/missions/{state["id"]}'
+        response = await self.client.post(path + "/preview", headers=self.auth,
+            json={"action_id": "toggle_oxygen_generator", "expected_version": state["version"]})
+        self.assertEqual(response.status_code, 200, response.text)
+        forecast = response.json()["forecast"]
+        self.assertEqual(forecast["with_action"]["mission"]["state"]["resources"]["oxygen_kg"], 2.52)
+        self.assertEqual(forecast["without_action"]["mission"]["state"]["resources"]["oxygen_kg"], 2.92)
+        self.assertEqual((await self.client.get(path + "/events", headers=self.auth)).json()["total"], 1)
+        state = (await self.cmd(state, "action", "toggle_oxygen_generator")).json()["mission"]["state"]
+        actual = (await self.cmd(state)).json()["mission"]["state"]
+        self.assertEqual(actual["resources"], forecast["with_action"]["mission"]["state"]["resources"])
+        self.assertEqual(actual["crew_health_pct"], forecast["with_action"]["mission"]["state"]["crew_health_pct"])
+
+    async def test_mars_profile_is_derived_from_the_frozen_science_bundle(self):
+        response = await self.create({"scenario_id": "mars-outpost-v1", "data_mode": "snapshot"})
+        self.assertEqual(response.status_code, 201, response.text)
+        state = response.json()["mission"]["state"]
+        science = (await self.client.get(f'/api/v1/missions/{state["id"]}/science', headers=self.auth)).json()
+        derivation = science["model_derivations"]["mars_radiation"]
+        self.assertEqual(state["radiation_profile_ugy_h"], derivation["values"])
+        self.assertEqual(state["radiation_profile_source_hash"], "normalized_sha256:" + derivation["normalized_records_sha256"])
+        self.assertEqual(sum(derivation["counts"]), 139)
+
+    async def test_trusted_proxy_separates_visitors_while_rejecting_spoofed_headers(self):
+        self.settings.sessions_per_hour = 1
+        self.settings.proxy_token = SecretStr(SERVICE_TOKEN)
+        for _ in range(25):
+            response = await self.client.post("/api/v1/sessions", headers={
+                "X-Orbita-Proxy-Token": SERVICE_TOKEN, "X-Orbita-Visitor": str(uuid4())})
+            self.assertEqual(response.status_code, 201, response.text)
+        visitor = str(uuid4())
+        headers = {"X-Orbita-Proxy-Token": SERVICE_TOKEN, "X-Orbita-Visitor": visitor}
+        self.assertEqual((await self.client.post("/api/v1/sessions", headers=headers)).status_code, 201)
+        self.assertEqual((await self.client.post("/api/v1/sessions", headers=headers)).status_code, 429)
+        self.assertEqual((await self.client.post("/api/v1/sessions", headers={"X-Orbita-Visitor": str(uuid4())})).status_code, 429)
+
+    async def test_proxy_global_ceiling_is_still_enforced(self):
+        self.settings.proxy_token = SecretStr(SERVICE_TOKEN)
+        self.settings.proxy_sessions_per_hour = 20
+        for _ in range(20):
+            response = await self.client.post("/api/v1/sessions", headers={"X-Orbita-Proxy-Token": SERVICE_TOKEN,
+                "X-Orbita-Visitor": str(uuid4())})
+            self.assertEqual(response.status_code, 201)
+        self.assertEqual((await self.client.post("/api/v1/sessions", headers={"X-Orbita-Proxy-Token": SERVICE_TOKEN,
+            "X-Orbita-Visitor": str(uuid4())})).status_code, 429)
+
+    async def test_pending_creation_receipt_from_older_schema_is_replayed(self):
+        from mission_api.storage import fingerprint
+        key = str(uuid4())
+        original = await self.create(key=key)
+        old_digest = fingerprint({"scenario_id": "lunar-outpost-v1", "difficulty": "cadet", "seed": 42, "data_mode": "snapshot"})
+        with closing(sqlite3.connect(self.settings.database_path)) as c, c:
+            c.execute("UPDATE command_receipts SET fingerprint=? WHERE command_key=?", (old_digest, key))
+        with patch.object(self.app.state.resources, "capture", side_effect=AssertionError("No debe repetir la captura")):
+            replay = await self.create(key=key)
+        self.assertEqual(replay.status_code, 201, replay.text)
+        self.assertEqual(replay.json(), original.json())
 
 
 if __name__ == "__main__":

@@ -32,7 +32,7 @@ Como mucho se muestra **una palabra y una pregunta por orden**, para no saturar.
 | Luz solar respecto a la Tierra | ≈ 43 % | Distancia media de Marte al Sol: 1.52 UA |
 | Atmósfera | ≈ 95 % CO₂ | NASA Mars Fact Sheet |
 | Duración de un sol | 24 h 39 min 35 s | NASA |
-| Retraso de radio | 5 a 20 minutos por sentido | NASA |
+| Retraso de radio | Rango general 3–22 minutos por sentido; el ejercicio fija 20 | NASA/JPL; valor concreto del ejercicio didáctico |
 | MOXIE | Obtuvo oxígeno del CO₂ marciano en el rover Perseverance (2021–2023) | NASA / JPL |
 | Tormenta global de polvo de 2018 | Dejó sin energía al rover Opportunity | NASA / JPL |
 
@@ -51,3 +51,5 @@ Lo que **no** es un dato real y el juego lo dice: la tormenta de polvo de la mis
 2. Pregunta: nuevo elemento en `QUIZZES` con exactamente tres opciones.
 3. Medalla: nuevo elemento en `MEDALS`; su función `earned` solo lee el estado confirmado por el backend.
 4. Ejecuta `npm test`.
+
+Consulta las nuevas metas, modos y límites en [correcciones de la auditoría](correcciones-auditoria.md). La radio sólo acredita datos nuevos; el modo de protección eléctrica lunar no representa una nube que tape el Sol.

@@ -1,3 +1,23 @@
+# Reglas actuales 1.1 y compatibilidad
+
+Las partidas nuevas usan lunar-1.1.0 o mars-1.1.0. Los valores de consumo y producción de 1.0 se conservan salvo las diferencias descritas aquí. Los bloques 1.0 posteriores son la referencia histórica de las partidas antiguas.
+
+- Ciencia: explorar produce 12 puntos y datos nuevos. En Marte, enviar un lote nuevo aporta 6 puntos cuando llega la respuesta; enviarlo lo retira de la cola pendiente. Una consulta sin datos devuelve consejo y cero puntos. Los datos nuevos recogidos después del envío permanecen pendientes.
+- Objetivos: además de duración, salud y ciencia, conservar 0.8 kg de alimento en cadete o 0.6 kg en comandante. Marte requiere compartir datos de al menos una exploración (12 puntos). Son márgenes didácticos para la jornada siguiente, no una dieta real ni alimento para 24 horas completas.
+- Puntuación: 35 por duración, 25 por salud, 20 por ciencia, 10 por protección y 10 por reserva alimentaria conservada. La victoria exige todos los objetivos; completar el tiempo con objetivos pendientes produce partial.
+- Radio: valor de práctica de 20 minutos por sentido, dentro del rango NASA/JPL de referencia de 3–22. La respuesta vence a los 40 minutos y se lee al siguiente avance de dos horas; el jugador debe decidir autónomamente ante peligro inmediato. No se presenta ese paso como tiempo físico de propagación ni como una efeméride del día histórico.
+- Electricidad lunar: el factor 0.3 del incidente representa un modo de protección simulado del sistema eléctrico; la luz no queda tapada por una tormenta solar.
+- Fuente de Marte: la captura realmente obtenida se agrupa en doce intervalos UTC de dos horas, se calcula la media aritmética de absorbed_dose_rate en uGy/h y se redondea a dos decimales. No se interpolan intervalos vacíos. El bundle conserva observaciones, recuentos, algoritmo y hashes; el estado guarda el perfil usado. La transformación a puntos de exposición continúa siendo una regla de juego.
+- Preview: se calculan el efecto inmediato y dos avances en copias, con y sin la decisión. No modifica versión persistida, historial, recibos ni reservas.
+- Repetición: conserva dificultad, semilla, modo, reglas y perfil. La comparación muestra diferencias de resultados y acciones por turno. Las partidas 1.0 siguen usando el motor congelado de 1.0.
+- Entrenamiento: cambia sólo incidentes simulados, de forma reproducible. En Luna, la fuga llega al turno 2 o 3 y el polvo al 7, 8 o 9. En Marte, la tormenta de polvo empieza entre el turno 5 y 7 y dura cuatro turnos. La radiación histórica y su orden no se alteran.
+
+La iluminación permanente durante el segmento es una simplificación declarada. No se representa un ciclo lunar completo ni un sol marciano completo con su noche. El invernadero representa una cosecha ya establecida.
+
+Fuentes: [NASA/JPL sobre retrasos de radio](https://science.nasa.gov/blog/speaking-percys-language-how-to-talk-so-perseverance-will-listen/), [NASA sobre efectos del clima espacial](https://science.nasa.gov/sun/solar-storms-and-flares/), [RadLab](https://visualization.osdr.nasa.gov/radlab/).
+
+---
+
 # Modelo lunar · lunar-1.0.0
 
 Práctica de 24 horas, cuatro tripulantes, 12 turnos de dos horas y dos acciones por turno. Escenario: `lunar-outpost-v1`. La versión de reglas queda guardada en cada partida.

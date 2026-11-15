@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { PixelButton, PixelSprite } from "@/components/hud";
 import type { IconName } from "@/sprites/sprites.config";
 import { useI18n } from "@/lib/providers";
+import { reviewText } from "./reviewText";
 import { useFocusTrap } from "@/lib/hooks";
 import type { TurnPayload } from "./model";
 import type { ScenarioParams } from "./useMission";
@@ -35,7 +36,8 @@ type Props = {
  * Todos los números vienen del evento `turn_advanced` del backend.
  */
 export function TurnReport({ turn, payload, params, systemsOn, storm, moduleName, onClose }: Props) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const copy = reviewText(locale);
   const trap = useFocusTrap<HTMLElement>();
   const btn = useRef<HTMLButtonElement>(null);
   useEffect(() => btn.current?.focus({ preventScroll: true }), []);
@@ -147,6 +149,8 @@ export function TurnReport({ turn, payload, params, systemsOn, storm, moduleName
           <PixelSprite icon="flask" scale={2} />
           <span>
             {t.report.radReading} <strong className="font-pixel text-amber">{payload.dose_rate_ugy_h.toFixed(1)}</strong> {t.report.radUnit}.
+            <span className="mt-1 block text-base">{copy.historical} · {copy.provenance}</span>
+            {payload.observation_start_utc && <span className="block text-base">{copy.observed}: {payload.observation_start_utc} — {payload.observation_end_utc}</span>}
           </span>
         </p>
       )}

@@ -1,6 +1,8 @@
 import asyncio
 import json
 import logging
+import re
+import secrets
 import sqlite3
 import time
 from datetime import UTC, datetime
@@ -43,10 +45,28 @@ class RequestGuard:
             if not scope["path"].startswith("/health/") and scope["method"] != "OPTIONS":
                 store = scope["app"].state.store
                 ip = scope.get("client", ("unknown", 0))[0]
+                headers = dict(scope.get("headers", []))
+                configured = self.settings.proxy_token.get_secret_value() if self.settings.proxy_token else ""
+                supplied = headers.get(b"x-orbita-proxy-token", b"")
+                visitor = headers.get(b"x-orbita-visitor", b"")
+                trusted = bool(configured and secrets.compare_digest(supplied, configured.encode())
+                               and re.fullmatch(rb"[a-f0-9-]{36}", visitor))
+                identity = "visitor:" + visitor.decode("ascii") if trusted else ip
                 try:
-                    retry = await asyncio.to_thread(store.rate_limit, "requests", ip, self.settings.requests_per_minute, 60, datetime.now(UTC))
+                    now = datetime.now(UTC)
+                    retry = 0
+                    if trusted:
+                        # Techo compartido deliberado; la cuota individual se aplica por visitante.
+                        retry = await asyncio.to_thread(store.rate_limit, "gateway-requests", ip,
+                                                        self.settings.proxy_requests_per_minute, 60, now)
+                    if not retry:
+                        retry = await asyncio.to_thread(store.rate_limit, "requests", identity, self.settings.requests_per_minute, 60, now)
                     if not retry and scope["path"] == "/api/v1/sessions" and scope["method"] == "POST":
-                        retry = await asyncio.to_thread(store.rate_limit, "sessions", ip, self.settings.sessions_per_hour, 3600, datetime.now(UTC))
+                        if trusted:
+                            retry = await asyncio.to_thread(store.rate_limit, "gateway-sessions", ip,
+                                                            self.settings.proxy_sessions_per_hour, 3600, now)
+                        if not retry:
+                            retry = await asyncio.to_thread(store.rate_limit, "sessions", identity, self.settings.sessions_per_hour, 3600, now)
                 except sqlite3.Error:
                     return await reject("DATABASE_UNAVAILABLE", "El almacenamiento no está disponible; vuelve a intentarlo.", 503)
                 if retry:

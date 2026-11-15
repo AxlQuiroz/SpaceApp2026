@@ -1,6 +1,6 @@
-# SpaceApp2026 · Órbita — Backend v0.2.0
+# SpaceApp2026 · Órbita — Backend v0.3.0
 
-Backend del entrenador de decisiones y recursos para una base lunar. Incluye motor, API de partidas, guardado y conexión con recursos NASA. El frontend se desarrolla por separado con **Node.js, React y Next.js**.
+Backend del entrenador de decisiones y recursos para bases lunares y marcianas. Incluye motor, API de partidas, guardado y conexión con recursos NASA. El frontend **Next.js y React** está integrado en la raíz del repositorio.
 
 | Componente | Ubicación | Función |
 | --- | --- | --- |
@@ -59,8 +59,10 @@ Después de instalar dependencias, snapshot funciona sin internet. `python scrip
 
 ## Alcance
 
-Una misión lunar reproducible de 24 horas, cuatro tripulantes y turnos de dos horas. Incluye dos dificultades, nueve acciones, fuga de agua, incidente solar y daño de paneles. Cada orden se guarda automáticamente. Las sesiones son anónimas y duran siete días por defecto.
+Dos escenarios reproducibles de 24 horas, cuatro tripulantes y turnos de dos horas. Las reglas nuevas 1.1 añaden previsiones comparadas, investigación no repetible, reserva alimentaria, historial comparado y entrenamiento con incidentes variables. Las partidas 1.0 conservan sus cálculos originales. Cada orden se guarda automáticamente. Las sesiones son anónimas y duran siete días por defecto.
 
 Los datos NASA se conservan como referencias históricas atribuidas. Los coeficientes e incidentes son reglas didácticas versionadas: el índice de exposición **no es una dosis de radiación**. El frontend debe mostrar las fuentes y esta distinción.
 
 Docker Compose se incluye en `compose.backend.yaml`; no se ejecutó durante la entrega. Para una instalación remota configura HTTPS, hosts permitidos, persistencia y respaldos. Esta versión usa SQLite en un servidor y no incluye cuentas con contraseña, multijugador ni un escenario marciano.
+
+La actualización y sus pruebas se describen en [cierre de la revisión](../docs/correcciones-auditoria.md).

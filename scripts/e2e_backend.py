@@ -36,6 +36,7 @@ with tempfile.TemporaryDirectory(prefix="selene-e2e-") as directory:
         "MISSION_ALLOWED_HOSTS": '["localhost","127.0.0.1"]',
         "MISSION_REQUESTS_PER_MINUTE": "10000",
         "MISSION_SESSIONS_PER_HOUR": "1000",
+        "MISSION_PROXY_TOKEN": "TEST-ONLY_e2e-proxy-p5rA8Nv2Wz6Lq0Uc1mT9Bf4Gd7Yh3",
     }
     try:
         for module, port in [("resource_api.main:create_app", 8701), ("mission_api.main:create_app", 8700)]:

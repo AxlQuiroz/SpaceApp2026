@@ -3,7 +3,7 @@
   "info": {
     "title": "Órbita — Backend de misiones",
     "description": "Motor lunar y API para Next.js/React. Partidas aisladas, reglas versionadas y fuentes históricas atribuidas.",
-    "version": "0.2.0"
+    "version": "0.3.0"
   },
   "paths": {
     "/health/live": {
@@ -2208,11 +2208,74 @@
             ],
             "title": "Data Mode",
             "default": "snapshot"
+          },
+          "practice_mode": {
+            "type": "string",
+            "enum": [
+              "historical",
+              "training"
+            ],
+            "title": "Practice Mode",
+            "default": "historical"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "title": "CreateMission"
+      },
+      "DecisionDifference": {
+        "properties": {
+          "turn": {
+            "type": "integer",
+            "title": "Turn"
+          },
+          "previous": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "repair_water_loop",
+                "repair_solar_panels",
+                "enter_shelter",
+                "leave_shelter",
+                "explore",
+                "activate_oxygen_reserve",
+                "activate_water_reserve",
+                "toggle_greenhouse",
+                "toggle_oxygen_generator",
+                "contact_earth"
+              ]
+            },
+            "type": "array",
+            "title": "Previous"
+          },
+          "current": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "repair_water_loop",
+                "repair_solar_panels",
+                "enter_shelter",
+                "leave_shelter",
+                "explore",
+                "activate_oxygen_reserve",
+                "activate_water_reserve",
+                "toggle_greenhouse",
+                "toggle_oxygen_generator",
+                "contact_earth"
+              ]
+            },
+            "type": "array",
+            "title": "Current"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "turn",
+          "previous",
+          "current"
+        ],
+        "title": "DecisionDifference"
       },
       "ErrorDetail": {
         "properties": {
@@ -2330,6 +2393,23 @@
             "type": "array",
             "title": "Feedback"
           },
+          "feedback_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Feedback Codes"
+          },
+          "comparison": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MissionComparison"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "rules_version": {
             "type": "string",
             "title": "Rules Version"
@@ -2344,6 +2424,8 @@
           "score",
           "objectives",
           "feedback",
+          "feedback_codes",
+          "comparison",
           "rules_version"
         ],
         "title": "Evaluation"
@@ -2379,6 +2461,86 @@
           "offset"
         ],
         "title": "EventList"
+      },
+      "ForecastComparison": {
+        "properties": {
+          "horizon_hours": {
+            "type": "integer",
+            "title": "Horizon Hours",
+            "default": 2
+          },
+          "without_action": {
+            "$ref": "#/components/schemas/MutationResult"
+          },
+          "with_action": {
+            "$ref": "#/components/schemas/MutationResult"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "horizon_hours",
+          "without_action",
+          "with_action"
+        ],
+        "title": "ForecastComparison"
+      },
+      "MissionComparison": {
+        "properties": {
+          "previous_mission_id": {
+            "type": "string",
+            "title": "Previous Mission Id"
+          },
+          "previous_turns": {
+            "type": "integer",
+            "title": "Previous Turns"
+          },
+          "current_turns": {
+            "type": "integer",
+            "title": "Current Turns"
+          },
+          "score_delta": {
+            "type": "integer",
+            "title": "Score Delta"
+          },
+          "health_delta": {
+            "type": "number",
+            "title": "Health Delta"
+          },
+          "exposure_delta": {
+            "type": "number",
+            "title": "Exposure Delta"
+          },
+          "food_delta_kg": {
+            "type": "number",
+            "title": "Food Delta Kg"
+          },
+          "energy_delta_kwh": {
+            "type": "number",
+            "title": "Energy Delta Kwh"
+          },
+          "decisions": {
+            "items": {
+              "$ref": "#/components/schemas/DecisionDifference"
+            },
+            "type": "array",
+            "title": "Decisions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "previous_mission_id",
+          "previous_turns",
+          "current_turns",
+          "score_delta",
+          "health_delta",
+          "exposure_delta",
+          "food_delta_kg",
+          "energy_delta_kwh",
+          "decisions"
+        ],
+        "title": "MissionComparison"
       },
       "MissionList": {
         "properties": {
@@ -2431,7 +2593,9 @@
             "type": "string",
             "enum": [
               "lunar-1.0.0",
-              "mars-1.0.0"
+              "mars-1.0.0",
+              "lunar-1.1.0",
+              "mars-1.1.0"
             ],
             "title": "Rules Version",
             "default": "lunar-1.0.0"
@@ -2520,6 +2684,47 @@
             "title": "Science Points",
             "default": 0
           },
+          "unreported_data_points": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Unreported Data Points",
+            "default": 0
+          },
+          "reported_data_points": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Reported Data Points",
+            "default": 0
+          },
+          "practice_mode": {
+            "type": "string",
+            "enum": [
+              "historical",
+              "training"
+            ],
+            "title": "Practice Mode",
+            "default": "historical"
+          },
+          "radiation_profile_ugy_h": {
+            "items": {
+              "type": "number",
+              "minimum": 0.0
+            },
+            "type": "array",
+            "maxItems": 12,
+            "title": "Radiation Profile Ugy H"
+          },
+          "radiation_profile_source_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Radiation Profile Source Hash"
+          },
           "resources": {
             "$ref": "#/components/schemas/Resources"
           },
@@ -2582,6 +2787,11 @@
           "crew_health_pct",
           "exposure_risk_index",
           "science_points",
+          "unreported_data_points",
+          "reported_data_points",
+          "practice_mode",
+          "radiation_profile_ugy_h",
+          "radiation_profile_source_hash",
           "resources",
           "systems",
           "created_at",
@@ -2657,6 +2867,16 @@
             },
             "type": "array",
             "title": "Alerts"
+          },
+          "planning": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanningIndicators"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -2664,7 +2884,8 @@
         "required": [
           "state",
           "available_actions",
-          "alerts"
+          "alerts",
+          "planning"
         ],
         "title": "MissionView"
       },
@@ -2688,6 +2909,45 @@
           "events"
         ],
         "title": "MutationResult"
+      },
+      "PlanningIndicators": {
+        "properties": {
+          "food_autonomy_hours": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Food Autonomy Hours"
+          },
+          "food_reserve_target_kg": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Food Reserve Target Kg"
+          },
+          "pending_reply_minutes": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pending Reply Minutes"
+          },
+          "radio_round_trip_minutes": {
+            "type": "integer",
+            "title": "Radio Round Trip Minutes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "food_autonomy_hours",
+          "food_reserve_target_kg",
+          "pending_reply_minutes",
+          "radio_round_trip_minutes"
+        ],
+        "title": "PlanningIndicators"
       },
       "Preview": {
         "properties": {
@@ -2735,6 +2995,16 @@
           },
           "result": {
             "$ref": "#/components/schemas/MutationResult"
+          },
+          "forecast": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ForecastComparison"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -2742,7 +3012,8 @@
         "required": [
           "persisted",
           "based_on_version",
-          "result"
+          "result",
+          "forecast"
         ],
         "title": "PreviewResult"
       },
@@ -2846,6 +3117,11 @@
             "type": "array",
             "title": "Sources"
           },
+          "model_derivations": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Model Derivations"
+          },
           "notice": {
             "type": "string",
             "title": "Notice",
@@ -2860,6 +3136,7 @@
           "captured_at",
           "historical_replay",
           "sources",
+          "model_derivations",
           "notice"
         ],
         "title": "ScienceBundle"
@@ -3031,6 +3308,24 @@
             "type": "boolean",
             "title": "Earth Message Pending",
             "default": false
+          },
+          "earth_message_data_points": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Earth Message Data Points",
+            "default": 0
+          },
+          "earth_reply_due_minutes": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Earth Reply Due Minutes"
           }
         },
         "additionalProperties": false,
@@ -3042,7 +3337,9 @@
           "water_leak_active",
           "crew_in_shelter",
           "dust_storm_active",
-          "earth_message_pending"
+          "earth_message_pending",
+          "earth_message_data_points",
+          "earth_reply_due_minutes"
         ],
         "title": "Systems"
       },

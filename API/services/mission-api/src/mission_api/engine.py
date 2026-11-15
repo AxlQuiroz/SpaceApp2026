@@ -1,11 +1,12 @@
 """Motor determinista: sin red, base de datos ni dependencia de FastAPI."""
 import random
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 
 from .errors import MissionError
 from .models import (ActionOption, Command, CreateMission, Evaluation, MissionState, MissionView,
-                     MutationResult, Resources, TimelineEvent)
-from .rules import MARS, TERMINAL, rules_for
+                     MutationResult, Resources, TimelineEvent, PlanningIndicators)
+from .rules import MARS, TERMINAL, rules_for, rules_for_state
+from . import legacy_engine
 
 # El mismo catálogo alimenta validación, documentación y controles del frontend.
 ACTIONS = {
@@ -24,7 +25,7 @@ ACTIONS = {
 MARS_ACTIONS = {key: value for key, value in ACTIONS.items() if key != "repair_water_loop"} | {
     "repair_solar_panels": ("Limpiar paneles", "Retira el polvo marciano con cepillos y recupera 50 puntos de integridad.", {}),
     "toggle_oxygen_generator": ("Cambiar estado del generador de oxígeno", "Activa o pausa la obtención de oxígeno a partir del CO2 del aire marciano.", {}),
-    "contact_earth": ("Informar a la Tierra", "Envía tus datos por radio. La respuesta tarda y llega en el turno siguiente con 6 puntos científicos.", {"energy_kwh": 1}),
+    "contact_earth": ("Informar a la Tierra", "Envía tus datos por radio. La respuesta tarda 40 minutos en este ejercicio y se lee al avanzar. Sólo datos nuevos aportan 6 puntos científicos.", {"energy_kwh": 1}),
 }
 
 
@@ -33,9 +34,15 @@ def actions_for(scenario_id: str) -> dict:
 
 
 def new_mission(mission_id: str, config: CreateMission, bundle_id: str, now: datetime,
-                parent_id: str | None = None) -> MissionState:
+                parent_id: str | None = None, *, rules_version: str | None = None,
+                radiation_profile: list[float] | None = None, profile_hash: str | None = None) -> MissionState:
+    if rules_version and rules_version.endswith("1.0.0"):
+        return legacy_engine.new_mission(mission_id, config, bundle_id, now, parent_id)
+    selected = rules_for(config.scenario_id, rules_version)
     factor = 1 if config.difficulty == "cadet" else 0.75
-    return MissionState(id=mission_id, scenario_id=config.scenario_id, rules_version=rules_for(config.scenario_id).version,
+    return MissionState(id=mission_id, scenario_id=config.scenario_id, rules_version=selected.version, practice_mode=config.practice_mode,
+        radiation_profile_ugy_h=list(radiation_profile if radiation_profile is not None else selected.radiation_profile_ugy_h),
+        radiation_profile_source_hash=profile_hash or ("snapshot_sha256:29065bafc5637994ee742ac9a071ba52b8e7ba18935ae13e0dc9874451db1cc7" if config.scenario_id == MARS else None),
         difficulty=config.difficulty, seed=config.seed,
         resources=Resources(energy_kwh=32 * factor, oxygen_kg=2.8 * factor,
                             water_l=18 * factor, food_kg=3.2 * factor, spare_parts=6),
@@ -43,7 +50,9 @@ def new_mission(mission_id: str, config: CreateMission, bundle_id: str, now: dat
 
 
 def _reason(s: MissionState, action: str) -> str | None:
-    R, actions = rules_for(s.scenario_id), actions_for(s.scenario_id)
+    if s.rules_version.endswith("1.0.0"):
+        return legacy_engine._reason(s, action)
+    R, actions = rules_for_state(s), actions_for(s.scenario_id)
     if action not in actions:
         return "Esta acción no existe en esta misión."
     if s.status != "active":
@@ -74,11 +83,15 @@ def _reason(s: MissionState, action: str) -> str | None:
 
 
 def action_options(s: MissionState) -> list[ActionOption]:
+    if s.rules_version.endswith("1.0.0"):
+        return legacy_engine.action_options(s)
     return [ActionOption(id=key, title=value[0], description=value[1], enabled=_reason(s, key) is None,
                          disabled_reason=_reason(s, key), costs=value[2]) for key, value in actions_for(s.scenario_id).items()]
 
 
 def view(s: MissionState) -> MissionView:
+    if s.rules_version.endswith("1.0.0"):
+        return legacy_engine.view(s)
     mars = s.scenario_id == MARS
     alerts = []
     if s.systems.water_leak_active:
@@ -90,7 +103,7 @@ def view(s: MissionState) -> MissionView:
         alerts.append("Tormenta de polvo: llega muy poca luz a los paneles.")
     if mars and s.turn == 2:
         alerts.append("El próximo avance trae la radiación de una eyección solar real: considera entrar al refugio.")
-    if mars and s.turn == rules_for(s.scenario_id).dust_storm_turns[0] - 1:
+    if mars and s.turn == rules_for_state(s).dust_storm_turns[0] - 1:
         alerts.append("Se acerca una tormenta de polvo: ahorra batería antes del próximo avance.")
     if not mars and s.turn == 5:
         alerts.append("El próximo avance incluye un incidente solar simulado: considera entrar al refugio.")
@@ -102,16 +115,24 @@ def view(s: MissionState) -> MissionView:
     ]:
         if getattr(s.resources, field) < threshold:
             alerts.append(message)
-    return MissionView(state=s, available_actions=action_options(s), alerts=alerts)
+    R = rules_for_state(s)
+    planning = PlanningIndicators(
+        food_autonomy_hours=round(s.resources.food_kg / (s.crew_count * R.crew_food_kg_per_person_hour), 2),
+        food_reserve_target_kg=R.food_reserve_target_kg * (0.75 if s.difficulty == "commander" else 1),
+        pending_reply_minutes=max(0, s.systems.earth_reply_due_minutes - s.elapsed_hours * 60) if s.systems.earth_reply_due_minutes is not None else None,
+        radio_round_trip_minutes=2 * R.radio_delay_minutes_one_way)
+    return MissionView(state=s, available_actions=action_options(s), alerts=alerts, planning=planning)
 
 
 def transition(original: MissionState, command: Command, now: datetime) -> MutationResult:
+    if original.rules_version.endswith("1.0.0"):
+        return legacy_engine.transition(original, command, now)
     if command.expected_version != original.version:
         raise MissionError("VERSION_CONFLICT", "La partida cambió. Consulta su estado y vuelve a evaluar la decisión.")
     if original.status in TERMINAL:
         raise MissionError("MISSION_FINISHED", "La misión terminó; puedes iniciar otra mediante restart.")
     s = original.model_copy(deep=True)
-    R, actions, mars = rules_for(s.scenario_id), actions_for(s.scenario_id), s.scenario_id == MARS
+    R, actions, mars = rules_for_state(s), actions_for(s.scenario_id), s.scenario_id == MARS
     events: list[TimelineEvent] = []
 
     def emit(kind, message, payload=None, refs=None):
@@ -152,6 +173,7 @@ def transition(original: MissionState, command: Command, now: datetime) -> Mutat
             sy.crew_in_shelter = False
         elif action == "explore":
             s.science_points += 12
+            s.unreported_data_points += 12
             s.exposure_risk_index = min(100, s.exposure_risk_index + 1)
         elif action == "activate_oxygen_reserve":
             amount = min(0.6, r.reserve_oxygen_kg, R.oxygen_capacity_kg - r.oxygen_kg)
@@ -167,6 +189,9 @@ def transition(original: MissionState, command: Command, now: datetime) -> Mutat
             sy.oxygen_generator_on = not sy.oxygen_generator_on
         elif action == "contact_earth":
             sy.earth_message_pending = True
+            sy.earth_message_data_points = s.unreported_data_points
+            s.unreported_data_points = 0
+            sy.earth_reply_due_minutes = s.elapsed_hours * 60 + 2 * R.radio_delay_minutes_one_way
         s.actions_used += 1
         _round_resources(s)
         emit("action_applied", actions[action][0], {"action_id": action, "resource_delta": _delta(before, s.resources.model_dump())})
@@ -178,12 +203,20 @@ def transition(original: MissionState, command: Command, now: datetime) -> Mutat
         before = r.model_dump()
         dose_rate = None
         if mars:
-            storm, dose_rate = False, R.radiation_profile_ugy_h[s.turn - 1]
+            storm, dose_rate = False, (s.radiation_profile_ugy_h or R.radiation_profile_ugy_h)[s.turn - 1]
             if sy.earth_message_pending:
                 sy.earth_message_pending = False
-                s.science_points += R.earth_reply_science
-                emit("earth_reply", "La Tierra recibió tu informe y respondió: la señal de radio tarda entre 5 y 20 minutos en cada sentido.",
-                     {"science_points": R.earth_reply_science, "radio_delay_minutes_one_way": [5, 20]})
+                data_points = sy.earth_message_data_points
+                bonus = R.earth_reply_science if data_points > 0 else 0
+                s.science_points += bonus
+                s.reported_data_points += data_points
+                emit("earth_reply", "Llegó la respuesta de la Tierra. Sólo los datos nuevos reciben puntos; ante un peligro debes actuar sin esperar instrucciones.",
+                     {"science_points": bonus, "data_points": data_points,
+                      "radio_delay_minutes_one_way": R.radio_delay_minutes_one_way,
+                      "reply_due_elapsed_minutes": sy.earth_reply_due_minutes,
+                      "advice_code": "act_before_hazard"})
+                sy.earth_message_data_points = 0
+                sy.earth_reply_due_minutes = None
             if s.turn == 2:
                 emit("solar_warning", "Aviso de clima espacial: una eyección de masa coronal real (20 de mayo de 2024, 05:36 UTC) se dirige a Marte.",
                      {"cme_start_utc": "2024-05-20T05:36Z"}, ["donki-episode"])
@@ -204,19 +237,21 @@ def transition(original: MissionState, command: Command, now: datetime) -> Mutat
                      {"deposit_pct": R.dust_deposit_pct})
             sky = R.dust_generation_factor if sy.dust_storm_active else 1
         else:
-            if s.turn == 2:
+            if s.turn == R.water_leak_turn:
                 sy.water_leak_active = True
                 emit("water_leak", "Incidente simulado: se detectó una fuga en el circuito de agua.")
             if s.turn == 5:
                 emit("solar_warning", "Ejercicio de clima espacial: prepara el refugio para el siguiente turno.", refs=["donki-episode"])
-            if s.turn == 8:
+            if s.turn == R.panel_damage_turn:
                 sy.solar_integrity_pct = max(0, sy.solar_integrity_pct - 50)
                 emit("panel_damage", "Incidente simulado: el polvo redujo la integridad de los paneles en 50 puntos.")
             storm = s.turn == 6
-            sky = 0.3 if storm else 1
+            # La tormenta no tapa la luz: el sistema limita su salida en modo de protección.
+            sky = 1
+        power_protection = R.power_protection_factor if storm else 1
 
         # Se asigna la electricidad por prioridad. No se produce oxígeno sin energía o sin agua.
-        generation = R.solar_kw * R.solar_irradiance_factor * R.turn_hours * sy.solar_integrity_pct / 100 * sky
+        generation = R.solar_kw * R.solar_irradiance_factor * R.turn_hours * sy.solar_integrity_pct / 100 * sky * power_protection
         available = r.energy_kwh + generation
         supplied = {}
         for name, kw, enabled in [
@@ -260,10 +295,15 @@ def transition(original: MissionState, command: Command, now: datetime) -> Mutat
         payload = {
             "resource_delta": _delta(before, r.model_dump()), "generated_kwh": round(generation, 4),
             "curtailed_kwh": round(curtailed, 4), "power_fractions": supplied,
+            "power_protection_factor": power_protection,
             "risk_delta_points": round(risk, 4), "health_loss_points": round(health_loss, 4),
         }
         if dose_rate is not None:
-            payload |= {"dose_rate_ugy_h": dose_rate, "dose_rate_source": "radlab-reference", "sky_factor": sky}
+            payload |= {"dose_rate_ugy_h": dose_rate, "dose_rate_source": "radlab-reference", "sky_factor": sky,
+                       "radiation_profile_source_hash": s.radiation_profile_source_hash,
+                       "observation_start_utc": (datetime(2024, 5, 20, tzinfo=UTC) + timedelta(hours=(s.turn - 1) * R.turn_hours)).isoformat(),
+                       "observation_end_utc": (datetime(2024, 5, 20, tzinfo=UTC) + timedelta(hours=s.turn * R.turn_hours)).isoformat(),
+                       "historical_replay": True}
         emit("turn_advanced", "Se calcularon dos horas de producción y consumo.", payload)
         if s.crew_health_pct <= 0:
             s.status, s.end_reason = "failed", "La salud de la tripulación llegó a cero en el modelo didáctico."
@@ -290,28 +330,38 @@ def _delta(before, after):
 
 
 def evaluate(s: MissionState) -> Evaluation:
-    R, mars = rules_for(s.scenario_id), s.scenario_id == MARS
+    if s.rules_version.endswith("1.0.0"):
+        return legacy_engine.evaluate(s)
+    R, mars = rules_for_state(s), s.scenario_id == MARS
+    reserve_target = R.food_reserve_target_kg * (0.75 if s.difficulty == "commander" else 1)
     objectives = {"completed_duration": s.turn >= R.turns, "healthy_crew": s.crew_health_pct >= 60,
-                  "science_target": s.science_points >= R.science_target}
-    score = round(40 * s.turn / R.turns + 30 * s.crew_health_pct / 100
-                  + 20 * min(1, s.science_points / R.science_target) + 10 * (1 - s.exposure_risk_index / 100))
+                  "science_target": s.science_points >= R.science_target,
+                  "food_reserve": s.resources.food_kg + 1e-6 >= reserve_target}
+    if mars:
+        objectives["science_shared"] = s.reported_data_points >= R.required_transmitted_data
+    score = round(35 * s.turn / R.turns + 25 * s.crew_health_pct / 100
+                  + 20 * min(1, s.science_points / R.science_target) + 10 * (1 - s.exposure_risk_index / 100)
+                  + 10 * min(1, s.resources.food_kg / reserve_target))
     outcome = "in_progress"
     if s.status == "completed":
         outcome = "success" if all(objectives.values()) else "partial"
     elif s.status in {"failed", "aborted"}:
         outcome = s.status
-    feedback = []
+    notes = []
     if s.systems.water_leak_active:
-        feedback.append("Reparar pronto una fuga conserva agua para los turnos siguientes.")
+        notes.append(("repair_leak", "Reparar pronto una fuga conserva agua para los turnos siguientes."))
     if s.exposure_risk_index > 20:
-        feedback.append("Planificar el refugio antes del incidente reduce el índice de exposición simulado.")
+        notes.append(("plan_shelter", "Planificar el refugio antes del incidente reduce el índice de exposición simulado."))
     if not objectives["science_target"]:
-        feedback.append("Dos exploraciones y un informe a la Tierra alcanzan el objetivo científico." if mars
-                        else "Dos exploraciones alcanzan el objetivo científico; cada una consume suministros.")
+        notes.append(("research_mars" if mars else "research_lunar", "Explora para reunir datos nuevos. En Marte, un informe científico nuevo también aporta puntos." if mars else "Dos exploraciones alcanzan el objetivo científico; cada una consume suministros."))
+    if not objectives["food_reserve"]:
+        notes.append(("keep_food", "Conserva alimento para la siguiente jornada. Apagar el cultivo ahorra energía ahora, pero reduce esa reserva."))
+    if mars and not objectives["science_shared"]:
+        notes.append(("share_data", "Comparte con la Tierra los datos de al menos una exploración. Repetir una consulta sin datos no produce ciencia."))
     if s.resources.energy_kwh < 8:
-        feedback.append("Limpia los paneles o pausa sistemas secundarios durante la tormenta de polvo." if mars
-                        else "Repara los paneles o pausa sistemas secundarios para proteger el soporte vital.")
-    if outcome == "success":
-        feedback.append("Completaste la misión y sus objetivos de salud y exploración.")
+        notes.append(("power_mars" if mars else "power_lunar", "Limpia los paneles o pausa sistemas secundarios durante la tormenta de polvo." if mars else "Repara los paneles o pausa sistemas secundarios para proteger el soporte vital."))
+    if not notes:
+        notes.append(("good_balance", "Buen equilibrio entre protección, investigación y suministros para continuar la misión."))
     return Evaluation(mission_id=s.id, final=s.status in TERMINAL, outcome=outcome,
-                      score=max(0, min(100, score)), objectives=objectives, feedback=feedback, rules_version=s.rules_version)
+                      score=min(100, max(0, score)), objectives=objectives,
+                      feedback=[text for _, text in notes], feedback_codes=[code for code, _ in notes], rules_version=s.rules_version)

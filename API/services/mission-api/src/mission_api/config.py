@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     allowed_hosts: list[str] = ["localhost", "127.0.0.1", "[::1]"]
     requests_per_minute: int = Field(default=300, ge=1, le=10000)
     sessions_per_hour: int = Field(default=20, ge=1, le=1000)
+    proxy_token: SecretStr | None = None
+    proxy_requests_per_minute: int = Field(default=3000, ge=100, le=100000)
+    proxy_sessions_per_hour: int = Field(default=1000, ge=20, le=100000)
     max_body_bytes: int = Field(default=16384, ge=1024, le=1048576)
     max_active_missions_per_session: int = Field(default=20, ge=1, le=100)
 
@@ -32,6 +35,10 @@ class Settings(BaseSettings):
         token = self.resource_api_token.get_secret_value()
         if len(token) < 32 or len(set(token)) < 8 or token.startswith("REEMPLAZAR_"):
             raise ValueError("Configura RESOURCE_API_TOKEN con un token aleatorio de al menos 32 caracteres.")
+        if self.proxy_token and self.proxy_token.get_secret_value():
+            proxy_secret = self.proxy_token.get_secret_value()
+            if len(proxy_secret) < 32 or len(set(proxy_secret)) < 8 or proxy_secret.startswith("REEMPLAZAR_"):
+                raise ValueError("MISSION_PROXY_TOKEN requiere un secreto propio aleatorio de al menos 32 caracteres.")
         for origin in self.cors_origins:
             parsed = urlsplit(origin)
             if (origin == "*" or parsed.scheme not in {"https", "http"} or not parsed.hostname

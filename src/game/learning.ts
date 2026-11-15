@@ -102,8 +102,8 @@ export const TERMS: Term[] = [
     on: ["event:solar_incident"],
     term: { es: "Radiación", en: "Radiation" },
     text: {
-      es: "Son partículas diminutas y rapidísimas que lanza el Sol. No se ven ni se sienten, pero demasiadas dañan el cuerpo. En la Tierra nos protegen el aire y un escudo magnético invisible. Aquí nos protege el refugio.",
-      en: "These are tiny, super-fast particles thrown out by the Sun. You can't see or feel them, but too many harm the body. On Earth, air and an invisible magnetic shield protect us. Here, the shelter does.",
+      es: "La radiación lleva energía como ondas o partículas. Puede venir del Sol y del espacio profundo. En la Tierra nos protegen el aire y el campo magnético. Aquí reducimos la exposición con un refugio.",
+      en: "Radiation carries energy as waves or particles. It can come from the Sun and deep space. Air and a magnetic field protect Earth. Here, a shelter reduces exposure.",
     },
   },
   {
@@ -172,8 +172,8 @@ export const TERMS: Term[] = [
     on: ["event:solar_incident@mars"],
     term: { es: "RAD, el medidor del rover Curiosity", en: "RAD, the Curiosity rover's detector" },
     text: {
-      es: "Curiosity es un rover de la NASA que explora Marte desde 2012. Lleva un aparato llamado RAD que cuenta la radiación. Los números de esta misión son los que RAD midió de verdad ese día.",
-      en: "Curiosity is a NASA rover that has explored Mars since 2012. It carries a device called RAD that counts radiation. The numbers in this mission are the ones RAD really measured that day.",
+      es: "Curiosity es un rover de la NASA que explora Marte desde 2012. Lleva un aparato llamado RAD que cuenta la radiación. Las lecturas de RAD son reales. El índice de exposición del juego es una transformación para aprender.",
+      en: "Curiosity is a NASA rover that has explored Mars since 2012. It carries a device called RAD that counts radiation. RAD readings are real. The game exposure index is an educational transformation.",
     },
   },
   {
@@ -192,8 +192,8 @@ export const TERMS: Term[] = [
     on: ["action:contact_earth"],
     term: { es: "Retraso de la señal", en: "Signal delay" },
     text: {
-      es: "Los mensajes viajan por radio a la velocidad de la luz, ¡la más rápida que existe! Aun así, Marte está tan lejos que tardan entre 5 y 20 minutos en llegar. No se puede platicar en vivo con la Tierra.",
-      en: "Messages travel by radio at the speed of light, the fastest there is! Even so, Mars is so far away that they take 5 to 20 minutes to arrive. You can't chat live with Earth.",
+      es: "Los mensajes viajan por radio a la velocidad de la luz, ¡la más rápida que existe! Aun así, Marte está tan lejos que tardan entre 3 y 22 minutos en llegar. No se puede platicar en vivo con la Tierra.",
+      en: "Messages travel by radio at the speed of light, the fastest there is! Even so, Mars is so far away that they take 3 to 22 minutes to arrive. You can't chat live with Earth.",
     },
   },
 ];
@@ -290,7 +290,7 @@ export const QUIZZES: Quiz[] = [
       { es: "Porque la radio estaba descompuesta", en: "Because the radio was broken" },
     ],
     answer: 1,
-    explain: { es: "Ni la luz, que es lo más rápido que existe, llega al instante: tarda entre 5 y 20 minutos.", en: "Not even light, the fastest thing there is, arrives instantly: it takes 5 to 20 minutes." },
+    explain: { es: "Ni la luz, que es lo más rápido que existe, llega al instante: tarda entre 3 y 22 minutos.", en: "Not even light, the fastest thing there is, arrives instantly: it takes 3 to 22 minutes." },
   },
 ];
 
