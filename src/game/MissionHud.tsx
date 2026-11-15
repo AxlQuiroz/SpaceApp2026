@@ -43,6 +43,7 @@ import {
   type ModuleId,
   type TurnPayload,
 } from "./model";
+import { missionErrorText, reviewText } from "./reviewText";
 import { TurnReport } from "./TurnReport";
 import { isDemo, type ActionId, type MissionController, type ScenarioParams } from "./useMission";
 
@@ -77,6 +78,7 @@ type Props = { game: MissionController & { mission: MissionView } };
 export function MissionHud({ game }: Props) {
   const { t, locale } = useI18n();
   const { play } = useAudio();
+  const copy = reviewText(locale);
   const { mission, log, latest, busy, scenario } = game;
   const s = mission.state;
   const p: ScenarioParams = scenario?.parameters ?? {
@@ -94,6 +96,7 @@ export function MissionHud({ game }: Props) {
   const actionsLeft = Math.max(0, p.actions_per_turn - s.actions_used);
   const active = s.status === "active";
 
+  const [vitalsExpanded, setVitalsExpanded] = useState(false);
   const [selected, setSelected] = useState<ModuleId | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [logbookOpen, setLogbookOpen] = useState(false);
@@ -228,7 +231,7 @@ export function MissionHud({ game }: Props) {
   const coachInfo = coachStep !== null && !COACH_STEPS[coachStep].wait;
   /** Mientras R0-B1 explica un paso, lo demás espera; en los pasos de práctica se ve todo. */
   const showQueue = queue.length > 0 && !coachInfo;
-  const overlayOpen = showQueue || !!pendingAction || menuOpen || coachInfo;
+  const overlayOpen = showQueue || !!pendingAction || menuOpen || sourcesOpen || medalsOpen || logbookOpen || actionsOpen || coachInfo;
 
   /* ---------- "¿Qué pasaría si…?" ---------- */
   const askPreview = useCallback(
@@ -243,14 +246,14 @@ export function MissionHud({ game }: Props) {
     [game],
   );
   const confirmAction = useCallback(() => {
-    if (!pendingAction) return;
+    if (!pendingAction?.result || pendingAction.result === "error" || !pendingAction.result.forecast) return;
     const { id } = pendingAction;
     setPendingAction(null);
     void game.act(id);
   }, [game, pendingAction]);
 
   /* ---------- Espacio = avanzar turno ---------- */
-  const canAdvance = active && !busy && !game.hasPending;
+  const canAdvance = active && !busy && !game.hasPending && !overlayOpen;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.code !== "Space" || overlayOpen) return;
@@ -266,7 +269,7 @@ export function MissionHud({ game }: Props) {
   /* ---------- Tarjeta de comandos ---------- */
   const commands: Command[] = commandLayout(mission).map(({ id, icon }) => {
     const opt = mission.available_actions.find((a) => a.id === id);
-    const enabled = !!opt?.enabled && actionsLeft > 0 && active && !busy && !game.hasPending;
+    const enabled = !!opt?.enabled && actionsLeft > 0 && active && !busy && !game.hasPending && !overlayOpen;
     const reason = !opt?.enabled
       ? locale === "es"
         ? (opt?.disabled_reason ?? t.game.unavailable)
@@ -325,7 +328,7 @@ export function MissionHud({ game }: Props) {
       {/* ================= BARRA SUPERIOR ================= */}
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
-          <PixelButton className="whitespace-nowrap" onClick={() => setMenuOpen(true)} aria-haspopup="dialog">
+          <PixelButton disabled={showQueue || !!pendingAction || coachInfo} className="whitespace-nowrap" onClick={() => setMenuOpen(true)} aria-haspopup="dialog">
             ☰ {t.game.menu}
           </PixelButton>
           <div className="bevel flex items-center gap-3 px-3 py-1" role="status" aria-label={`${t.game.turn} ${s.turn} / ${p.turns}`}>
@@ -343,13 +346,14 @@ export function MissionHud({ game }: Props) {
             </div>
           </div>
           <Badge tone="info">{mars ? t.destination.mars : t.destination.moon}</Badge>
-          {isDemo() && (
-            <Badge tone="warn">DEMO</Badge>
-          )}
+          {s.rules_version.endsWith("1.0.0") && <Badge tone="warn">{locale === "en" ? "Previous rules · saved mission" : "Reglas anteriores · partida guardada"}</Badge>}
+          {isDemo() ? <Badge tone="warn">DEMO</Badge> : <Badge tone="info">{copy.historical}{mars ? " · 20-05-2024" : ""}</Badge>}
           {s.status === "paused" && <Badge tone="warn">{t.missionStatus.paused}</Badge>}
         </div>
         <div className="bevel flex min-w-0 max-w-full flex-wrap gap-1 px-1 py-1" data-tour="resources">
           <ResourceCounter icon="energy" label={t.resources.energy} value={r.energy_kwh} unit="kWh" decimals={1} max={p.energy_capacity_kwh} dangerBelow={DANGER.energy_kwh} delta={delta("energy_kwh")} />
+          <PixelButton className="md:hidden" aria-expanded={vitalsExpanded} onClick={() => setVitalsExpanded(v => !v)}>{copy.support} · {vitalsExpanded ? copy.hide : copy.details}</PixelButton>
+          <div className={vitalsExpanded || mission.alerts.length > 0 ? "contents" : "hidden md:contents"}>
           <ResourceCounter
             icon="oxygen"
             label={t.resources.oxygen}
@@ -374,13 +378,21 @@ export function MissionHud({ game }: Props) {
           />
           <ResourceCounter icon="ration" label={t.game.food} value={r.food_kg} unit="kg" decimals={2} max={p.food_capacity_kg} dangerBelow={DANGER.food_kg} delta={delta("food_kg")} />
           <ResourceCounter icon="gear" label={t.game.parts} value={r.spare_parts} delta={delta("spare_parts")} />
+          </div>
         </div>
       </header>
 
+      {mission.planning && <aside className="bevel-inset flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2 text-base" aria-label={copy.support}>
+        <span>{copy.foodHours}: <strong>{mission.planning.food_autonomy_hours.toFixed(1)} h</strong> · {copy.hours}</span>
+        <span className={r.food_kg < mission.planning.food_reserve_target_kg ? "text-amber" : "text-lime"}>{copy.foodTarget}: {mission.planning.food_reserve_target_kg.toFixed(1)} kg</span>
+        {mars && <span>{copy.data}: {s.unreported_data_points}</span>}
+        {mission.planning.pending_reply_minutes !== null && <span className="text-amber">{copy.pendingRadio}: {mission.planning.pending_reply_minutes} {copy.minutes}</span>}
+        <details className="w-full"><summary className="cursor-pointer py-2">{copy.simulation} · {s.practice_mode === "training" ? copy.training : copy.historicalMode}</summary><p>{copy.harvestNote} {mars && copy.radioNote}</p></details>
+      </aside>}
       {banner && <AlertBanner icon="warning" message={localizeAlert(banner, locale)} onDismiss={() => setBanner(null)} />}
       {game.error && (
         <div role="alert" className="bevel flex items-center gap-3 px-3 py-2" style={{ ["--bevel-fill" as string]: "var(--color-alert-dark)" }}>
-          <span className="flex-1">{game.error}</span>
+          <span className="flex-1">{missionErrorText(game.error, locale, game.errorCode)}</span>
           {game.canRetry && <PixelButton disabled={busy || game.retryIn > 0} onClick={() => void game.retry()}>{t.menu.retry}{game.retryIn > 0 ? ` (${game.retryIn}s)` : ""}</PixelButton>}
         </div>
       )}
@@ -392,7 +404,7 @@ export function MissionHud({ game }: Props) {
           modules={modules}
           weather={weather}
           selected={selected}
-          onSelect={setSelected}
+          onSelect={id => { if (!overlayOpen) setSelected(id); }}
           activity={activity}
           turnBanner={turnBanner}
         />
@@ -483,7 +495,7 @@ export function MissionHud({ game }: Props) {
         <PixelButton
           data-tour="commands"
           className="min-w-0 flex-1 flex-wrap px-2 sm:px-4"
-          disabled={!active || busy || game.hasPending}
+          disabled={!active || busy || game.hasPending || overlayOpen}
           onClick={() => setActionsOpen(true)}
           aria-haspopup="dialog"
           icon={<span className="hidden sm:inline-flex"><PixelSprite icon="explore" scale={2} /></span>}
@@ -537,7 +549,7 @@ export function MissionHud({ game }: Props) {
       {/* ================= NARRACIÓN (una cosa a la vez) ================= */}
       {showQueue && queue[0].kind === "text" && (
         <div data-testid="narration" className="fixed inset-x-2 bottom-2 z-40 mx-auto max-w-2xl">
-          <DialogBox key={queue[0].text + queue.length} speaker={t.assistant.name} text={queue[0].text} onConfirm={nextNarration} />
+          <DialogBox modal key={queue[0].text + queue.length} speaker={t.assistant.name} text={queue[0].text} onConfirm={nextNarration} />
         </div>
       )}
       {showQueue && queue[0].kind === "term" && (
@@ -597,6 +609,7 @@ export function MissionHud({ game }: Props) {
               busy={busy || game.hasPending}
               onConfirm={confirmAction}
               onCancel={() => setPendingAction(null)}
+              onRetry={() => askPreview(pendingAction.id)}
             />
           </div>
         </div>
@@ -627,9 +640,9 @@ export function MissionHud({ game }: Props) {
       </Modal>
       <LogbookModal open={logbookOpen} onClose={() => setLogbookOpen(false)} progress={progress} />
       <MedalsModal open={medalsOpen} onClose={() => setMedalsOpen(false)} progress={progress} />
-      <SourcesModal key={s.id} open={sourcesOpen} onClose={() => setSourcesOpen(false)} load={game.science} />
-      <EndModal evaluation={queue.length ? null : game.evaluation} onAgain={() => void game.restart()} onMenu={game.exitToMenu}
-        busy={busy} hasPending={game.hasPending} error={game.error} retryIn={game.retryIn} onRetry={game.canRetry ? () => void game.retry() : undefined} />
+      <SourcesModal scenarioId={s.scenario_id} key={s.id} open={sourcesOpen} onClose={() => setSourcesOpen(false)} load={game.science} />
+      <EndModal actionName={id => actionText(t, mission, id).label} evaluation={queue.length ? null : game.evaluation} onAgain={() => void game.restart()} onMenu={game.exitToMenu}
+        busy={busy} hasPending={game.hasPending} error={game.error ? missionErrorText(game.error, locale, game.errorCode) : null} retryIn={game.retryIn} onRetry={game.canRetry ? () => void game.retry() : undefined} />
       {coachStep !== null && (
         <Coach step={coachStep} hidden={(showQueue || !!pendingAction || menuOpen) && !coachInfo} onNext={nextCoach} onSkip={skipCoach} />
       )}

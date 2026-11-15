@@ -3,12 +3,15 @@
 import { useState } from "react";
 import { Panel, PixelButton, PixelSprite, SettingsBar, Starfield } from "@/components/hud";
 import { MissionHud } from "@/game/MissionHud";
-import { useMission, type ScenarioId } from "@/game/useMission";
+import { isDemo, useMission, type ScenarioId } from "@/game/useMission";
+import { missionErrorText, reviewText } from "@/game/reviewText";
 import { useI18n } from "@/lib/providers";
 
 export default function MissionPage() {
   const game = useMission();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const copy = reviewText(locale);
+  const [practiceMode, setPracticeMode] = useState<"historical" | "training">("historical");
   const [difficulty, setDifficulty] = useState<"cadet" | "commander">("cadet");
   const [destination, setDestination] = useState<ScenarioId>("lunar-outpost-v1");
   // Marte sólo se ofrece si el backend conectado ya lo incluye.
@@ -41,7 +44,7 @@ export default function MissionPage() {
               <PixelSprite sprite="robot" anim="idle" scale={5} label="R0-B1" />
               <h2 className="font-pixel text-2xl text-alert">{t.menu.offlineTitle}</h2>
               <p className="text-xl text-steel-200">{t.menu.offlineBody}</p>
-              {game.error && <p className="font-tiny text-xs text-steel-400">{game.error}</p>}
+              {game.error && <p className="font-tiny text-xs text-steel-400">{missionErrorText(game.error, locale, game.errorCode)}</p>}
               <div className="flex flex-wrap justify-center gap-2">
                 <PixelButton variant="primary" disabled={game.busy || game.retryIn > 0} onClick={() => void game.connect()}>
                   {t.menu.retry}{game.retryIn > 0 ? ` (${game.retryIn}s)` : ""}
@@ -115,16 +118,17 @@ export default function MissionPage() {
                   </label>
                 ))}
               </fieldset>
+              <fieldset className="w-full text-left"><legend className="font-pixel text-lg text-amber">{copy.simulation}</legend><div className="flex flex-wrap gap-3">{(["historical", "training"] as const).filter(mode => !isDemo() || mode === "historical").map(mode => <label key={mode} className="bevel flex min-h-11 cursor-pointer items-center gap-2 px-3 py-2"><input type="radio" name="practice-mode" checked={practiceMode === mode} onChange={() => setPracticeMode(mode)} />{mode === "historical" ? copy.historicalMode : copy.training}</label>)}</div><p className="mt-2 text-base text-steel-200">{copy.modeNote}</p></fieldset>
               <PixelButton
                 variant="primary"
                 className="px-8 text-2xl"
                 disabled={game.busy || game.hasPending}
-                onClick={() => void game.start({ scenario_id: destination, difficulty, seed: Math.floor(Math.random() * 1_000_000) })}
+                onClick={() => void game.start({ scenario_id: destination, difficulty, practice_mode: practiceMode, seed: Math.floor(Math.random() * 1_000_000) })}
                 icon={<PixelSprite icon="next" scale={3} />}
               >
                 {game.busy ? "…" : t.menu.play}
               </PixelButton>
-              {game.error && <p role="alert" className="text-alert">{game.error}</p>}
+              {game.error && <p role="alert" className="text-alert">{missionErrorText(game.error, locale, game.errorCode)}</p>}
               {game.canRetry && <PixelButton disabled={game.busy || game.retryIn > 0} onClick={() => void game.retry()}>{t.menu.retry}{game.retryIn > 0 ? ` (${game.retryIn}s)` : ""}</PixelButton>}
             </>
           )}

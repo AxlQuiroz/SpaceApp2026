@@ -50,8 +50,8 @@ const MARS_ACTIONS: Partial<Record<ActionId, ActionDef>> = {
 const MARS_RAD = [3.81, 3.93, 60.05, 246.39, 122.15, 91.23, 72.12, 48.51, 38.63, 31.07, 27.25, 22.93];
 
 const RULES = {
-  "lunar-outpost-v1": { version: "lunar-1.0.0" as const, actions: LUNAR_ACTIONS, solarKwh: 11, oxygenKwh: 2.4, generatorWater: 0.45, science: 24 },
-  "mars-outpost-v1": { version: "mars-1.0.0" as const, actions: MARS_ACTIONS, solarKwh: 11.008, oxygenKwh: 4, generatorWater: 0, science: 30 },
+  "lunar-outpost-v1": { version: "lunar-1.1.0" as const, actions: LUNAR_ACTIONS, solarKwh: 11, oxygenKwh: 2.4, generatorWater: 0.45, science: 24 },
+  "mars-outpost-v1": { version: "mars-1.1.0" as const, actions: MARS_ACTIONS, solarKwh: 11.008, oxygenKwh: 4, generatorWater: 0, science: 30 },
 };
 const DUST_TURNS = [6, 7, 8, 9];
 
@@ -99,6 +99,11 @@ function initialState(opts: CreateMission, parent: string | null = null): Missio
     crew_health_pct: 100,
     exposure_risk_index: 0,
     science_points: 0,
+    unreported_data_points: 0,
+    reported_data_points: 0,
+    practice_mode: "historical", // El demo visual conserva un solo guion.
+    radiation_profile_ugy_h: scenario === "mars-outpost-v1" ? MARS_RAD : [],
+    radiation_profile_source_hash: null,
     resources: {
       energy_kwh: 32 * k,
       oxygen_kg: 2.8 * k,
@@ -116,6 +121,8 @@ function initialState(opts: CreateMission, parent: string | null = null): Missio
       crew_in_shelter: false,
       dust_storm_active: false,
       earth_message_pending: false,
+      earth_message_data_points: 0,
+      earth_reply_due_minutes: null,
     },
     created_at: now(),
     updated_at: now(),
@@ -165,7 +172,11 @@ function view(s: MissionState): MissionView {
     const why = reason(s, id);
     return { id, title: actions[id]!.title, description: "", enabled: why === null, disabled_reason: why, costs: actions[id]!.costs };
   });
-  return { state: structuredClone(s), available_actions, alerts };
+  return { state: structuredClone(s), available_actions, alerts,
+    planning: { food_autonomy_hours: Math.round(s.resources.food_kg / 0.1 * 100) / 100,
+      food_reserve_target_kg: s.difficulty === "commander" ? 0.6 : 0.8,
+      pending_reply_minutes: s.systems.earth_reply_due_minutes === null ? null : Math.max(0, s.systems.earth_reply_due_minutes - s.elapsed_hours * 60),
+      radio_round_trip_minutes: 40 } };
 }
 
 const evt = (s: MissionState, type: string, message: string, payload: Record<string, unknown> = {}): TimelineEvent => ({
@@ -209,11 +220,17 @@ function transition(s: MissionState, command: Command): TimelineEvent[] {
     if (id === "leave_shelter") sy.crew_in_shelter = false;
     if (id === "explore") {
       s.science_points += 12;
+      s.unreported_data_points += 12;
       s.exposure_risk_index = Math.min(100, s.exposure_risk_index + 1);
     }
     if (id === "toggle_greenhouse") sy.greenhouse_on = !sy.greenhouse_on;
     if (id === "toggle_oxygen_generator") sy.oxygen_generator_on = !sy.oxygen_generator_on;
-    if (id === "contact_earth") sy.earth_message_pending = true;
+    if (id === "contact_earth") {
+      sy.earth_message_pending = true;
+      sy.earth_message_data_points = s.unreported_data_points;
+      s.unreported_data_points = 0;
+      sy.earth_reply_due_minutes = s.elapsed_hours * 60 + 40;
+    }
     if (id === "activate_oxygen_reserve") {
       const x = Math.min(0.6, r.reserve_oxygen_kg, 6 - r.oxygen_kg);
       r.reserve_oxygen_kg -= x;
@@ -237,8 +254,12 @@ function transition(s: MissionState, command: Command): TimelineEvent[] {
       dose = MARS_RAD[s.turn - 1];
       if (sy.earth_message_pending) {
         sy.earth_message_pending = false;
-        s.science_points += 6;
-        out.push(evt(s, "earth_reply", "La Tierra respondió.", { science_points: 6 }));
+        const bonus = sy.earth_message_data_points > 0 ? 6 : 0;
+        s.science_points += bonus;
+        s.reported_data_points += sy.earth_message_data_points;
+        sy.earth_message_data_points = 0;
+        sy.earth_reply_due_minutes = null;
+        out.push(evt(s, "earth_reply", "La Tierra respondió.", { science_points: bonus }));
       }
       if (s.turn === 2) out.push(evt(s, "solar_warning", "Aviso de clima espacial.", { cme_start_utc: "2024-05-20T05:36Z" }));
       if (s.turn === 3) out.push(evt(s, "solar_incident", "Llegó la radiación.", { sheltered: sy.crew_in_shelter, dose_rate_ugy_h: dose }));
@@ -371,7 +392,12 @@ export class MockMissionClient {
   async preview(id: string, actionId: ActionId, expectedVersion: number): Promise<PreviewResult> {
     const copy = structuredClone(this.records.get(id)!.state);
     const events = transition(copy, { type: "action", action_id: actionId, expected_version: expectedVersion });
-    return { persisted: false, based_on_version: expectedVersion, result: { mission: view(copy), events } };
+    const immediate = { mission: view(structuredClone(copy)), events };
+    const baseline = structuredClone(this.records.get(id)!.state);
+    const baselineEvents = transition(baseline, { type: "advance", expected_version: baseline.version });
+    const forecastEvents = transition(copy, { type: "advance", expected_version: copy.version });
+    return { persisted: false, based_on_version: expectedVersion, result: immediate,
+      forecast: { horizon_hours: 2, without_action: { mission: view(baseline), events: baselineEvents }, with_action: { mission: view(copy), events: forecastEvents } } };
   }
 
   async evaluation(id: string): Promise<Evaluation> {
@@ -381,6 +407,8 @@ export class MockMissionClient {
       completed_duration: s.turn >= 12,
       healthy_crew: s.crew_health_pct >= 60,
       science_target: s.science_points >= target,
+      food_reserve: s.resources.food_kg >= (s.difficulty === "commander" ? 0.6 : 0.8),
+      ...(s.scenario_id === "mars-outpost-v1" ? { science_shared: s.reported_data_points >= 12 } : {}),
     };
     const score = Math.round(
       (s.turn / 12) * 40 + (s.crew_health_pct / 100) * 30 + Math.min(1, s.science_points / target) * 20 + (1 - s.exposure_risk_index / 100) * 10,
@@ -394,6 +422,7 @@ export class MockMissionClient {
       objectives,
       feedback: ["Modo demo: enciende el backend para la evaluación oficial."],
       rules_version: s.rules_version,
+      feedback_codes: [], comparison: null,
     };
   }
 
@@ -403,6 +432,7 @@ export class MockMissionClient {
       requested_mode: "snapshot",
       captured_at: now(),
       historical_replay: true,
+      model_derivations: {},
       notice: "Modo demo: enciende el backend para ver las fuentes NASA reales.",
       sources: [
         { id: "donki-episode", role: "Contexto histórico de clima espacial", interpretation: "Ejemplo (demo).", records: [], pages_meta: [] },

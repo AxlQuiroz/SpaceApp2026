@@ -1,5 +1,6 @@
 """Parámetros didácticos versionados; no son coeficientes certificados por NASA."""
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
+import random
 
 LUNAR = "lunar-outpost-v1"
 MARS = "mars-outpost-v1"
@@ -49,6 +50,12 @@ class Rules:
     dust_deposit_pct: float = 0.0
     # Puntos científicos que aporta la respuesta de la Tierra a un informe.
     earth_reply_science: int = 0
+    food_reserve_target_kg: float = 0.0
+    required_transmitted_data: int = 0
+    radio_delay_minutes_one_way: int = 20
+    water_leak_turn: int = 2
+    panel_damage_turn: int = 8
+    power_protection_factor: float = 0.3
 
 
 RULES = Rules()
@@ -62,18 +69,43 @@ MARS_RULES = Rules(
     dust_storm_turns=(6, 7, 8, 9), dust_generation_factor=0.2, dust_deposit_pct=40,
     science_target=30, earth_reply_science=6,
 )
-RULESETS = {LUNAR: RULES, MARS: MARS_RULES}
+LEGACY_RULESETS = {LUNAR: RULES, MARS: MARS_RULES}
+RULESETS = {
+    LUNAR: replace(RULES, version="lunar-1.1.0", food_reserve_target_kg=0.8),
+    MARS: replace(MARS_RULES, version="mars-1.1.0", food_reserve_target_kg=0.8, required_transmitted_data=12),
+}
+VERSIONED_RULESETS = {r.version: r for r in (*LEGACY_RULESETS.values(), *RULESETS.values())}
 TERMINAL = {"completed", "failed", "aborted"}
 
 
-def rules_for(scenario_id: str) -> Rules:
-    return RULESETS[scenario_id]
+def legacy_rules_for(scenario_id: str) -> Rules:
+    return LEGACY_RULESETS[scenario_id]
+
+
+def rules_for(scenario_id: str, version: str | None = None) -> Rules:
+    if version is None:
+        return RULESETS[scenario_id]
+    expected = "mars-" if scenario_id == MARS else "lunar-"
+    if not version.startswith(expected) or version not in VERSIONED_RULESETS:
+        raise ValueError("La versión de reglas no corresponde al escenario.")
+    return VERSIONED_RULESETS[version]
+
+
+def rules_for_state(state) -> Rules:
+    rules = rules_for(state.scenario_id, state.rules_version)
+    if state.rules_version.endswith("1.0.0") or state.practice_mode != "training":
+        return rules
+    rng = random.Random(f"{state.scenario_id}:{state.seed}:incidents-v1")
+    if state.scenario_id == MARS:
+        first = rng.choice((5, 6, 7))
+        return replace(rules, dust_storm_turns=tuple(range(first, first + 4)))
+    return replace(rules, water_leak_turn=rng.choice((2, 3)), panel_damage_turn=rng.choice((7, 8, 9)))
 
 
 _UNITS = {"energy": "kWh", "oxygen": "kg", "water": "L", "food": "kg", "power": "kW", "risk": "simulation_points"}
 
 
-def scenario_catalog(scenario_id: str = LUNAR) -> dict:
+def _original_catalog(scenario_id: str = LUNAR) -> dict:
     if scenario_id == MARS:
         return _mars_catalog()
     return {
@@ -132,3 +164,26 @@ def _mars_catalog() -> dict:
         "parameters": asdict(MARS_RULES),
         "units": _UNITS | {"dose_rate": "uGy/h"},
     }
+
+
+def scenario_catalog(scenario_id: str = LUNAR) -> dict:
+    catalog = _original_catalog(scenario_id)
+    current = rules_for(scenario_id)
+    catalog.update(rules_version=current.version, parameters=asdict(current))
+    catalog["objectives"] += ["Conservar alimento para la siguiente jornada (0.8 kg en cadete; 0.6 kg en comandante)"]
+    catalog["practice_modes"] = ["historical", "training"]
+    catalog["assumptions"] += [
+        "La reserva alimentaria final es un objetivo didáctico; no una recomendación nutricional.",
+        "Entrenamiento varía sólo incidentes simulados con la semilla; conserva la secuencia real de mediciones NASA.",
+        "La pérdida eléctrica lunar representa un modo de protección simulado, no una nube que tape el Sol.",
+    ]
+    if scenario_id == MARS:
+        catalog["facts"]["radio_delay_minutes_one_way"] = [3, 22]
+        catalog["facts"]["training_radio_delay_minutes_one_way"] = current.radio_delay_minutes_one_way
+        catalog["objectives"] += ["Compartir datos nuevos de al menos una exploración con la Tierra"]
+        catalog["assumptions"] += [
+            "Se eligen 20 minutos por sentido para practicar el retraso, dentro del rango de referencia de 3–22; no es una efeméride del 20 de mayo.",
+            "Los 40 minutos de ida y vuelta se resuelven al avanzar dos horas; la tripulación debe actuar antes si hay peligro.",
+        ]
+        catalog["tutorial"][-1] = "Envía datos nuevos a la Tierra: cada lote sólo puede acreditarse una vez. Una consulta sin datos aporta consejo, no ciencia."
+    return catalog

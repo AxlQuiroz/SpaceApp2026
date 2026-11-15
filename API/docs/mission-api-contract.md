@@ -1,4 +1,4 @@
-# API de partidas · v0.2.0
+# API de partidas · v0.3.0
 
 Base local: `http://127.0.0.1:8000`; prefijo `/api/v1`. [OpenAPI](mission-api-openapi.json). JSON UTF-8 y fechas UTC ISO 8601. Partidas y claves de idempotencia usan UUID.
 
@@ -90,3 +90,16 @@ El frontend utiliza `available_actions`, `enabled`, `disabled_reason` y los cost
 | 500 | `INTERNAL_ERROR` |
 
 `X-Request-ID` permite correlacionar la petición sin registrar tokens o cuerpos. Los errores de validación omiten los valores recibidos. Los límites se comparten entre procesos que usan la misma base; no son cuotas distribuidas entre servidores. Detrás de Next.js, los jugadores pueden compartir la IP del servidor: ajusta el límite al despliegue.
+
+
+## Adiciones compatibles de 0.3
+
+- CreateMission admite practice_mode: historical (predeterminado) o training. El fingerprint del valor histórico conserva la compatibilidad con las órdenes de creación pendientes de 0.2.
+- Las partidas nuevas usan lunar-1.1.0 o mars-1.1.0. El registro de versiones y legacy_engine conservan los cálculos 1.0, incluso al reiniciar un caso antiguo.
+- MissionView.planning ofrece autonomía de alimento sin nueva cosecha, reserva objetivo y espera de radio; el frontend muestra los valores del motor.
+- PreviewResult.forecast compara without_action y with_action al siguiente avance, sin escritura. result sigue siendo el efecto inmediato. El cliente bloquea la confirmación si falla la previsión.
+- MissionState conserva unreported_data_points, reported_data_points, el perfil radiométrico y su huella. Los datos en tránsito quedan en Systems hasta su respuesta. Las consultas vacías dan consejo y cero puntos.
+- ScienceBundle.model_derivations documenta intervalos, unidades, recuentos, medias, algoritmo y hashes del perfil real utilizado.
+- Evaluation añade feedback_codes y comparison cuando el intento anterior terminó y comparte escenario, semilla, reglas, dificultad y archivo. Las diferencias incluyen recursos, resultados y acciones por turno. No se deduce una causalidad única si cambiaron varias decisiones.
+
+Los contratos de salida siguen serializando sus valores predeterminados. Los campos añadidos a los estados antiguos se reconstruyen con valores neutros; no se migra su balance ni se elimina su historial.

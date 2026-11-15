@@ -24,6 +24,7 @@ class CreateMission(Model):
     difficulty: Difficulty = "cadet"
     seed: Annotated[int, Field(strict=True, ge=0, le=2147483647)] = 42
     data_mode: Literal["snapshot", "live"] = "snapshot"
+    practice_mode: Literal["historical", "training"] = "historical"
 
 
 class Command(Model):
@@ -66,12 +67,14 @@ class Systems(Model):
     # Sólo cambian en el escenario marciano.
     dust_storm_active: bool = False
     earth_message_pending: bool = False
+    earth_message_data_points: Annotated[int, Field(ge=0)] = 0
+    earth_reply_due_minutes: NonNegative | None = None
 
 
 class MissionState(Model):
     id: str
     scenario_id: ScenarioId = "lunar-outpost-v1"
-    rules_version: Literal["lunar-1.0.0", "mars-1.0.0"] = "lunar-1.0.0"
+    rules_version: Literal["lunar-1.0.0", "mars-1.0.0", "lunar-1.1.0", "mars-1.1.0"] = "lunar-1.0.0"
     version: int = 1
     status: Status = "active"
     difficulty: Difficulty
@@ -85,6 +88,11 @@ class MissionState(Model):
     crew_health_pct: Percent = 100
     exposure_risk_index: Percent = 0
     science_points: Annotated[int, Field(ge=0)] = 0
+    unreported_data_points: Annotated[int, Field(ge=0)] = 0
+    reported_data_points: Annotated[int, Field(ge=0)] = 0
+    practice_mode: Literal["historical", "training"] = "historical"
+    radiation_profile_ugy_h: list[NonNegative] = Field(default_factory=list, max_length=12)
+    radiation_profile_source_hash: str | None = None
     resources: Resources
     systems: Systems = Field(default_factory=Systems)
     created_at: AwareDatetime
@@ -118,6 +126,7 @@ class ScienceBundle(Model):
     captured_at: AwareDatetime
     historical_replay: Literal[True] = True
     sources: list[SourceItem]
+    model_derivations: dict[str, Any] = Field(default_factory=dict)
     notice: str = (
         "Los registros NASA son referencias históricas de contextos distintos. "
         "Los consumos, incidentes, puntuación y el índice de riesgo son reglas didácticas del simulador. "
@@ -134,10 +143,18 @@ class ActionOption(Model):
     costs: dict[str, float]
 
 
+class PlanningIndicators(Model):
+    food_autonomy_hours: NonNegative
+    food_reserve_target_kg: NonNegative
+    pending_reply_minutes: NonNegative | None
+    radio_round_trip_minutes: int
+
+
 class MissionView(Model):
     state: MissionState
     available_actions: list[ActionOption]
     alerts: list[str]
+    planning: PlanningIndicators | None = None
 
 
 class MutationResult(Model):
@@ -145,10 +162,17 @@ class MutationResult(Model):
     events: list[TimelineEvent]
 
 
+class ForecastComparison(Model):
+    horizon_hours: int = 2
+    without_action: MutationResult
+    with_action: MutationResult
+
+
 class PreviewResult(Model):
     persisted: Literal[False] = False
     based_on_version: int
     result: MutationResult
+    forecast: ForecastComparison | None = None
 
 
 class SessionInfo(Model):
@@ -191,6 +215,24 @@ class EventList(Model):
     offset: int
 
 
+class DecisionDifference(Model):
+    turn: int
+    previous: list[ActionId]
+    current: list[ActionId]
+
+
+class MissionComparison(Model):
+    previous_mission_id: str
+    previous_turns: int
+    current_turns: int
+    score_delta: int
+    health_delta: float
+    exposure_delta: float
+    food_delta_kg: float
+    energy_delta_kwh: float
+    decisions: list[DecisionDifference]
+
+
 class Evaluation(Model):
     mission_id: str
     final: bool
@@ -198,6 +240,8 @@ class Evaluation(Model):
     score: Annotated[int, Field(ge=0, le=100)]
     objectives: dict[str, bool]
     feedback: list[str]
+    feedback_codes: list[str] = Field(default_factory=list)
+    comparison: MissionComparison | None = None
     rules_version: str
 
 

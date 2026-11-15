@@ -59,6 +59,7 @@ export function useMission(client?: MissionApiClient) {
   const [latest, setLatest] = useState<TimelineEvent[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [hasPending, setHasPending] = useState(false);
   const [canRetry, setCanRetry] = useState(false);
@@ -89,13 +90,14 @@ export function useMission(client?: MissionApiClient) {
     // Un ref bloquea también dos clics recibidos antes del siguiente render de React.
     if (lock.current || Date.now() < retryAt.current) return;
     lock.current = true;
-    setBusy(true); setError(null); setCanRetry(false);
+    setBusy(true); setError(null); setErrorCode(null); setCanRetry(false);
     retryTask.current = task;
     try {
       await task();
       retryTask.current = null;
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
+      setErrorCode(e instanceof MissionApiError ? e.code : null);
       setCanRetry(transient(e));
       const delay = e instanceof MissionApiError ? e.retryAfter ?? 0 : 0;
       retryAt.current = Date.now() + delay * 1000;
@@ -222,7 +224,7 @@ export function useMission(client?: MissionApiClient) {
   const preview = useCallback((action_id: ActionId): Promise<PreviewResult> | null => missionId ? api.preview(missionId, action_id, version) : null, [api, missionId, version]);
   const science = useCallback((): Promise<ScienceBundle> | null => missionId ? api.science(missionId) : null, [api, missionId]);
   return {
-    phase, scenario, scenarios, mission, savedMissions, log, latest, busy, error, evaluation, hasPending, canRetry, retryIn,
+    phase, scenario, scenarios, mission, savedMissions, log, latest, busy, error, errorCode, evaluation, hasPending, canRetry, retryIn,
     connect, start, restart, exitToMenu, openMission, retry,
     clearLatest: () => setLatest([]),
     act: (action_id: ActionId) => send({ type: "action", action_id, expected_version: version }),

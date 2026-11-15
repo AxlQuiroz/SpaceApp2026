@@ -3,6 +3,8 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Badge, Modal, PixelButton, PixelSprite } from "@/components/hud";
 import type { PreviewResult } from "@/lib/orbita/schema";
+import { useFocusTrap } from "@/lib/hooks";
+import { reviewText } from "./reviewText";
 import { useAudio, useI18n } from "@/lib/providers";
 import type { IconName } from "@/sprites/sprites.config";
 import { suitForMedal } from "./wardrobe";
@@ -13,8 +15,9 @@ import { MEDALS, TERMS, type Lang, type Medal, type Progress, type Quiz, type Te
 /* ------------------------------------------------------------------ */
 
 function RobotCard({ tag, tone, children, talking = false }: { tag: string; tone: string; children: ReactNode; talking?: boolean }) {
+  const trap = useFocusTrap<HTMLElement>();
   return (
-    <section className="bevel rivets pop-in flex gap-3" style={{ padding: "calc(var(--px) * 5)" }}>
+    <section ref={trap} role="dialog" aria-modal="true" aria-label={tag} className="bevel rivets pop-in flex gap-3" style={{ padding: "calc(var(--px) * 5)" }}>
       <div className="bevel-inset scanlines shrink-0 self-start p-2">
         <PixelSprite sprite="robot" anim={talking ? "talk" : "idle"} scale={4} label="R0-B1" />
       </div>
@@ -31,7 +34,13 @@ function RobotCard({ tag, tone, children, talking = false }: { tag: string; tone
 /** Enfoca el botón principal de la tarjeta para que Enter la cierre. */
 function useAutoFocus<T extends HTMLElement>(dep: unknown) {
   const ref = useRef<T>(null);
-  useEffect(() => ref.current?.focus({ preventScroll: true }), [dep]);
+  useEffect(() => {
+    const element = ref.current;
+    const target = element?.matches(":disabled")
+      ? element.closest('[role="dialog"]')?.querySelector<HTMLElement>('button:not(:disabled)')
+      : element;
+    target?.focus({ preventScroll: true });
+  }, [dep]);
   return ref;
 }
 
@@ -181,10 +190,15 @@ type PreviewProps = {
   busy: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  onRetry?: () => void;
 };
 
-export function PreviewPanel({ label, hint, icon, result, current, names, note, busy, onConfirm, onCancel }: PreviewProps) {
-  const { t } = useI18n();
+export function PreviewPanel({ label, hint, icon, result, current, names, note, busy, onConfirm, onCancel, onRetry }: PreviewProps) {
+  const { t, locale } = useI18n();
+  const copy = reviewText(locale);
+  const trap = useFocusTrap<HTMLElement>();
+  const forecast = result && result !== "error" ? result.forecast : null;
+  const failed = result === "error" || (result !== null && !forecast);
   const ok = useAutoFocus<HTMLButtonElement>(result);
 
   useEffect(() => {
@@ -209,7 +223,7 @@ export function PreviewPanel({ label, hint, icon, result, current, names, note, 
   }
 
   return (
-    <section data-testid="preview" role="dialog" aria-label={t.preview.title} className="bevel rivets pop-in flex flex-col gap-2" style={{ padding: "calc(var(--px) * 5)" }}>
+    <section ref={trap} data-testid="preview" aria-modal="true" role="dialog" aria-label={t.preview.title} className="bevel rivets pop-in flex max-h-[94dvh] flex-col gap-2 overflow-y-auto" style={{ padding: "calc(var(--px) * 5)" }}>
       <span className="font-tiny self-start bg-neon-cyan px-2 py-0.5 text-xs text-void uppercase">{t.preview.title}</span>
       <h2 className="font-pixel flex items-center gap-2 text-2xl text-neon-cyan">
         <PixelSprite icon={icon} scale={2} />
@@ -218,7 +232,8 @@ export function PreviewPanel({ label, hint, icon, result, current, names, note, 
       <p className="text-lg whitespace-pre-line text-steel-200">{hint}</p>
       <div className="bevel-inset min-h-16 p-3" aria-live="polite">
         {result === null && <p className="blink text-lg">{t.preview.loading}</p>}
-        {result !== null && rows.length === 0 && <p className="text-lg text-steel-200">{t.preview.nothing}</p>}
+        {failed && <div role="alert" className="text-alert"><p>{copy.forecastError}</p><PixelButton onClick={onRetry} disabled={busy}>{copy.retry}</PixelButton></div>}
+        {!failed && result !== null && rows.length === 0 && <p className="text-lg text-steel-200">{copy.noImmediate}</p>}
         <ul className="flex flex-wrap gap-x-4 gap-y-1">
           {rows.map((row) => (
             <li key={row.key} className="flex items-center gap-1 text-lg" style={{ color: row.up ? "var(--color-lime)" : "var(--color-alert)" }}>
@@ -230,12 +245,26 @@ export function PreviewPanel({ label, hint, icon, result, current, names, note, 
         </ul>
         {note && <p className="mt-1 text-lg text-amber">{note}</p>}
       </div>
-      <p className="font-tiny text-xs text-steel-400">{t.preview.uses}</p>
+      {forecast && !failed && (
+        <section aria-label={copy.forecast} className="bevel-inset p-2">
+          <h3 className="font-pixel text-lg text-neon-cyan">{copy.forecast}</h3>
+          <table className="w-full table-fixed text-base">
+            <thead><tr><th className="w-[30%] text-left"></th><th scope="col">{copy.without}</th><th scope="col">{copy.with}</th></tr></thead>
+            <tbody>{PREVIEW_ROWS.slice(0, 4).map(row => {
+              const before = (forecast.without_action.mission.state.resources as Record<string, number>)[row.key];
+              const after = (forecast.with_action.mission.state.resources as Record<string, number>)[row.key];
+              return <tr key={row.key}><th scope="row" className="text-left font-normal">{names[row.key]}</th><td className="text-center tabular-nums">{before.toFixed(row.d)} {row.unit}</td><td className={`text-center tabular-nums ${after < before ? "text-amber" : after > before ? "text-lime" : ""}`}>{after.toFixed(row.d)} {row.unit}</td></tr>;
+            })}<tr><th scope="row" className="text-left font-normal">{copy.exposure}</th><td className="text-center">{forecast.without_action.mission.state.exposure_risk_index.toFixed(1)}</td><td className="text-center">{forecast.with_action.mission.state.exposure_risk_index.toFixed(1)}</td></tr></tbody>
+            <tbody><tr><th scope="row" className="text-left font-normal">{copy.health}</th><td className="text-center">{forecast.without_action.mission.state.crew_health_pct.toFixed(1)}</td><td className="text-center">{forecast.with_action.mission.state.crew_health_pct.toFixed(1)}</td></tr><tr><th scope="row" className="text-left font-normal">{t.preview.science}</th><td className="text-center">{forecast.without_action.mission.state.science_points}</td><td className="text-center">{forecast.with_action.mission.state.science_points}</td></tr></tbody>
+          </table>
+        </section>
+      )}
+      <p className="text-base text-steel-200">{t.preview.uses}</p>
       <div className="flex flex-wrap justify-end gap-2">
         <PixelButton variant="ghost" onClick={onCancel}>
           {t.preview.cancel}
         </PixelButton>
-        <PixelButton ref={ok} variant="primary" disabled={busy || result === null} onClick={onConfirm} icon={<PixelSprite icon="next" scale={2} />}>
+        <PixelButton ref={ok} variant="primary" disabled={busy || result === null || failed} onClick={onConfirm} icon={<PixelSprite icon="next" scale={2} />}>
           {t.preview.confirm}
         </PixelButton>
       </div>

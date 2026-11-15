@@ -94,3 +94,12 @@ El comando sólo escribe cuando normalizar CRLF recupera exactamente el SHA-256 
 ## Límites
 
 Las pruebas de navegador usan emulación de móvil, no un dispositivo Android o iOS físico. Las reglas siguen siendo un modelo didáctico y las fuentes son históricas atribuidas. SQLite corresponde a una instalación en un servidor; la publicación remota requiere la configuración HTTPS y de persistencia descrita en las guías del backend. Las sesiones anónimas expiradas no tienen recuperación por correo.
+
+
+## Regresiones de decisiones y fuentes (0.3)
+
+El inventario incluye **199 pruebas** entre Python (123), SDK (9), adaptador Next.js (12), interfaz (27), lanzador (12) y navegador escritorio/móvil (16). El resultado de la ejecución concreta se consulta en GitHub Actions y en los informes del lanzador.
+
+Los casos nuevos comprueban informes científicos sin datos/repetidos, reserva alimentaria, previsión frente al avance real, recuperación de preview fallido, foco, fuentes en inglés, perfil derivado de las 139 lecturas, conservación de reglas 1.0, recibos pendientes anteriores, comparación de intentos y más de veinte visitantes detrás de un proxy autenticado. El plan viable se ejercita en 24 combinaciones de escenario, dificultad, modo y semilla.
+
+Para evaluar comprensión humana, usa [prueba-con-usuarios.md](prueba-con-usuarios.md). Para publicar en un alojamiento separado, configura los secretos privados descritos en [integración Next.js](../API/docs/nextjs-integration.md).

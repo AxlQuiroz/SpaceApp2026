@@ -155,7 +155,7 @@ export const es = {
     activate_water_reserve: { label: "Reserva agua", hint: "Usa el tanque de agua de emergencia." },
     enter_shelter: { label: "Ir al refugio", hint: "Protege a la tripulación de la radiación del Sol." },
     leave_shelter: { label: "Salir del refugio", hint: "Vuelve a trabajar en la base." },
-    contact_earth: { label: "Llamar a la Tierra", hint: "Envía tus datos por radio. La respuesta tarda y llega el próximo turno: +6 de ciencia." },
+    contact_earth: { label: "Llamar a la Tierra", hint: "Envía tus datos por radio. La respuesta tarda. Sólo los datos nuevos aportan ciencia; una consulta vacía no da puntos." },
   },
   events: {
     mission_created: "¡Misión iniciada! Tenemos 24 horas. Revisa los recursos y elige tus acciones.",
@@ -169,7 +169,7 @@ export const es = {
     dust_warning: "Los sensores ven una pared de polvo acercándose. Pronto llegará muy poca luz a los paneles: ¡ahorra batería apagando lo que no sea urgente!",
     dust_storm: "¡Tormenta de polvo! El cielo se oscureció y los paneles producen solo una quinta parte. Cuida la batería.",
     dust_cleared: "¡La tormenta de polvo pasó! Pero dejó los paneles cubiertos. Límpialos para recuperar toda la energía.",
-    earth_reply: "¡Llegó la respuesta de la Tierra! Los científicos analizaron tus datos: +6 de ciencia.",
+    earth_reply: "¡Llegó la respuesta de la Tierra! Los datos nuevos aportan ciencia; las consultas repetidas no.",
   },
   modules: {
     habitat: { name: "Hábitat", desc: "Donde vive la tripulación. Siempre necesita energía para mantener aire y temperatura." },
@@ -220,7 +220,7 @@ export const es = {
   report: {
     title: "Informe del turno",
     sun: "Los paneles produjeron",
-    stormCut: "La tormenta tapó parte de la luz del Sol.",
+    stormCut: "Modo de protección eléctrica: el sistema limita su salida durante el incidente simulado.",
     dustCut: "La tormenta de polvo tapó casi toda la luz: los paneles rindieron solo una quinta parte.",
     realData: "Dato real de la NASA",
     radReading: "El rover Curiosity (RAD) midió en estas dos horas",
@@ -617,7 +617,7 @@ export const en: DeepString<Dict> = {
     activate_water_reserve: { label: "Water reserve", hint: "Use the emergency water tank." },
     enter_shelter: { label: "Go to shelter", hint: "Protect the crew from the Sun's radiation." },
     leave_shelter: { label: "Leave shelter", hint: "Go back to work in the base." },
-    contact_earth: { label: "Call Earth", hint: "Send your data by radio. The reply takes time and arrives next turn: +6 science." },
+    contact_earth: { label: "Call Earth", hint: "Send your data by radio. The reply takes time. Only new research earns science; an empty request earns no points." },
   },
   events: {
     mission_created: "Mission started! We have 24 hours. Check the supplies and choose your actions.",
@@ -631,7 +631,7 @@ export const en: DeepString<Dict> = {
     dust_warning: "Sensors see a wall of dust coming. Soon very little light will reach the panels: save battery by turning off what is not urgent!",
     dust_storm: "Dust storm! The sky went dark and the panels make only one fifth. Watch the battery.",
     dust_cleared: "The dust storm passed! But it left the panels covered. Clean them to get full power back.",
-    earth_reply: "Earth's reply arrived! Scientists analyzed your data: +6 science.",
+    earth_reply: "Earth's reply arrived! New research earns science; repeated requests do not.",
   },
   modules: {
     habitat: { name: "Habitat", desc: "Where the crew lives. It always needs power to keep air and temperature." },
@@ -682,7 +682,7 @@ export const en: DeepString<Dict> = {
   report: {
     title: "Turn report",
     sun: "The panels produced",
-    stormCut: "The storm blocked part of the sunlight.",
+    stormCut: "Power protection mode limits output during the simulated event.",
     dustCut: "The dust storm blocked almost all the light: the panels made only one fifth.",
     realData: "Real NASA data",
     radReading: "The Curiosity rover (RAD) measured in these two hours",

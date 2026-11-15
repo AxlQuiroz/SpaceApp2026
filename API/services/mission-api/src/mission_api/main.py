@@ -18,10 +18,10 @@ from starlette.responses import JSONResponse
 
 from . import __version__
 from .config import Settings
-from .engine import evaluate, transition, view
+from .engine import transition, view
 from .errors import MissionError
 from .middleware import RequestGuard
-from .models import (Command, CreateMission, ErrorResponse, Evaluation, EventList, MissionList,
+from .models import (Command, CreateMission, ErrorResponse, Evaluation, ForecastComparison, EventList, MissionList,
                      MissionView, Model, MutationResult, Preview, PreviewResult, RestartMission,
                      ScienceBundle, SessionCreated, SessionInfo)
 from .resources import ResourceClient, make_http_client
@@ -141,7 +141,11 @@ def create_app(settings: Settings | None = None, resource_transport: httpx.Async
     @app.post("/api/v1/missions", response_model=MutationResult, status_code=201, tags=["missions"])
     async def create_mission(request: Request, body: CreateMission, current: Session, key: Key, response: Response):
         """Captura referencias NASA históricas y crea la partida. snapshot funciona sin internet con resources encendido."""
-        digest, now = fingerprint(body.model_dump()), datetime.now(UTC)
+        # El valor histórico por defecto conserva el fingerprint de las creaciones de 0.2.
+        payload = body.model_dump()
+        if body.practice_mode == "historical":
+            payload.pop("practice_mode")
+        digest, now = fingerprint(payload), datetime.now(UTC)
         store = request.app.state.store
         result = await asyncio.to_thread(store.receipt, current.session_id, "create", str(key), digest, now)
         if result is None:
@@ -173,7 +177,11 @@ def create_app(settings: Settings | None = None, resource_transport: httpx.Async
         """Previsualiza una acción sobre la versión indicada sin guardar ni consumir recursos."""
         state = await asyncio.to_thread(request.app.state.store.get, current.session_id, str(mission_id), datetime.now(UTC))
         result = transition(state, Command(type="action", action_id=body.action_id, expected_version=body.expected_version), datetime.now(UTC))
-        return PreviewResult(based_on_version=state.version, result=result)
+        baseline = transition(state, Command(type="advance", expected_version=state.version), datetime.now(UTC))
+        acted = result.mission.state
+        forecast = transition(acted, Command(type="advance", expected_version=acted.version), datetime.now(UTC))
+        return PreviewResult(based_on_version=state.version, result=result,
+                             forecast=ForecastComparison(without_action=baseline, with_action=forecast))
 
     @app.post("/api/v1/missions/{mission_id}/restart", response_model=MutationResult, status_code=201, tags=["missions"])
     async def restart(request: Request, mission_id: UUID, body: RestartMission, current: Session, key: Key, response: Response):
@@ -193,7 +201,6 @@ def create_app(settings: Settings | None = None, resource_transport: httpx.Async
 
     @app.get("/api/v1/missions/{mission_id}/evaluation", response_model=Evaluation, tags=["missions"])
     async def evaluation(request: Request, mission_id: UUID, current: Session):
-        state = await asyncio.to_thread(request.app.state.store.get, current.session_id, str(mission_id), datetime.now(UTC))
-        return evaluate(state)
+        return await asyncio.to_thread(request.app.state.store.evaluation, current.session_id, str(mission_id), datetime.now(UTC))
 
     return app

@@ -11,6 +11,7 @@ from pydantic import AwareDatetime, BaseModel, Field, ValidationError
 from .config import Settings
 from .errors import MissionError
 from .models import ScienceBundle, SourceItem
+from .scientific_profile import derive_mars_radiation
 
 
 class Pagination(BaseModel):
@@ -107,12 +108,12 @@ class ResourceClient:
             SourceItem(id="radlab-reference", role="Radiación medida en la superficie de Marte", interpretation="MSL-RAD, rover Curiosity, 20 de mayo de 2024. La media de cada dos horas da forma al índice de exposición del juego; no es una dosis para personas.", records=radiation[0], pages_meta=radiation[1]),
             SourceItem(id="osdr-study", role="Referencia educativa sobre investigación biológica", interpretation="OSD-104 estudia ratones. No se derivan de este estudio parámetros de salud humana.", records=study[0], pages_meta=study[1]),
         ]
-        return self._bundle(sources, mode, now)
+        return self._bundle(sources, mode, now, {"mars_radiation": derive_mars_radiation(radiation[0], radiation[1])})
 
     @staticmethod
-    def _bundle(sources, mode: str, now: datetime) -> ScienceBundle:
-        canonical = json.dumps([s.model_dump(mode="json") for s in sources], sort_keys=True, separators=(",", ":"))
-        return ScienceBundle(id=hashlib.sha256(canonical.encode()).hexdigest(), requested_mode=mode, captured_at=now, sources=sources)
+    def _bundle(sources, mode: str, now: datetime, derivations=None) -> ScienceBundle:
+        canonical = json.dumps({"sources": [s.model_dump(mode="json") for s in sources], "derivations": derivations or {}}, sort_keys=True, separators=(",", ":"))
+        return ScienceBundle(id=hashlib.sha256(canonical.encode()).hexdigest(), requested_mode=mode, captured_at=now, sources=sources, model_derivations=derivations or {})
 
 
 def make_http_client(settings: Settings, transport=None) -> httpx.AsyncClient:

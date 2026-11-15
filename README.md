@@ -1,8 +1,14 @@
-# SpaceApp2026 · Órbita
+# SpaceApp2026 · RockieOS
 
 **RockieOS** es un entrenador de decisiones y recursos para bases en la Luna y Marte, con referencias científicas de NASA. El frontend (juego pixel art para niños de 7 a 12 años) está en la raíz del repo con Next.js; el backend, en `API/`.
 
-El **backend v0.2.0** se encuentra en [`API/`](API/README.md). Incluye la API interna de recursos NASA, el motor lunar, partidas persistentes en SQLite, el contrato OpenAPI, un cliente TypeScript y el adaptador para Next.js App Router.
+El **backend v0.3.0** se encuentra en [`API/`](API/README.md). Incluye la API interna de recursos NASA, el motor lunar y marciano, partidas persistentes en SQLite, el contrato OpenAPI, un cliente TypeScript y el adaptador para Next.js App Router.
+
+## Actualización 0.3 y reglas 1.1
+
+Las misiones nuevas exigen ciencia obtenida de datos nuevos y una reserva alimentaria final. La previsualización compara el siguiente turno con y sin la acción. El archivo radiométrico y su transformación quedan fijados en cada partida. Repetir un intento permite comparar resultados y decisiones; el entrenamiento variado cambia sólo incidentes simulados.
+
+Las partidas anteriores mantienen las reglas 1.0. Para jugar con el balance nuevo, crea una misión desde el menú. Consulta el [detalle de las correcciones](docs/correcciones-auditoria.md), la [ficha de entrega](docs/project-submission.md) y los [créditos de datos e IA](CREDITS.md).
 
 ## Empezar
 
@@ -17,9 +23,9 @@ Consulta la [guía del lanzador y presentación](docs/lanzador-windows.md). Tamb
 
 GitHub Actions verifica Python en Linux y Windows, contratos, frontend, compilación de producción y partidas completas desde Chromium en escritorio y móvil. Las pruebas usan capturas históricas, sin claves NASA ni acceso a sus proveedores. Consulta [pruebas y recuperación](docs/pruebas-del-proyecto.md).
 
-## Frontend · Base Selene
+## Frontend · RockieOS
 
-Juego educativo (7-12 años) de supervivencia en una base lunar, con HUD pixel art de estrategia sci-fi.
+Entrenador de decisiones (7–12 años) para bases lunares y marcianas, con HUD pixel art de estrategia sci-fi.
 Especificación de diseño: [`Claude.md`](./Claude.md).
 
 ### Arrancar

@@ -20,6 +20,13 @@ export type CreateMission = {
   "difficulty"?: "cadet" | "commander";
   "seed"?: number;
   "data_mode"?: "snapshot" | "live";
+  "practice_mode"?: "historical" | "training";
+};
+
+export type DecisionDifference = {
+  "turn": number;
+  "previous": Array<"repair_water_loop" | "repair_solar_panels" | "enter_shelter" | "leave_shelter" | "explore" | "activate_oxygen_reserve" | "activate_water_reserve" | "toggle_greenhouse" | "toggle_oxygen_generator" | "contact_earth">;
+  "current": Array<"repair_water_loop" | "repair_solar_panels" | "enter_shelter" | "leave_shelter" | "explore" | "activate_oxygen_reserve" | "activate_water_reserve" | "toggle_greenhouse" | "toggle_oxygen_generator" | "contact_earth">;
 };
 
 export type ErrorDetail = {
@@ -46,6 +53,8 @@ export type Evaluation = {
   "score": number;
   "objectives": Record<string, boolean>;
   "feedback": Array<string>;
+  "feedback_codes": Array<string>;
+  "comparison": (MissionComparison | null);
   "rules_version": string;
 };
 
@@ -54,6 +63,24 @@ export type EventList = {
   "total": number;
   "limit": number;
   "offset": number;
+};
+
+export type ForecastComparison = {
+  "horizon_hours": number;
+  "without_action": MutationResult;
+  "with_action": MutationResult;
+};
+
+export type MissionComparison = {
+  "previous_mission_id": string;
+  "previous_turns": number;
+  "current_turns": number;
+  "score_delta": number;
+  "health_delta": number;
+  "exposure_delta": number;
+  "food_delta_kg": number;
+  "energy_delta_kwh": number;
+  "decisions": Array<DecisionDifference>;
 };
 
 export type MissionList = {
@@ -66,7 +93,7 @@ export type MissionList = {
 export type MissionState = {
   "id": string;
   "scenario_id": "lunar-outpost-v1" | "mars-outpost-v1";
-  "rules_version": "lunar-1.0.0" | "mars-1.0.0";
+  "rules_version": "lunar-1.0.0" | "mars-1.0.0" | "lunar-1.1.0" | "mars-1.1.0";
   "version": number;
   "status": "active" | "paused" | "completed" | "failed" | "aborted";
   "difficulty": "cadet" | "commander";
@@ -80,6 +107,11 @@ export type MissionState = {
   "crew_health_pct": number;
   "exposure_risk_index": number;
   "science_points": number;
+  "unreported_data_points": number;
+  "reported_data_points": number;
+  "practice_mode": "historical" | "training";
+  "radiation_profile_ugy_h": Array<number>;
+  "radiation_profile_source_hash": (string | null);
   "resources": Resources;
   "systems": Systems;
   "created_at": string;
@@ -102,11 +134,19 @@ export type MissionView = {
   "state": MissionState;
   "available_actions": Array<ActionOption>;
   "alerts": Array<string>;
+  "planning": (PlanningIndicators | null);
 };
 
 export type MutationResult = {
   "mission": MissionView;
   "events": Array<TimelineEvent>;
+};
+
+export type PlanningIndicators = {
+  "food_autonomy_hours": number;
+  "food_reserve_target_kg": number;
+  "pending_reply_minutes": (number | null);
+  "radio_round_trip_minutes": number;
 };
 
 export type Preview = {
@@ -118,6 +158,7 @@ export type PreviewResult = {
   "persisted": false;
   "based_on_version": number;
   "result": MutationResult;
+  "forecast": (ForecastComparison | null);
 };
 
 export type Resources = {
@@ -140,6 +181,7 @@ export type ScienceBundle = {
   "captured_at": string;
   "historical_replay": true;
   "sources": Array<SourceItem>;
+  "model_derivations": Record<string, unknown>;
   "notice": string;
 };
 
@@ -179,6 +221,8 @@ export type Systems = {
   "crew_in_shelter": boolean;
   "dust_storm_active": boolean;
   "earth_message_pending": boolean;
+  "earth_message_data_points": number;
+  "earth_reply_due_minutes": (number | null);
 };
 
 export type TimelineEvent = {
