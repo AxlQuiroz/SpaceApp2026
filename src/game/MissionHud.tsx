@@ -81,8 +81,12 @@ export function MissionHud({ game }: Props) {
   const weather = spaceWeather(mission, log);
   const actionsLeft = Math.max(0, p.actions_per_turn - s.actions_used);
   const active = s.status === "active";
+  const radiationAlert = active && !!mission.planning?.shelter_recommended;
+  const generalAlerts = useMemo(() => mission.alerts.filter(a => !(radiationAlert && a.includes("refugio"))), [mission.alerts, radiationAlert]);
 
   const [vitalsExpanded, setVitalsExpanded] = useState(false);
+  const vitalsNeedAttention = s.resources.oxygen_kg < DANGER.oxygen_kg || s.resources.water_l < DANGER.water_l || s.resources.food_kg < DANGER.food_kg;
+  useEffect(() => { if (vitalsNeedAttention) setVitalsExpanded(true); }, [vitalsNeedAttention]);
   const [selected, setSelected] = useState<ModuleId | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [homeOpen, setHomeOpen] = useState(false);
@@ -174,15 +178,15 @@ export function MissionHud({ game }: Props) {
   const delta = (k: string) => (deltas && deltas.values[k] !== undefined ? { value: deltas.values[k], key: deltas.key } : null);
 
   /* ---------- Banner sólo para alertas NUEVAS ---------- */
-  const prevAlerts = useRef<string[]>(mission.alerts);
+  const prevAlerts = useRef<string[]>(generalAlerts);
   const [banner, setBanner] = useState<string | null>(null);
   useEffect(() => {
-    const fresh = mission.alerts.find((a) => !prevAlerts.current.includes(a));
-    prevAlerts.current = mission.alerts;
+    const fresh = generalAlerts.find((a) => !prevAlerts.current.includes(a));
+    prevAlerts.current = generalAlerts;
     if (fresh) setBanner(fresh);
     // Una alerta resuelta (fuga reparada, paneles limpios) retira su aviso.
-    else setBanner((current) => (current && !mission.alerts.includes(current) ? null : current));
-  }, [mission.alerts]);
+    else setBanner((current) => (current && !generalAlerts.includes(current) ? null : current));
+  }, [generalAlerts]);
 
   /* ---------- Tutorial jugable (la primera vez, al empezar una misión) ---------- */
   const coachStarted = useRef(false);
@@ -320,7 +324,7 @@ export function MissionHud({ game }: Props) {
   };
 
   return (
-    <div data-testid="mission-hud" data-mission-id={s.id} data-turn={s.turn} data-version={s.version} className="flex min-h-dvh flex-col gap-2 p-2 pb-24 md:p-3 lg:pb-3">
+    <div data-testid="mission-hud" data-mission-id={s.id} data-turn={s.turn} data-version={s.version} className={`flex min-h-dvh flex-col gap-2 p-2 md:p-3 ${radiationAlert ? "pb-48 md:pb-48" : "pb-32 md:pb-32"} lg:pb-3`}>
       {/* ================= BARRA SUPERIOR ================= */}
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
@@ -352,7 +356,7 @@ export function MissionHud({ game }: Props) {
         <div className="bevel flex min-w-0 max-w-full flex-wrap gap-1 px-1 py-1" data-tour="resources">
           <ResourceCounter icon="energy" label={t.resources.energy} value={r.energy_kwh} unit="kWh" decimals={1} max={p.energy_capacity_kwh} dangerBelow={DANGER.energy_kwh} delta={delta("energy_kwh")} />
           <PixelButton className="md:hidden" aria-expanded={vitalsExpanded} onClick={() => setVitalsExpanded(v => !v)}>{copy.support} · {vitalsExpanded ? copy.hide : copy.details}</PixelButton>
-          <div className={vitalsExpanded || mission.alerts.length > 0 ? "contents" : "hidden md:contents"}>
+          <div className={vitalsExpanded ? "contents" : "hidden md:contents"}>
           <ResourceCounter
             icon="oxygen"
             label={t.resources.oxygen}
@@ -389,7 +393,7 @@ export function MissionHud({ game }: Props) {
         {mission.planning.pending_reply_minutes !== null && <span className="text-amber">{copy.pendingRadio}: {mission.planning.pending_reply_minutes} {copy.minutes}</span>}
         <details className="w-full"><summary className="cursor-pointer py-2">{copy.simulation} · {s.practice_mode === "training" ? copy.training : copy.historicalMode}</summary><p>{copy.harvestNote} {mars && copy.radioNote}</p></details>
       </aside>}
-      {active && mission.planning?.shelter_recommended && <p role="status" data-testid="radiation-alert" className="bevel border-l-4 border-amber px-3 py-2 text-lg text-amber">{copy.shelterAlert}</p>}
+      {radiationAlert && <p role="status" data-testid="radiation-alert" className="bevel border-l-4 border-amber px-3 py-2 text-lg text-amber">{copy.shelterAlert}</p>}
       {mars && <RadioReport report={s.earth_guidance} turn={s.turn} />}
       {banner && <AlertBanner icon="warning" message={localizeAlert(banner, locale)} onDismiss={() => setBanner(null)} />}
       {game.error && (
@@ -446,7 +450,7 @@ export function MissionHud({ game }: Props) {
               badges={
                 <>
                   {s.systems.crew_in_shelter && <Badge tone="info">{t.game.inShelter}</Badge>}
-                  {mission.alerts.map((a) => (
+                  {generalAlerts.map((a) => (
                     <Badge key={a} tone="warn">
                       {localizeAlert(a, locale)}
                     </Badge>
@@ -494,7 +498,7 @@ export function MissionHud({ game }: Props) {
         className="bevel fixed inset-x-0 bottom-0 z-30 flex gap-2 p-2 lg:hidden"
         style={{ ["--bevel-fill" as string]: "var(--color-steel-900)" }}
       >
-        {active && mission.planning?.shelter_recommended && <span aria-hidden className="absolute inset-x-0 bottom-full bg-steel-950 px-3 py-1 text-base text-amber">{copy.shelterShort}</span>}
+        {radiationAlert && <span aria-hidden className="absolute inset-x-0 bottom-full bg-steel-950 px-3 py-1 text-base text-amber">{copy.shelterShort}</span>}
         <PixelButton
           data-tour="commands"
           className="min-w-0 flex-1 flex-wrap px-2 sm:px-4"

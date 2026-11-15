@@ -149,6 +149,14 @@ test("el aviso persiste durante el pico y la radio entrega un informe útil", as
   for (let turn = 2; turn <= 4; turn++) await advance(page, turn);
   await expect(page.getByTestId("radiation-alert")).toBeVisible();
   await expect(page.getByTestId("radiation-alert")).toContainText("seguirá elevada");
+  if (info.project.name === "mobile") {
+    const oxygen = page.getByRole("group", { name: /^Oxígeno:/ });
+    await expect(oxygen).toBeHidden();
+    await page.getByRole("button", { name: /Soporte vital.*Ver reservas/ }).click();
+    await expect(oxygen).toBeVisible();
+    await page.getByRole("button", { name: /Soporte vital.*Ocultar reservas/ }).click();
+    await expect(oxygen).toBeHidden();
+  }
   await page.screenshot({ path: info.outputPath("mvp-radiacion.png"), fullPage: true });
   await checkWidth(page);
   await action(page, "Ir al refugio");
