@@ -277,7 +277,7 @@ export function MissionHud({ game }: Props) {
     const opt = mission.available_actions.find((a) => a.id === id);
     const enabled = !!opt?.enabled && actionsLeft > 0 && active && !busy && !game.hasPending && !commandsBlocked;
     const reason = busy || game.hasPending ? flight.wait : actionAvailability(mission, id, locale);
-    const costs = opt ? formatCosts(opt.costs, locale) : "";
+    const costs = id === "activate_oxygen_reserve" || id === "activate_water_reserve" ? flight.transfer : opt ? formatCosts(opt.costs, locale) : "";
     let { label, hint } = actionText(t, mission, id);
     const toggled = id === "toggle_greenhouse" ? s.systems.greenhouse_on : s.systems.oxygen_generator_on;
     if (id === "toggle_greenhouse" || id === "toggle_oxygen_generator") {
@@ -285,10 +285,12 @@ export function MissionHud({ game }: Props) {
       label = `${toggled ? flight.turnOff : flight.turnOn} ${name}`;
       hint = id === "toggle_greenhouse" ? (toggled ? flight.greenhouseOff : flight.greenhouseOn) : toggled ? flight.oxygenOff : mars ? flight.moxieOn : flight.oxygenOn;
     }
+    const previewHint = hint;
+    if (id === "contact_earth") hint = s.unreported_data_points > 0 ? `${s.unreported_data_points} ${flight.sendData}` : flight.emptyCall;
     return {
       id,
       icon,
-      label, hint, costs, reason, group: actionGroup(id),
+      label, hint, previewHint, costs, reason, group: actionGroup(id),
       hidden: id === "enter_shelter" ? s.systems.crew_in_shelter : id === "leave_shelter" ? !s.systems.crew_in_shelter : false,
       state: id.startsWith("toggle_") ? (toggled ? flight.on : flight.off) : undefined,
       recommended: guidance.action === id,
@@ -400,7 +402,7 @@ export function MissionHud({ game }: Props) {
         </div>
       )}
 
-      <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(370px,440px)]">
+      <div className="grid min-w-0 items-start gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(370px,440px)]">
       <div className="flex min-w-0 flex-col gap-3">
       {/* ================= ESCENA ================= */}
       <main className="flex-1" data-tour="base">
@@ -462,7 +464,7 @@ export function MissionHud({ game }: Props) {
 
       </footer>
       </div>
-        <aside className="bevel flight-console hidden min-w-0 self-start p-3 lg:block">
+        <aside className="bevel flight-console hidden min-w-0 self-start p-3 lg:sticky lg:top-3 lg:block">
           <div data-tour="commands"><ActionConsole commands={commands} actionsLeft={actionsLeft} maxActions={p.actions_per_turn} guidance={guidance.text} hotkeys={!overlayOpen} /></div>
           <div className="mt-3 border-t-2 border-steel-700 pt-3">
           <PixelButton
@@ -573,7 +575,7 @@ export function MissionHud({ game }: Props) {
           <div className="w-full max-w-xl">
             <PreviewPanel
               label={commands.find(command => command.id === pendingAction.id)?.label ?? actionText(t, mission, pendingAction.id).label}
-              hint={commands.find(command => command.id === pendingAction.id)?.hint ?? actionText(t, mission, pendingAction.id).hint}
+              hint={commands.find(command => command.id === pendingAction.id)?.previewHint ?? actionText(t, mission, pendingAction.id).hint}
               icon={commandLayout(mission).find((c) => c.id === pendingAction.id)?.icon ?? "explore"}
               result={pendingAction.result}
               current={{ resources: r as unknown as Record<string, number>, science_points: s.science_points, exposure_risk_index: s.exposure_risk_index }}

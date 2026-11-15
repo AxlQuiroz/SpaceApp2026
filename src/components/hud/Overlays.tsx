@@ -134,9 +134,9 @@ export function Modal({ open, title, onClose, children, wide = false }: ModalPro
         if (e.clientX < bounds.left || e.clientX > bounds.right || e.clientY < bounds.top || e.clientY > bounds.bottom) onClose();
       }}
       aria-labelledby={titleId}
-      className={`bevel rivets pop-in m-auto max-h-[94dvh] overflow-hidden p-0 ${wide ? "w-[min(94vw,780px)]" : "w-[min(94vw,560px)]"} text-steel-50 backdrop:bg-void/80`}
+      className={`flight-dialog bevel rivets pop-in m-auto max-h-[94dvh] overflow-hidden p-0 ${wide ? "w-[min(94vw,780px)]" : "w-[min(94vw,560px)]"} text-steel-50 backdrop:bg-void/80`}
     >
-      <header className="flex items-center justify-between bg-steel-900 py-1 pr-2 pl-4" style={{ margin: "calc(var(--px) * 2)" }}>
+      <header className="flex shrink-0 items-center justify-between bg-steel-900 py-1 pr-2 pl-4" style={{ margin: "calc(var(--px) * 2)" }}>
         <h2 id={titleId} className="min-w-0 break-words font-pixel text-xl text-neon-cyan uppercase">
           {title}
         </h2>
@@ -150,7 +150,7 @@ export function Modal({ open, title, onClose, children, wide = false }: ModalPro
           X
         </button>
       </header>
-      <div className="max-h-[calc(94dvh-64px)] overflow-y-auto overscroll-contain px-3 pt-2 pb-5 text-xl sm:px-6">{children}</div>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-2 pb-5 text-xl sm:px-6">{children}</div>
     </dialog>
   );
 }

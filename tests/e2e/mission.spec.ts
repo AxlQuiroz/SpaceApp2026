@@ -36,8 +36,10 @@ async function action(page: Page, name: string) {
   const mobile = page.getByRole("button", { name: "Acciones", exact: true });
   if (await mobile.isVisible()) {
     await mobile.click();
-    await page.getByRole("dialog").getByRole("button", { name: new RegExp(`^${name}`) }).click();
-  } else await page.getByRole("button", { name, exact: true }).click();
+  }
+  const group = /Explorar|Llamar/.test(name) ? "Investigar" : /refugio|Reserva/.test(name) ? "Tripulación" : "Sistemas";
+  await page.getByRole("tab", { name: group, exact: true }).click();
+  await page.getByRole("button", { name, exact: true }).click();
   // "¿Qué pasaría si…?": la orden sólo se envía al confirmar.
   const confirmation = page.getByTestId("preview").getByRole("button", { name: "¡Hazlo!", exact: true });
   await expect(confirmation).toBeEnabled();
@@ -227,8 +229,9 @@ test("la consola explica bloqueos y refleja el estado real al encender o apagar"
   };
   const console = await openConsole();
   await expect(console.getByRole("heading",{name:"Ciencia y comunicación",exact:true})).toBeVisible();
-  await expect(console.getByRole("heading",{name:"Sistemas de la base",exact:true})).toBeVisible();
-  await expect(console.getByRole("heading",{name:"Cuidado de la tripulación",exact:true})).toBeVisible();
+  await expect(console.getByRole("tab",{name:"Sistemas",exact:true})).toBeVisible();
+  await expect(console.getByRole("tab",{name:"Tripulación",exact:true})).toBeVisible();
+  await console.getByRole("tab",{name:"Sistemas",exact:true}).click();
   await expect(console.getByText(/El circuito está bien: no hay fuga/)).toBeVisible();
   const repair=console.getByRole("button",{name:"Reparar agua",exact:true});
   await expect(repair).toBeDisabled();
@@ -238,6 +241,7 @@ test("la consola explica bloqueos y refleja el estado real al encender o apagar"
   if(await page.getByRole("dialog").count()) await page.getByRole("dialog").getByRole("button",{name:"Cerrar",exact:true}).click();
   await action(page,"Apagar generador O₂");
   const updated=await openConsole();
+  await updated.getByRole("tab",{name:"Sistemas",exact:true}).click();
   await expect(updated.getByRole("button",{name:"Encender generador O₂",exact:true})).toBeVisible();
   await expect(updated.getByText("Detenido",{exact:false})).toBeVisible();
   await checkWidth(page);
@@ -275,7 +279,7 @@ test("el menú y las zonas de familias y vestidor funcionan con teclado", async 
   await expect(page.getByRole("heading",{name:"RockieOS",exact:true})).toBeVisible();
   await page.screenshot({path:info.outputPath("menu-principal.png"),fullPage:true});
   await checkWidth(page);
-  await page.getByRole("button",{name:/^Vestidor/}).click();
+  await page.getByRole("navigation",{name:"Menú principal",exact:true}).getByRole("button",{name:/^Vestidor/}).click();
   const wardrobe=page.getByRole("dialog",{name:"Vestidor",exact:true});
   const crew=wardrobe.getByRole("radio");
   await crew.first().focus(); await page.keyboard.press("ArrowRight");

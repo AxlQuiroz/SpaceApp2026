@@ -170,12 +170,16 @@ svg.pixel {
 }
 
 /* Consola de decisiones: nombre y consecuencias visibles, también sin hover. */
+.flight-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
 .flight-console {
   background: linear-gradient(135deg, #24364a 0%, var(--color-steel-900) 55%);
 }
 .action-choice {
   min-height: 108px;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 .action-choice:hover:not([aria-disabled="true"]) {
   --bevel-fill: #30455b;

@@ -26,9 +26,11 @@ it("presenta nombre, propósito, coste y motivo de bloqueo sin hover", () => {
   render(<Providers><ActionConsole commands={commands} actionsLeft={2} maxActions={2} guidance="Compara antes de elegir" /></Providers>);
   expect(screen.getByRole("heading", {name:"Ciencia y comunicación"})).toBeTruthy();
   expect(screen.getByText(/−2.0 kWh/)).toBeTruthy();
+  fireEvent.click(screen.getByRole("tab",{name:"Sistemas"}));
   expect(screen.getByText(/El circuito está bien: no hay fuga/)).toBeTruthy();
   fireEvent.click(screen.getByRole("button", {name:"Reparar agua"}));
   expect(commands[1].onActivate).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("tab",{name:"Investigar"}));
   fireEvent.click(screen.getByRole("button", {name:"Explorar"}));
   expect(commands[0].onActivate).toHaveBeenCalledOnce();
 });

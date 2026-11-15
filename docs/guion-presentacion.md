@@ -32,7 +32,7 @@ Haz la preparación y las pruebas antes del evento: instalar dependencias o comp
 | --- | --- | --- |
 | 0:00–0:20 | Menú y tripulación | «¿Cómo enseñamos a tomar decisiones de una misión espacial sin convertirlo en una hoja de cálculo? RockieOS propone un entrenador para estudiantes de 7 a 12 años». |
 | 0:20–0:40 | Selección de Marte y plan de misión | «Cada turno representa dos horas. Tenemos hasta dos decisiones, y sobrevivir no es el único objetivo: también debemos investigar, compartir datos y conservar comida». |
-| 0:40–1:15 | Consola → Apagar MOXIE → previsión | «Apagar una máquina ahorra energía, pero deja de producir oxígeno. Aquí podemos comparar el siguiente turno con y sin la decisión». Puedes cancelar; la previsión no cambia la partida. |
+| 0:40–1:15 | Consola → Sistemas → Apagar MOXIE → previsión | «Apagar una máquina ahorra energía, pero deja de producir oxígeno. Aquí podemos comparar el siguiente turno con y sin la decisión». Puedes cancelar; la previsión no cambia la partida. |
 | 1:15–1:40 | Acceso directo **Archivo NASA** | «La radiación usa mediciones históricas reales de Curiosity. Podemos ver la fecha, el instrumento, los enlaces y cómo se transformaron los registros. Los puntos de salud y exposición siguen siendo reglas educativas». |
 | 1:40–2:05 | Explorar, llamar y avanzar | «Investigar produce datos nuevos. Una llamada los envía, pero la respuesta tarda: el jugador debe decidir por sí mismo ante un peligro. Repetir consultas vacías no regala ciencia». |
 | 2:05–2:35 | Resultado de una misión ensayada y comparación | «Al repetir conservamos las condiciones y comparamos acciones y resultados. Queremos que el jugador pueda explicar por qué le fue mejor, no sólo repetir una secuencia». |

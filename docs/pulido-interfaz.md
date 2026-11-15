@@ -1,8 +1,8 @@
 # Pulido de la interfaz y del flujo de presentación
 
-La consola del juego cambia de una cuadrícula de iconos a tarjetas agrupadas en ciencia/comunicación, sistemas y cuidado de la tripulación. El nombre, propósito, gasto inmediato y motivo de bloqueo se pueden leer sin pasar el ratón. Los atajos conservan sus posiciones originales.
+La consola del juego cambia de una cuadrícula de iconos a tarjetas agrupadas en pestañas de ciencia/comunicación, sistemas y cuidado de la tripulación. El nombre, propósito, gasto inmediato y motivo de bloqueo se pueden leer sin pasar el ratón. Las pestañas evitan alargar toda la pantalla y admiten teclado. Los atajos conservan sus posiciones originales.
 
-Los botones de oxígeno y cultivo describen la próxima orden: **Encender** o **Apagar**. Su estado confirmado aparece junto a la explicación. Se muestra un único control de refugio según dónde esté la tripulación. R0-B1 orienta a partir de avisos, averías y reservas ya conocidos; no calcula ni ejecuta una estrategia por el jugador.
+Los botones de oxígeno y cultivo describen la próxima orden: **Encender** o **Apagar**. Su estado confirmado aparece junto a la explicación. Se muestra un único control de refugio según dónde esté la tripulación. R0-B1 orienta a partir de avisos, averías y reservas ya conocidos; «Ver opción» abre la categoría correspondiente sin ejecutar la orden. No calcula ni ejecuta una estrategia por el jugador.
 
 La escena y los controles comparten la vista de escritorio. En móvil, el dock conserva el acceso a las acciones y abre la misma consola. El presupuesto se muestra como `disponibles / máximo` y se explica que gastar todas las acciones no es obligatorio. La selección continúa abriendo una previsión sin cambiar el estado; la mutación requiere confirmación.
 

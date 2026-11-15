@@ -37,7 +37,7 @@ export function WardrobeModal({ open, onClose, medals, look, dress }: Props) {
             role="radio"
             aria-checked={crew === i}
             tabIndex={crew === i ? 0 : -1}
-            data-autofocus={i === 0 ? true : undefined}
+            data-autofocus={crew === i ? true : undefined}
             onClick={() => setCrew(i)}
             onKeyDown={event => {
               const next = ["ArrowRight", "ArrowDown"].includes(event.key) ? (i + 1) % look.length : ["ArrowLeft", "ArrowUp"].includes(event.key) ? (i + look.length - 1) % look.length : event.key === "Home" ? 0 : event.key === "End" ? look.length - 1 : null;
