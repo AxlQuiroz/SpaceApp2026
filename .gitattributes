@@ -1,0 +1,5 @@
+# Capturas históricas NASA del backend: el servicio verifica su SHA-256 byte a byte
+# (snapshot_store.py). En Windows, core.autocrlf=true convertía \n en \r\n al clonar,
+# la verificación fallaba (SNAPSHOT_INTEGRITY_FAILED) y crear una misión devolvía 503.
+# -text = git nunca cambia los saltos de línea de estos archivos.
+API/services/resource-api/src/resource_api/snapshots/** -text
