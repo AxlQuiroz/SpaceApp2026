@@ -12,7 +12,7 @@ import { SUITS, suitSwap, useCrewLook } from "@/game/wardrobe";
 import { useAudio, useI18n } from "@/lib/providers";
 import type { IconName } from "@/sprites/sprites.config";
 
-type Open = null | "medals" | "wardrobe" | "logbook" | "family" | "credits";
+type Open = null | "medals" | "wardrobe" | "logbook" | "family" | "schools" | "credits";
 
 /** Pantalla de título: menú principal, tripulación, progreso y zona para familias. */
 export default function Home() {
@@ -68,7 +68,7 @@ export default function Home() {
             </nav>
           </Panel>
 
-          <div className="flex flex-col gap-4 xl:grid xl:grid-cols-2 xl:items-start xl:[grid-template-areas:'crew_plan''fact_plan']">
+          <div className="flex flex-col gap-4 xl:grid xl:grid-cols-2 xl:items-start xl:[grid-template-areas:'crew_plan''fact_schools']">
             {/* ================= PLAN FAMILIAR (promoción para adultos; sin precio aquí) ================= */}
             <Panel className="xl:[grid-area:plan]" title={<><PixelSprite icon="heart" scale={2} /> {t.home.planTitle}</>}>
               <button
@@ -88,6 +88,30 @@ export default function Home() {
                 <span className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-tiny text-xs text-steel-400 uppercase">{t.home.planFor}</span>
                   <span className="font-pixel bg-amber px-3 py-1 text-lg text-void uppercase">{t.home.planCta} ▸</span>
+                </span>
+              </button>
+            </Panel>
+
+            {/* ================= PLAN ESCOLAR (para docentes e instituciones) ================= */}
+            <Panel className="xl:[grid-area:schools]" title={<><PixelSprite icon="book" scale={2} /> {t.home.schoolTitle}</>}>
+              <button
+                type="button"
+                onClick={() => setOpen("schools")}
+                aria-haspopup="dialog"
+                className="bevel pixel-btn relative flex w-full flex-col gap-2 p-3 text-left"
+                style={{ ["--bevel-fill" as string]: "var(--color-steel-800)", ["--bevel-light" as string]: "var(--color-neon-cyan)" }}
+              >
+                <span className="font-tiny absolute top-2 right-2 bg-lime px-2 py-0.5 text-xs text-void uppercase">{t.home.schoolBadge}</span>
+                <span aria-hidden className="flex items-end gap-4 pt-7">
+                  <PixelSprite icon="book" scale={3} />
+                  <PixelSprite icon="flask" scale={3} />
+                  <PixelSprite icon="sun" scale={3} />
+                  <PixelSprite icon="gear" scale={3} />
+                </span>
+                <span className="text-lg">{t.home.schoolPitch}</span>
+                <span className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-tiny text-xs text-steel-400 uppercase">{t.home.schoolFor}</span>
+                  <span className="font-pixel bg-neon-cyan px-3 py-1 text-lg text-void uppercase">{t.home.schoolCta} ▸</span>
                 </span>
               </button>
             </Panel>
@@ -156,7 +180,7 @@ export default function Home() {
       <MedalsModal open={open === "medals"} onClose={close} progress={progress} />
       <LogbookModal open={open === "logbook"} onClose={close} progress={progress} />
       <WardrobeModal open={open === "wardrobe"} onClose={close} medals={progress.medals} look={look} dress={dress} />
-      <FamilyModal open={open === "family"} onClose={close} progress={progress} />
+      <FamilyModal open={open === "family" || open === "schools"} onClose={close} progress={progress} initialTab={open === "schools" ? "schools" : "pass"} />
       <CreditsModal open={open === "credits"} onClose={close} />
     </main>
   );

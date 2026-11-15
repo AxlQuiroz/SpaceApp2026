@@ -15,20 +15,21 @@ import type { Dict } from "@/i18n/dictionaries";
  * cuando exista el cobro, la confirmación del adulto la pone la tienda o pasarela.
  */
 
-type Tab = "pass" | "diploma" | "together" | "schools";
+export type FamilyTab = "pass" | "diploma" | "together" | "schools";
+type Tab = FamilyTab;
 const TABS: Tab[] = ["pass", "diploma", "together", "schools"];
 
-type Props = { open: boolean; onClose: () => void; progress: Progress };
+type Props = { open: boolean; onClose: () => void; progress: Progress; initialTab?: Tab };
 
-export function FamilyModal({ open, onClose, progress }: Props) {
+export function FamilyModal({ open, onClose, progress, initialTab = "pass" }: Props) {
   const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("pass");
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
 
-  // Cada vez que se abre, empieza por el Plan Familiar.
+  // Cada vez que se abre, empieza por la pestaña pedida (Plan Familiar por defecto).
   useEffect(() => {
-    if (open) setTab("pass");
-  }, [open]);
+    if (open) setTab(initialTab);
+  }, [open, initialTab]);
 
   return (
     <Modal open={open} title={t.family.title} onClose={onClose} wide>
