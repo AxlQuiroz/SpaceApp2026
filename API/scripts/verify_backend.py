@@ -25,6 +25,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--live", action="store_true", help="Descargar también las tres referencias históricas desde NASA.")
     parser.add_argument("--nextjs", action="store_true", help="Verificar el Route Handler; requiere npm ci y npm test en integrations/nextjs.")
+    parser.add_argument("--scenario", choices=["lunar-outpost-v1", "mars-outpost-v1", "all"], default="lunar-outpost-v1")
     parser.add_argument("--output-dir", type=Path)
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
@@ -57,12 +58,15 @@ def main():
                             time.sleep(0.1)
                         else:
                             raise RuntimeError("El backend no quedó disponible en 20 segundos.")
-                for mode in (["snapshot", "live"] if args.live else ["snapshot"]):
-                    summary = run(f"http://127.0.0.1:{mission_port}", mode)
-                    if args.output_dir:
-                        args.output_dir.mkdir(parents=True, exist_ok=True)
-                        (args.output_dir / f"smoke-{mode}.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-                    print(json.dumps(summary, ensure_ascii=False, indent=2), flush=True)
+                scenarios = ["lunar-outpost-v1", "mars-outpost-v1"] if args.scenario == "all" else [args.scenario]
+                for scenario in scenarios:
+                    for mode in (["snapshot", "live"] if args.live else ["snapshot"]):
+                        summary = run(f"http://127.0.0.1:{mission_port}", mode, scenario)
+                        if args.output_dir:
+                            args.output_dir.mkdir(parents=True, exist_ok=True)
+                            suffix = "" if scenario == "lunar-outpost-v1" else "-mars"
+                            (args.output_dir / f"smoke-{mode}{suffix}.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+                        print(json.dumps(summary, ensure_ascii=False, indent=2), flush=True)
                 if args.nextjs:
                     checked = subprocess.run(["node", str(root / "integrations/nextjs/tests/live-proxy.cjs"), f"http://127.0.0.1:{mission_port}"],
                                              cwd=root, check=True, capture_output=True, text=True)

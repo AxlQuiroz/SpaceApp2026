@@ -1,12 +1,14 @@
 # SpaceApp2026 · Órbita
 
-Entrenador de decisiones y recursos para una base lunar, con referencias científicas de NASA. El frontend (**Base Selene**, juego pixel art para niños de 7 a 12 años) está en la raíz del repo con Next.js; el backend, en `API/`.
+**RockieOS** es un entrenador de decisiones y recursos para bases en la Luna y Marte, con referencias científicas de NASA. El frontend (juego pixel art para niños de 7 a 12 años) está en la raíz del repo con Next.js; el backend, en `API/`.
 
 El **backend v0.2.0** se encuentra en [`API/`](API/README.md). Incluye la API interna de recursos NASA, el motor lunar, partidas persistentes en SQLite, el contrato OpenAPI, un cliente TypeScript y el adaptador para Next.js App Router.
 
 ## Empezar
 
-Abre una terminal dentro de `API/` y sigue la [instalación en Windows](API/docs/backend-installation-windows.md). Las dependencias Python y los scripts se ejecutan desde esa carpeta.
+En Windows, con **Python 3.12 y Node.js 24** instalados, abre **[`RockieOS.cmd`](RockieOS.cmd)** con doble clic. Elige **1** para preparar las dependencias y **2** para iniciar la presentación. El mismo menú ejecuta pruebas, abre informes y ofrece un modo de desarrollo. `Ctrl+C` detiene los servicios y regresa al menú.
+
+Consulta la [guía del lanzador y presentación](docs/lanzador-windows.md). También puedes seguir la [instalación manual del backend](API/docs/backend-installation-windows.md).
 
 - [Conectar el frontend Next.js](API/docs/nextjs-integration.md).
 - [Contrato de partidas](API/docs/mission-api-contract.md).

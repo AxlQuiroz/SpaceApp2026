@@ -34,6 +34,11 @@ describe("Contenido educativo", () => {
     expect(pickLesson(triggers, { ...empty(), quizzes: { why_delay: false } }).quiz?.id).toBe("why_delay");
     expect(pickLesson(triggers, { ...empty(), quizzes: { why_delay: true } }).quiz).toBeNull();
   });
+  it("saltar el tutorial no entrega una medalla de graduación en una orden posterior", async () => {
+    const mission = (await new MockMissionClient().createMission({})).mission;
+    const medals = newMedals({ mission, log: [], evaluation: null, progress: { ...empty(), tutorialDone: true } });
+    expect(medals.map((medal) => medal.id)).not.toContain("graduate");
+  });
 });
 
 describe("Marte en el modo demo", () => {

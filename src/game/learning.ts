@@ -313,7 +313,9 @@ export const MEDALS: Medal[] = [
     icon: "flask",
     name: { es: "Cadete graduado", en: "Graduated cadet" },
     how: { es: "Termina el tutorial jugable.", en: "Finish the playable tutorial." },
-    earned: (i) => i.progress.tutorialDone,
+    // Saltar también marca tutorialDone para no volver a mostrar el entrenador.
+    // Sólo nextCoach entrega esta medalla al completar todos los pasos.
+    earned: () => false,
   },
   {
     id: "first_day",

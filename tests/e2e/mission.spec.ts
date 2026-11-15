@@ -1,5 +1,16 @@
 import { test, expect, type Page } from "@playwright/test";
 
+async function checkWidth(page: Page) {
+  const viewport = page.viewportSize()!.width;
+  const layout = await page.evaluate(width => ({
+    width: document.documentElement.scrollWidth,
+    overflowing: [...document.querySelectorAll("body *")].map(el => ({
+      tag: el.tagName, class: el.getAttribute("class"), right: Math.round(el.getBoundingClientRect().right),
+    })).filter(el => el.right > width + 1).slice(0, 12),
+  }), viewport);
+  // En móvil, innerWidth puede ensancharse y ocultar el fallo mediante un zoom automático.
+  expect(layout.width, JSON.stringify(layout)).toBeLessThanOrEqual(viewport + 1);
+}
 async function dismissNarration(page: Page) {
   const box = page.getByTestId("narration");
   // Mensajes, palabras nuevas, preguntas, medallas e informe: una tarjeta por clic (dos en las preguntas).
@@ -10,28 +21,34 @@ async function dismissNarration(page: Page) {
   }
   await expect(box).toHaveCount(0);
 }
-async function start(page: Page) {
+async function start(page: Page, destination: "Luna" | "Marte" = "Luna") {
   await page.goto("/mision");
+  if (destination === "Marte") await page.getByText("Marte", { exact: true }).click();
   await page.getByRole("button", { name: "Jugar", exact: true }).click();
   await expect(page.getByTestId("mission-hud")).toHaveAttribute("data-turn", "0");
+  await checkWidth(page);
   await page.getByRole("button", { name: "Saltar tutorial", exact: true }).click();
   await expect(page.getByTestId("narration")).toBeVisible();
   await dismissNarration(page);
 }
 async function action(page: Page, name: string) {
-  const confirmed = page.waitForResponse(response => response.url().endsWith("/commands") && response.request().method() === "POST");
+  await dismissNarration(page);
   const mobile = page.getByRole("button", { name: "Acciones", exact: true });
   if (await mobile.isVisible()) {
     await mobile.click();
     await page.getByRole("dialog").getByRole("button", { name: new RegExp(`^${name}`) }).click();
   } else await page.getByRole("button", { name, exact: true }).click();
   // "¿Qué pasaría si…?": la orden sólo se envía al confirmar.
-  await page.getByTestId("preview").getByRole("button", { name: "¡Hazlo!", exact: true }).click();
-  const response = await confirmed;
-  await dismissNarration(page);
+  const confirmation = page.getByTestId("preview").getByRole("button", { name: "¡Hazlo!", exact: true });
+  await expect(confirmation).toBeEnabled();
+  const [response] = await Promise.all([
+    page.waitForResponse(response => response.url().endsWith("/commands") && response.request().method() === "POST", { timeout: 15_000 }),
+    confirmation.click(),
+  ]);
   expect(response.ok()).toBe(true);
   const result = await response.json();
   await expect(page.getByTestId("mission-hud")).toHaveAttribute("data-version", String(result.mission.state.version));
+  await dismissNarration(page);
 }
 async function advance(page: Page, turn: number) {
   await page.getByRole("button", { name: "Avanzar 2 horas", exact: true }).click();
@@ -45,8 +62,7 @@ test("misión real completa, fuentes, recarga y menú", async ({ page }, info) =
   await start(page);
   const id = await page.getByTestId("mission-hud").getAttribute("data-mission-id");
   await page.screenshot({ path: info.outputPath("base-selene.png"), fullPage: true });
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
-  expect(overflow).toBe(false);
+  await checkWidth(page);
   await page.getByRole("button", { name: "☰ Menú", exact: true }).click();
   await page.getByRole("button", { name: "Fuentes NASA", exact: true }).click();
   const sources = page.getByRole("dialog", { name: "Fuentes y créditos", exact: true });
@@ -95,6 +111,30 @@ test("503 al reanudar conserva la partida", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Sin conexión con la base", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Reintentar", exact: true }).click();
   await expect(page.getByTestId("mission-hud")).toHaveAttribute("data-mission-id", id!);
+});
+test("misión de Marte completa con datos reales, llamadas y tormenta de polvo", async ({ page }, info) => {
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await start(page, "Marte");
+  const id = await page.getByTestId("mission-hud").getAttribute("data-mission-id");
+  await page.screenshot({ path: info.outputPath("base-marte.png"), fullPage: true });
+  await checkWidth(page);
+  const plan: Record<number, string[]> = {
+    0: ["Explorar", "Llamar a la Tierra"], 2: ["Ir al refugio"],
+    5: ["Invernadero", "MOXIE"], 7: ["Salir del refugio", "Explorar"],
+    10: ["Limpiar paneles", "MOXIE"], 11: ["Invernadero"],
+  };
+  for (let turn = 0; turn < 12; turn++) {
+    for (const name of plan[turn] ?? []) await action(page, name);
+    await advance(page, turn + 1);
+    if (turn === 6) {
+      await page.reload();
+      await expect(page.getByTestId("mission-hud")).toHaveAttribute("data-mission-id", id!);
+      await expect(page.getByTestId("mission-hud")).toHaveAttribute("data-turn", "7");
+    }
+  }
+  await expect(page.getByRole("dialog", { name: "¡Misión exitosa!", exact: true })).toBeVisible();
+  expect(errors).toEqual([]);
 });
 test("503 en una orden reintenta exactamente la misma intención", async ({ page }) => {
   await start(page);

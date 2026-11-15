@@ -1,5 +1,6 @@
 """Ejecuta ambos servicios localmente con el Python del entorno actual."""
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -31,6 +32,14 @@ def main():
         raise SystemExit(str(exc)) from None
     children = []
     exit_code = 0
+    # El lanzador raíz usa grupos de procesos; permite cerrar SQLite y ambos hijos
+    # también al detenerlo desde Windows (CTRL_BREAK) o desde un supervisor.
+    def interrupt(*_args):
+        raise KeyboardInterrupt
+
+    for name in ("SIGTERM", "SIGBREAK"):
+        if hasattr(signal, name):
+            signal.signal(getattr(signal, name), interrupt)
     try:
         for entrypoint, port in [("resource_api.main:create_app", "8001"), ("mission_api.main:create_app", "8000")]:
             children.append(subprocess.Popen([sys.executable, "-m", "uvicorn", entrypoint, "--factory", "--host", "127.0.0.1", "--port", port, "--no-access-log"], cwd=root))
