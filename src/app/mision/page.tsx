@@ -1,16 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Panel, PixelButton, PixelSprite, SettingsBar, Starfield } from "@/components/hud";
 import { MissionHud } from "@/game/MissionHud";
 import { isDemo, useMission, type ScenarioId } from "@/game/useMission";
 import { missionErrorText, reviewText } from "@/game/reviewText";
 import { useI18n } from "@/lib/providers";
+import { flightText } from "@/game/flightText";
 
 export default function MissionPage() {
   const game = useMission();
   const { t, locale } = useI18n();
   const copy = reviewText(locale);
+  const flight = flightText(locale);
   const [practiceMode, setPracticeMode] = useState<"historical" | "training">("historical");
   const [difficulty, setDifficulty] = useState<"cadet" | "commander">("cadet");
   const [destination, setDestination] = useState<ScenarioId>("lunar-outpost-v1");
@@ -28,7 +31,7 @@ export default function MissionPage() {
       <div className="absolute inset-0">
         <Starfield />
       </div>
-      <Panel className="relative z-10 w-full max-w-3xl" scanlines>
+      <Panel className="relative z-10 w-full max-w-4xl" scanlines>
         <div className="flex flex-col items-center gap-4 p-2 text-center">
           <h1 className="font-pixel text-4xl text-neon-cyan">{t.app.title}</h1>
 
@@ -60,20 +63,26 @@ export default function MissionPage() {
 
           {game.phase === "menu" && (
             <>
-              <fieldset className="grid w-full gap-3 sm:grid-cols-2">
+              <div className="bevel-inset w-full p-3 text-left">
+                <p className="font-tiny text-xs text-amber uppercase">{flight.briefing}</p>
+                <p className="font-pixel text-xl text-steel-50">{flight.briefingSteps}</p>
+                <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-base text-neon-cyan"><li>◷ {flight.timeBox}</li><li>◆ {flight.turnBox}</li><li>Ⅱ {flight.safeBox}</li></ul>
+              </div>
+              {isDemo() && <p role="status" className="bevel-inset w-full p-2 text-lg text-amber">{flight.demo}</p>}
+              <fieldset disabled={game.busy || game.hasPending} className="grid w-full grid-cols-2 gap-3">
                 <legend className="font-pixel mb-2 text-lg text-amber uppercase">{t.destination.title}</legend>
                 {destinations.map((id) => {
                   const isMarsCard = id === "mars-outpost-v1";
                   return (
                     <label
                       key={id}
-                      className={`bevel pixel-btn relative flex cursor-pointer flex-col items-center gap-2 p-4 ${destination === id ? "glow" : ""}`}
+                      className={`bevel pixel-btn relative flex cursor-pointer flex-col items-center gap-2 p-3 ${destination === id ? "glow" : ""}`}
                       style={{ ["--bevel-fill" as string]: destination === id ? (isMarsCard ? "var(--color-mars-dark)" : "var(--color-cyan-dark)") : "var(--color-steel-800)" }}
                     >
                       <input type="radio" name="destination" value={id} checked={destination === id} onChange={() => setDestination(id)} className="sr-only" />
-                      <PixelSprite icon={isMarsCard ? "mars" : "day"} scale={4} />
+                      <PixelSprite icon={isMarsCard ? "mars" : "day"} scale={3} />
                       <span className="font-pixel text-2xl">{isMarsCard ? t.destination.mars : t.destination.moon}</span>
-                      <span className="text-lg text-steel-200">{isMarsCard ? t.destination.marsDesc : t.destination.moonDesc}</span>
+                      <span className="text-base text-steel-200">{isMarsCard ? t.destination.marsDesc : t.destination.moonDesc}</span>
                       {!isMarsCard && <span className="font-tiny bg-lime px-2 py-0.5 text-xs text-void uppercase">{t.destination.recommended}</span>}
                     </label>
                   );
@@ -94,12 +103,12 @@ export default function MissionPage() {
                   </ul>
                 </section>
               )}
-              <fieldset className="grid w-full gap-3 sm:grid-cols-2">
+              <fieldset disabled={game.busy || game.hasPending} className="grid w-full grid-cols-2 gap-3">
                 <legend className="font-pixel mb-2 text-lg text-amber uppercase">{t.menu.difficulty}</legend>
                 {(["cadet", "commander"] as const).map((d) => (
                   <label
                     key={d}
-                    className={`bevel pixel-btn flex cursor-pointer flex-col items-center gap-2 p-4 ${difficulty === d ? "glow" : ""}`}
+                    className={`bevel pixel-btn flex cursor-pointer flex-col items-center gap-2 p-3 ${difficulty === d ? "glow" : ""}`}
                     style={{
                       ["--bevel-fill" as string]: difficulty === d ? "var(--color-cyan-dark)" : "var(--color-steel-800)",
                     }}
@@ -112,13 +121,13 @@ export default function MissionPage() {
                       onChange={() => setDifficulty(d)}
                       className="sr-only"
                     />
-                    <PixelSprite sprite="astronaut" anim={d === "cadet" ? "idle" : "work"} scale={4} />
+                    <PixelSprite sprite="astronaut" anim={d === "cadet" ? "idle" : "work"} scale={3} />
                     <span className="font-pixel text-2xl">{t.menu[d]}</span>
-                    <span className="text-lg text-steel-200">{d === "cadet" ? t.menu.cadetDesc : t.menu.commanderDesc}</span>
+                    <span className="text-base text-steel-200">{d === "cadet" ? t.menu.cadetDesc : t.menu.commanderDesc}</span>
                   </label>
                 ))}
               </fieldset>
-              <fieldset className="w-full text-left"><legend className="font-pixel text-lg text-amber">{copy.simulation}</legend><div className="flex flex-wrap gap-3">{(["historical", "training"] as const).filter(mode => !isDemo() || mode === "historical").map(mode => <label key={mode} className="bevel flex min-h-11 cursor-pointer items-center gap-2 px-3 py-2"><input type="radio" name="practice-mode" checked={practiceMode === mode} onChange={() => setPracticeMode(mode)} />{mode === "historical" ? copy.historicalMode : copy.training}</label>)}</div><p className="mt-2 text-base text-steel-200">{copy.modeNote}</p></fieldset>
+              <fieldset disabled={game.busy || game.hasPending} className="w-full text-left"><legend className="font-pixel text-lg text-amber">{copy.simulation}</legend><div className="flex flex-wrap gap-3">{(["historical", "training"] as const).filter(mode => !isDemo() || mode === "historical").map(mode => <label key={mode} className="bevel flex min-h-11 cursor-pointer items-center gap-2 px-3 py-2"><input type="radio" name="practice-mode" checked={practiceMode === mode} onChange={() => setPracticeMode(mode)} />{mode === "historical" ? copy.historicalMode : copy.training}</label>)}</div><p className="mt-2 text-base text-steel-200">{copy.modeNote}</p></fieldset>
               <PixelButton
                 variant="primary"
                 className="px-8 text-2xl"
@@ -134,6 +143,7 @@ export default function MissionPage() {
           )}
 
           <SettingsBar />
+          <Link href="/" className="pixel-btn inline-flex items-center px-3 py-2 text-lg text-steel-200">← {flight.home}</Link>
         </div>
       </Panel>
     </main>

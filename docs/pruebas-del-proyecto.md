@@ -98,8 +98,10 @@ Las pruebas de navegador usan emulación de móvil, no un dispositivo Android o 
 
 ## Regresiones de decisiones y fuentes (0.3)
 
-El inventario incluye **199 pruebas** entre Python (123), SDK (9), adaptador Next.js (12), interfaz (27), lanzador (12) y navegador escritorio/móvil (16). El resultado de la ejecución concreta se consulta en GitHub Actions y en los informes del lanzador.
+El inventario incluye **219 pruebas** entre Python (125), SDK (9), adaptador Next.js (12), interfaz (39), lanzador (12) y navegador escritorio/móvil (22). El resultado de la ejecución concreta se consulta en GitHub Actions y en los informes del lanzador.
 
 Los casos nuevos comprueban informes científicos sin datos/repetidos, reserva alimentaria, previsión frente al avance real, recuperación de preview fallido, foco, fuentes en inglés, perfil derivado de las 139 lecturas, conservación de reglas 1.0, recibos pendientes anteriores, comparación de intentos y más de veinte visitantes detrás de un proxy autenticado. El plan viable se ejercita en 24 combinaciones de escenario, dificultad, modo y semilla.
 
 Para evaluar comprensión humana, usa [prueba-con-usuarios.md](prueba-con-usuarios.md). Para publicar en un alojamiento separado, configura los secretos privados descritos en [integración Next.js](../API/docs/nextjs-integration.md).
+
+El pulido de la consola añade recorridos de estado de los interruptores, motivos de bloqueo, tutorial y teclado en familias/vestidor. Las capturas de la pantalla principal y la consola quedan en los artefactos de navegador. El ensayo de entrega se describe en [guion-presentacion.md](guion-presentacion.md).

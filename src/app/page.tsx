@@ -11,12 +11,14 @@ import { MEDALS, QUIZZES, TERMS, useProgress } from "@/game/learning";
 import { suitSwap, useCrewLook } from "@/game/wardrobe";
 import { useAudio, useI18n } from "@/lib/providers";
 import type { IconName } from "@/sprites/sprites.config";
+import { flightText } from "@/game/flightText";
 
 type Open = null | "medals" | "wardrobe" | "logbook" | "family" | "credits";
 
 /** Pantalla de título: menú principal, tripulación, progreso y zona para familias. */
 export default function Home() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const flight = flightText(locale);
   const { progress } = useProgress();
   const { look, dress } = useCrewLook();
   const [open, setOpen] = useState<Open>(null);
@@ -61,6 +63,7 @@ export default function Home() {
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
           {/* ================= MENÚ ================= */}
           <Panel title={<><PixelSprite icon="gear" scale={2} /> {t.home.menuTitle}</>}>
+            <p className="mb-3 text-lg text-steel-200">{flight.steps}</p>
             <nav aria-label={t.home.menuTitle} className="flex flex-col gap-3">
               <MenuEntry href="/mision" primary icon="next" label={t.home.play} hint={t.home.playHint} />
               <MenuEntry icon="medal" label={t.home.medals} hint={t.home.medalsHint} count={`${medals}/${MEDALS.length}`} onClick={() => setOpen("medals")} />

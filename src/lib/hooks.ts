@@ -2,6 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 
+let scrollLocks = 0;
+let previousOverflow = "";
+/** Varias capas pueden relevarse sin desbloquear el fondo de otra ventana. */
+export function useBodyScrollLock(active: boolean) {
+  useEffect(() => {
+    if (!active) return;
+    if (scrollLocks++ === 0) { previousOverflow = document.body.style.overflow; document.body.style.overflow = "hidden"; }
+    return () => { if (--scrollLocks === 0) document.body.style.overflow = previousOverflow; };
+  }, [active]);
+}
+
 /** Mantiene el teclado dentro de los overlays que no usan <dialog> nativo. */
 export function useFocusTrap<T extends HTMLElement>(active = true) {
   const ref = useRef<T>(null);

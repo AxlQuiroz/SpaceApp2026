@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertBanner,
   Badge,
-  CommandCard,
   DialogBox,
   Minimap,
   Modal,
@@ -14,7 +13,6 @@ import {
   SettingsBar,
   SpaceWeather,
   UnitPanel,
-  type Command,
   type UnitStat,
 } from "@/components/hud";
 import type { MissionView, PreviewResult } from "@/lib/orbita/schema";
@@ -45,6 +43,10 @@ import {
 } from "./model";
 import { missionErrorText, reviewText } from "./reviewText";
 import { TurnReport } from "./TurnReport";
+import { ActionConsole, type FlightCommand } from "./ActionConsole";
+import { actionAvailability, actionGroup, decisionGuidance } from "./actionPresentation";
+import { flightText } from "./flightText";
+import { MissionPlan } from "./MissionPlan";
 import { isDemo, type ActionId, type MissionController, type ScenarioParams } from "./useMission";
 
 /** Cola de cosas que R0-B1 muestra una por una, en orden. */
@@ -58,16 +60,16 @@ type Narration =
 const COST_UNITS: Record<string, [string, number]> = {
   energy_kwh: ["kWh", 1],
   oxygen_kg: ["kg O₂", 2],
-  water_l: ["L", 1],
+  water_l: ["L H₂O", 1],
   food_kg: ["kg", 1],
   spare_parts: ["⚙", 0],
 };
 
-function formatCosts(costs: Record<string, number>) {
+function formatCosts(costs: Record<string, number>, locale: "es" | "en") {
   return Object.entries(costs)
     .filter(([, v]) => v > 0)
     .map(([k, v]) => {
-      const [unit, d] = COST_UNITS[k] ?? [k, 1];
+      const [unit, d] = k === "food_kg" ? [locale === "en" ? "kg food" : "kg comida", 2] : k === "spare_parts" ? [locale === "en" ? "parts" : "repuestos", 0] : COST_UNITS[k] ?? [k, 1];
       return `−${v.toFixed(d)} ${unit}`;
     })
     .join(" · ");
@@ -79,6 +81,7 @@ export function MissionHud({ game }: Props) {
   const { t, locale } = useI18n();
   const { play } = useAudio();
   const copy = reviewText(locale);
+  const flight = flightText(locale);
   const { mission, log, latest, busy, scenario } = game;
   const s = mission.state;
   const p: ScenarioParams = scenario?.parameters ?? {
@@ -269,22 +272,28 @@ export function MissionHud({ game }: Props) {
   }, [canAdvance, game, overlayOpen]);
 
   /* ---------- Tarjeta de comandos ---------- */
-  const commands: Command[] = commandLayout(mission).map(({ id, icon }) => {
+  const guidance = decisionGuidance(mission, locale, weather !== "calm");
+  const commands: FlightCommand[] = commandLayout(mission).map(({ id, icon }) => {
     const opt = mission.available_actions.find((a) => a.id === id);
     const enabled = !!opt?.enabled && actionsLeft > 0 && active && !busy && !game.hasPending && !commandsBlocked;
-    const reason = !opt?.enabled
-      ? locale === "es"
-        ? (opt?.disabled_reason ?? t.game.unavailable)
-        : t.game.unavailable
-      : actionsLeft === 0
-        ? t.game.noActionsLeft
-        : null;
-    const costs = opt ? formatCosts(opt.costs) : "";
+    const reason = busy || game.hasPending ? flight.wait : actionAvailability(mission, id, locale);
+    const costs = id === "activate_oxygen_reserve" || id === "activate_water_reserve" ? flight.transfer : opt ? formatCosts(opt.costs, locale) : "";
+    let { label, hint } = actionText(t, mission, id);
+    const toggled = id === "toggle_greenhouse" ? s.systems.greenhouse_on : s.systems.oxygen_generator_on;
+    if (id === "toggle_greenhouse" || id === "toggle_oxygen_generator") {
+      const name = id === "toggle_greenhouse" ? flight.greenhouse : mars ? "MOXIE" : flight.oxygen;
+      label = `${toggled ? flight.turnOff : flight.turnOn} ${name}`;
+      hint = id === "toggle_greenhouse" ? (toggled ? flight.greenhouseOff : flight.greenhouseOn) : toggled ? flight.oxygenOff : mars ? flight.moxieOn : flight.oxygenOn;
+    }
+    const previewHint = hint;
+    if (id === "contact_earth") hint = s.unreported_data_points > 0 ? `${s.unreported_data_points} ${flight.sendData}` : flight.emptyCall;
     return {
       id,
       icon,
-      label: actionText(t, mission, id).label,
-      hint: [actionText(t, mission, id).hint, costs && `${t.game.cost}: ${costs}`, reason && `✖ ${reason}`].filter(Boolean).join("\n"),
+      label, hint, previewHint, costs, reason, group: actionGroup(id),
+      hidden: id === "enter_shelter" ? s.systems.crew_in_shelter : id === "leave_shelter" ? !s.systems.crew_in_shelter : false,
+      state: id.startsWith("toggle_") ? (toggled ? flight.on : flight.off) : undefined,
+      recommended: guidance.action === id,
       locked: !enabled,
       onActivate: () => askPreview(id),
     };
@@ -349,7 +358,7 @@ export function MissionHud({ game }: Props) {
           </div>
           <Badge tone="info">{mars ? t.destination.mars : t.destination.moon}</Badge>
           {s.rules_version.endsWith("1.0.0") && <Badge tone="warn">{locale === "en" ? "Previous rules · saved mission" : "Reglas anteriores · partida guardada"}</Badge>}
-          {isDemo() ? <Badge tone="warn">DEMO</Badge> : <Badge tone="info">{copy.historical}{mars ? " · 20-05-2024" : ""}</Badge>}
+          {isDemo() ? <Badge tone="warn">DEMO</Badge> : <button type="button" disabled={overlayOpen} onClick={() => setSourcesOpen(true)} aria-label={flight.sourceShortcut} aria-haspopup="dialog" className="bevel pixel-btn min-h-11 px-2 font-tiny text-xs text-neon-cyan">{copy.historical}{mars ? " · 20-05-2024" : ""} ↗</button>}
           {s.status === "paused" && <Badge tone="warn">{t.missionStatus.paused}</Badge>}
         </div>
         <div className="bevel flex min-w-0 max-w-full flex-wrap gap-1 px-1 py-1" data-tour="resources">
@@ -384,13 +393,7 @@ export function MissionHud({ game }: Props) {
         </div>
       </header>
 
-      {mission.planning && <aside className="bevel-inset flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2 text-base" aria-label={copy.support}>
-        <span>{copy.foodHours}: <strong>{mission.planning.food_autonomy_hours.toFixed(1)} h</strong> · {copy.hours}</span>
-        <span className={r.food_kg < mission.planning.food_reserve_target_kg ? "text-amber" : "text-lime"}>{copy.foodTarget}: {mission.planning.food_reserve_target_kg.toFixed(1)} kg</span>
-        {mars && <span>{copy.data}: {s.unreported_data_points}</span>}
-        {mission.planning.pending_reply_minutes !== null && <span className="text-amber">{copy.pendingRadio}: {mission.planning.pending_reply_minutes} {copy.minutes}</span>}
-        <details className="w-full"><summary className="cursor-pointer py-2">{copy.simulation} · {s.practice_mode === "training" ? copy.training : copy.historicalMode}</summary><p>{copy.harvestNote} {mars && copy.radioNote}</p></details>
-      </aside>}
+      <MissionPlan mission={mission} parameters={p} />
       {banner && <AlertBanner icon="warning" message={localizeAlert(banner, locale)} onDismiss={() => setBanner(null)} />}
       {game.error && (
         <div role="alert" className="bevel flex items-center gap-3 px-3 py-2" style={{ ["--bevel-fill" as string]: "var(--color-alert-dark)" }}>
@@ -399,6 +402,8 @@ export function MissionHud({ game }: Props) {
         </div>
       )}
 
+      <div className="grid min-w-0 items-start gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(370px,440px)]">
+      <div className="flex min-w-0 flex-col gap-3">
       {/* ================= ESCENA ================= */}
       <main className="flex-1" data-tour="base">
         <BaseScene
@@ -413,7 +418,7 @@ export function MissionHud({ game }: Props) {
       </main>
 
       {/* ================= CONSOLA INFERIOR ================= */}
-      <footer className="bevel rivets grid gap-3 p-3 lg:grid-cols-[auto_1fr_auto]">
+      <footer className="bevel rivets grid gap-3 p-3 xl:grid-cols-[auto_minmax(0,1fr)]">
         {/* Izquierda: minimapa + clima */}
         <section className="flex flex-col gap-2" aria-label={t.minimap.label}>
           <Minimap modules={minimapModules} crew={crewDots} />
@@ -457,21 +462,15 @@ export function MissionHud({ game }: Props) {
           )}
         </section>
 
-        {/* Derecha: comandos + avanzar */}
-        <section className="hidden flex-col items-center gap-2 lg:flex">
-          <div data-tour="commands" className="flex flex-col items-center gap-1">
-            <span className="font-tiny flex items-center gap-1 text-xs text-steel-200 uppercase" aria-label={`${t.game.actionsLeft}: ${actionsLeft}`}>
-              {t.game.actionsLeft}
-              {Array.from({ length: p.actions_per_turn }, (_, i) => (
-                <span key={i} aria-hidden className="inline-block h-3 w-3" style={{ background: i < actionsLeft ? "var(--color-lime)" : "var(--color-steel-700)" }} />
-              ))}
-            </span>
-            <CommandCard commands={commands} hotkeys={!overlayOpen} />
-          </div>
+      </footer>
+      </div>
+        <aside className="bevel flight-console hidden min-w-0 self-start p-3 lg:sticky lg:top-3 lg:block">
+          <div data-tour="commands"><ActionConsole commands={commands} actionsLeft={actionsLeft} maxActions={p.actions_per_turn} guidance={guidance.text} hotkeys={!overlayOpen} /></div>
+          <div className="mt-3 border-t-2 border-steel-700 pt-3">
           <PixelButton
             data-tour="advance"
             variant="primary"
-            className="w-full"
+            className={`w-full ${actionsLeft === 0 && canAdvance ? "glow" : ""}`}
             disabled={!canAdvance}
             onClick={() => {
               play("success");
@@ -483,16 +482,17 @@ export function MissionHud({ game }: Props) {
           >
             {busy ? "…" : t.game.advance}
           </PixelButton>
-          <span className="font-tiny text-xs text-steel-400">[{t.game.advanceKey}]</span>
-        </section>
-      </footer>
+          <p className="mt-2 text-base text-steel-200">{flight.next} <kbd className="text-sm text-steel-400">[{t.game.advanceKey}]</kbd></p>
+          </div>
+        </aside>
+      </div>
 
       {/* ================= DOCK MÓVIL (comandos siempre a mano) ================= */}
       <nav
         aria-label={t.game.actionsLeft}
         data-testid="mobile-dock"
         className="bevel fixed inset-x-0 bottom-0 z-30 flex gap-2 p-2 lg:hidden"
-        style={{ ["--bevel-fill" as string]: "var(--color-steel-900)" }}
+        style={{ ["--bevel-fill" as string]: "var(--color-steel-900)", paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}
       >
         <PixelButton
           data-tour="commands"
@@ -500,9 +500,10 @@ export function MissionHud({ game }: Props) {
           disabled={!active || busy || game.hasPending || overlayOpen}
           onClick={() => setActionsOpen(true)}
           aria-haspopup="dialog"
+          aria-label={t.game.actionsLeft}
           icon={<span className="hidden sm:inline-flex"><PixelSprite icon="explore" scale={2} /></span>}
         >
-          {t.game.actionsLeft}
+          {t.game.actionsLeft} <span className="text-neon-cyan">{actionsLeft}/{p.actions_per_turn}</span>
           <span aria-hidden className="flex gap-1">
             {Array.from({ length: p.actions_per_turn }, (_, i) => (
               <span key={i} className="inline-block h-3 w-3" style={{ background: i < actionsLeft ? "var(--color-lime)" : "var(--color-steel-700)" }} />
@@ -525,27 +526,7 @@ export function MissionHud({ game }: Props) {
       </nav>
 
       <Modal open={actionsOpen} title={`${t.game.actionsLeft} · ${actionsLeft}/${p.actions_per_turn}`} onClose={() => setActionsOpen(false)}>
-        <ul className="flex max-h-[65vh] flex-col gap-2 overflow-y-auto pr-1">
-          {commands.map((c) => (
-            <li key={c.id}>
-              <button
-                type="button"
-                disabled={c.locked}
-                onClick={() => {
-                  setActionsOpen(false);
-                  c.onActivate?.();
-                }}
-                className="bevel pixel-btn flex w-full items-start gap-3 p-3 text-left"
-              >
-                <PixelSprite icon={c.locked ? "lock" : c.icon} scale={2} />
-                <span className="flex flex-col">
-                  <span className="font-pixel text-lg text-neon-cyan">{c.label}</span>
-                  <span className="whitespace-pre-line text-lg text-steel-200">{c.hint}</span>
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
+        <ActionConsole compact commands={commands} actionsLeft={actionsLeft} maxActions={p.actions_per_turn} guidance={guidance.text} onSelect={command => { setActionsOpen(false); command.onActivate(); }} />
       </Modal>
 
       {/* ================= NARRACIÓN (una cosa a la vez) ================= */}
@@ -593,8 +574,8 @@ export function MissionHud({ game }: Props) {
         <div className="fixed inset-0 z-40 grid place-items-end overflow-y-auto bg-void/50 p-2 sm:place-items-center">
           <div className="w-full max-w-xl">
             <PreviewPanel
-              label={actionText(t, mission, pendingAction.id).label}
-              hint={actionText(t, mission, pendingAction.id).hint}
+              label={commands.find(command => command.id === pendingAction.id)?.label ?? actionText(t, mission, pendingAction.id).label}
+              hint={commands.find(command => command.id === pendingAction.id)?.previewHint ?? actionText(t, mission, pendingAction.id).hint}
               icon={commandLayout(mission).find((c) => c.id === pendingAction.id)?.icon ?? "explore"}
               result={pendingAction.result}
               current={{ resources: r as unknown as Record<string, number>, science_points: s.science_points, exposure_risk_index: s.exposure_risk_index }}

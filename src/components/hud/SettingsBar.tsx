@@ -1,12 +1,30 @@
 "use client";
 
 import { useAudio, useI18n } from "@/lib/providers";
+import { useEffect, useState } from "react";
 import { PixelButton } from "./PixelButton";
 
 /** Silencio, volumen e idioma. Siempre visible. */
 export function SettingsBar() {
   const { muted, setMuted, volume, setVolume, play } = useAudio();
   const { t, locale, setLocale } = useI18n();
+  const [fullscreen, setFullscreen] = useState(false);
+  const [supported, setSupported] = useState(false);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    setSupported(!!document.fullscreenEnabled);
+    const changed = () => setFullscreen(!!document.fullscreenElement);
+    changed();
+    document.addEventListener("fullscreenchange", changed);
+    return () => document.removeEventListener("fullscreenchange", changed);
+  }, []);
+  const toggleFullscreen = async () => {
+    setFailed(false);
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await document.documentElement.requestFullscreen();
+    } catch { setFailed(true); }
+  };
   return (
     <div className="flex flex-wrap items-center gap-2">
       <PixelButton
@@ -45,6 +63,8 @@ export function SettingsBar() {
           </PixelButton>
         ))}
       </div>
+      {supported && <PixelButton aria-pressed={fullscreen} onClick={() => void toggleFullscreen()} icon={<span aria-hidden>⛶</span>}>{fullscreen ? t.settings.exitFullscreen : t.settings.fullscreen}</PixelButton>}
+      {failed && <p role="status" className="text-base text-amber">{t.settings.fullscreenError}</p>}
     </div>
   );
 }

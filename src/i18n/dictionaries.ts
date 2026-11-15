@@ -55,6 +55,9 @@ export const es = {
     unmute: "Activar sonido",
     volume: "Volumen",
     language: "Idioma",
+    fullscreen: "Pantalla completa",
+    exitFullscreen: "Salir de pantalla completa",
+    fullscreenError: "No se pudo cambiar la pantalla completa. Puedes continuar jugando.",
   },
   units: {
     nova: { name: "Cmdt. Nova", desc: "Líder de la base. Sabe reparar módulos y calmar a la tripulación." },
@@ -95,7 +98,7 @@ export const es = {
     cadet: "Cadete",
     cadetDesc: "Empiezas con más recursos. Ideal para tu primera misión.",
     commander: "Comandante",
-    commanderDesc: "Empiezas con 25% menos de todo. ¡Un reto de verdad!",
+    commanderDesc: "Empiezas con menos reservas y necesitas planear con más cuidado.",
     connecting: "Conectando con la base…",
     offlineTitle: "Sin conexión con la base",
     offlineBody:
@@ -253,13 +256,13 @@ export const es = {
     mars: "Marte",
     marsDesc: "Base Ares. Radiación real medida por el rover Curiosity, tormenta de polvo y llamadas a la Tierra.",
     recommended: "Empieza aquí",
-    goalMoon: "Objetivo: sobrevive 12 turnos (24 horas), mantén la salud en 60 o más y consigue 24 puntos de ciencia.",
-    goalMars: "Objetivo: sobrevive 12 turnos (un sol marciano), mantén la salud en 60 o más y consigue 30 puntos de ciencia.",
+    goalMoon: "Completa 12 turnos de 2 horas: salud de 60 o más, 24 puntos de ciencia y comida de reserva para después.",
+    goalMars: "Completa 12 turnos de 2 horas: salud de 60 o más, 30 puntos de ciencia, comparte datos nuevos y conserva comida para después.",
   },
   mars: {
     actions: {
       explore: { label: "Explorar", hint: "Sal a investigar Marte: +12 de ciencia." },
-      repair_solar_panels: { label: "Limpiar paneles", hint: "Quita el polvo marciano de los paneles con cepillos. ¡No cuesta nada!" },
+      repair_solar_panels: { label: "Limpiar paneles", hint: "Quita el polvo con cepillos y recupera producción solar. Usa una acción, sin gastar repuestos." },
       toggle_oxygen_generator: { label: "MOXIE", hint: "Enciende o apaga la máquina que saca oxígeno del aire marciano. No gasta agua, pero usa mucha energía." },
     },
     modules: {
@@ -268,7 +271,7 @@ export const es = {
       water: { name: "Reciclaje de agua", desc: "Limpia y recupera el agua usada. En Marte tampoco hay ríos: cada gota cuenta." },
     },
     events: {
-      mission_created: "¡Bienvenido a Marte! Hoy es 20 de mayo de 2024. Viviremos un día marciano con datos reales de la NASA. Revisa los recursos y elige tus acciones.",
+      mission_created: "¡Bienvenido a Marte! Entrenaremos durante 24 horas simuladas con mediciones NASA del 20 de mayo de 2024. Revisa las reservas, comparte ciencia y cuida la comida del día siguiente.",
       solar_warning: "¡Aviso de la NASA! El Sol lanzó una nube gigante de partículas hacia Marte. En el próximo turno subirá la radiación. ¡Prepara el refugio!",
       solar_incident: "¡Llegó la tormenta solar! El medidor RAD del rover Curiosity registró este mismo aumento de radiación. El refugio nos protege.",
     },
@@ -330,6 +333,7 @@ export const es = {
     tabs: { pass: "Pase de Familia", diploma: "Diploma", together: "Jugar juntos", schools: "Escuelas" },
     passIntro:
       "RockieOS es gratis y completo. El Pase de Familia es un pago único y opcional que solo añade cosas para verse y para compartir en casa. Nunca da ventajas, recursos ni misiones.",
+    previewNote: "Propuesta en desarrollo. Las compras y los contenidos del pase todavía no están habilitados.",
     freeTitle: "Gratis para siempre",
     freeItems: [
       "Las misiones de la Luna y de Marte",
@@ -349,7 +353,7 @@ export const es = {
     passSuits: "Trajes del pase (vista previa)",
     price: "Pago único sugerido: de 3 a 6 USD, con opción de aportar más para apoyar el proyecto.",
     buy: "Comprar pase",
-    buySoon: "Todavía no vendemos el pase: estamos probando el juego con familias. ¡Gracias por tu interés!",
+    buySoon: "El pase aún no está a la venta. No se ha realizado ningún cobro.",
     rulesTitle: "Nuestras reglas",
     rules: [
       "Tu hija o hijo nunca ve precios ni botones de compra dentro del juego.",
@@ -517,6 +521,9 @@ export const en: DeepString<Dict> = {
     unmute: "Unmute",
     volume: "Volume",
     language: "Language",
+    fullscreen: "Full screen",
+    exitFullscreen: "Exit full screen",
+    fullscreenError: "Full screen could not be changed. You can keep playing.",
   },
   units: {
     nova: { name: "Cmdr. Nova", desc: "Base leader. Can fix modules and keep the crew calm." },
@@ -557,7 +564,7 @@ export const en: DeepString<Dict> = {
     cadet: "Cadet",
     cadetDesc: "You start with more supplies. Great for your first mission.",
     commander: "Commander",
-    commanderDesc: "You start with 25% less of everything. A real challenge!",
+    commanderDesc: "Start with fewer supplies and plan your decisions more carefully.",
     connecting: "Connecting to the base…",
     offlineTitle: "No connection to the base",
     offlineBody:
@@ -715,13 +722,13 @@ export const en: DeepString<Dict> = {
     mars: "Mars",
     marsDesc: "Ares Base. Real radiation measured by the Curiosity rover, a dust storm and calls to Earth.",
     recommended: "Start here",
-    goalMoon: "Goal: survive 12 turns (24 hours), keep health at 60 or more and earn 24 science points.",
-    goalMars: "Goal: survive 12 turns (one Martian sol), keep health at 60 or more and earn 30 science points.",
+    goalMoon: "Complete twelve 2-hour turns: keep health at 60 or above, earn 24 science points and save food for later.",
+    goalMars: "Complete twelve 2-hour turns: keep health at 60 or above, earn 30 science points, share new data and save food for later.",
   },
   mars: {
     actions: {
       explore: { label: "Explore", hint: "Go out and study Mars: +12 science." },
-      repair_solar_panels: { label: "Clean panels", hint: "Brush the Martian dust off the panels. It costs nothing!" },
+      repair_solar_panels: { label: "Clean panels", hint: "Brush off the dust to restore solar production. Uses one action without spare parts." },
       toggle_oxygen_generator: { label: "MOXIE", hint: "Turn on/off the machine that pulls oxygen from Martian air. It uses no water, but lots of power." },
     },
     modules: {
@@ -730,7 +737,7 @@ export const en: DeepString<Dict> = {
       water: { name: "Water recycler", desc: "Cleans and recovers used water. Mars has no rivers either: every drop counts." },
     },
     events: {
-      mission_created: "Welcome to Mars! Today is May 20, 2024. We will live one Martian day with real NASA data. Check the supplies and choose your actions.",
+      mission_created: "Welcome to Mars! Train for 24 simulated hours with NASA measurements from May 20, 2024. Check supplies, share science and save food for the next day.",
       solar_warning: "NASA alert! The Sun threw a giant cloud of particles toward Mars. Radiation will rise next turn. Get the shelter ready!",
       solar_incident: "The solar storm is here! The Curiosity rover's RAD detector recorded this same rise in radiation. The shelter protects us.",
     },
@@ -792,6 +799,7 @@ export const en: DeepString<Dict> = {
     tabs: { pass: "Family Pass", diploma: "Diploma", together: "Play together", schools: "Schools" },
     passIntro:
       "RockieOS is free and complete. The Family Pass is an optional one-time payment that only adds things to look at and share at home. It never gives advantages, resources or missions.",
+    previewNote: "A proposal in development. Purchases and pass content are not enabled yet.",
     freeTitle: "Free forever",
     freeItems: [
       "The Moon and Mars missions",
@@ -811,7 +819,7 @@ export const en: DeepString<Dict> = {
     passSuits: "Pass suits (preview)",
     price: "Suggested one-time payment: 3 to 6 USD, with the option to give more to support the project.",
     buy: "Buy pass",
-    buySoon: "We're not selling the pass yet: we're testing the game with families. Thanks for your interest!",
+    buySoon: "The pass is not on sale yet. No payment has been made.",
     rulesTitle: "Our rules",
     rules: [
       "Your child never sees prices or buy buttons inside the game.",

@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { PixelSprite } from "./PixelSprite";
 import { PixelButton } from "./PixelButton";
 import { useAudio, useI18n } from "@/lib/providers";
-import { useFocusTrap, usePrefersReducedMotion } from "@/lib/hooks";
+import { useBodyScrollLock, useFocusTrap, usePrefersReducedMotion } from "@/lib/hooks";
 import type { IconName, SpriteName } from "@/sprites/sprites.config";
 
 /* ------------------------------------------------------------------ */
@@ -22,6 +22,7 @@ type DialogBoxProps = {
 };
 
 export function DialogBox({ speaker, text, sprite = "robot", onConfirm, speed = 28, modal = false }: DialogBoxProps) {
+  useBodyScrollLock(modal);
   const { t } = useI18n();
   const { play } = useAudio();
   const reduced = usePrefersReducedMotion();
@@ -106,6 +107,7 @@ export function AlertBanner({ icon, message, onDismiss }: AlertBannerProps) {
 type ModalProps = { open: boolean; title: string; onClose: () => void; children: ReactNode; /** más ancho (secciones con pestañas) */ wide?: boolean };
 
 export function Modal({ open, title, onClose, children, wide = false }: ModalProps) {
+  useBodyScrollLock(open);
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const { t } = useI18n();
@@ -126,25 +128,29 @@ export function Modal({ open, title, onClose, children, wide = false }: ModalPro
       ref={ref}
       onClose={() => { if (open) onClose(); }}
       onCancel={event => { event.preventDefault(); onClose(); }}
-      onClick={(e) => e.target === ref.current && onClose()}
+      onClick={(e) => {
+        if (e.target !== ref.current) return;
+        const bounds = e.currentTarget.getBoundingClientRect();
+        if (e.clientX < bounds.left || e.clientX > bounds.right || e.clientY < bounds.top || e.clientY > bounds.bottom) onClose();
+      }}
       aria-labelledby={titleId}
-      className={`bevel rivets pop-in m-auto p-0 ${wide ? "w-[min(94vw,780px)]" : "w-[min(92vw,560px)]"} text-steel-50 backdrop:bg-void/80`}
+      className={`flight-dialog bevel rivets pop-in m-auto max-h-[94dvh] overflow-hidden p-0 ${wide ? "w-[min(94vw,780px)]" : "w-[min(94vw,560px)]"} text-steel-50 backdrop:bg-void/80`}
     >
-      <header className="flex items-center justify-between bg-steel-900 py-1 pr-2 pl-4" style={{ margin: "calc(var(--px) * 2)" }}>
-        <h2 id={titleId} className="font-pixel text-xl text-neon-cyan uppercase">
+      <header className="flex shrink-0 items-center justify-between bg-steel-900 py-1 pr-2 pl-4" style={{ margin: "calc(var(--px) * 2)" }}>
+        <h2 id={titleId} className="min-w-0 break-words font-pixel text-xl text-neon-cyan uppercase">
           {title}
         </h2>
         <button
           type="button"
           onClick={onClose}
           aria-label={t.modal.close}
-          className="bevel pixel-btn font-pixel h-11 w-11 text-lg"
+          className="bevel pixel-btn font-pixel h-11 w-11 shrink-0 text-lg"
           style={{ ["--bevel-fill" as string]: "var(--color-alert-dark)" }}
         >
           X
         </button>
       </header>
-      <div className="px-6 pt-2 pb-6 text-xl">{children}</div>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-2 pb-5 text-xl sm:px-6">{children}</div>
     </dialog>
   );
 }

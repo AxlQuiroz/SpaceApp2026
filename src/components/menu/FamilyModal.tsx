@@ -17,7 +17,7 @@ import type { Dict } from "@/i18n/dictionaries";
 type Tab = "pass" | "diploma" | "together" | "schools";
 const TABS: Tab[] = ["pass", "diploma", "together", "schools"];
 
-/** Multiplicación de dos cifras: fácil para un adulto, difícil para un niño de 7 a 12. */
+/** Paso de lectura para adultos; no verifica edad ni identidad. */
 function newQuestion() {
   const r = () => 12 + Math.floor(Math.random() * 8); // 12..19
   return { a: r(), b: r() };
@@ -53,6 +53,14 @@ export function FamilyModal({ open, onClose, progress }: Props) {
                 id={`family-tab-${id}`}
                 aria-selected={tab === id}
                 aria-controls={`family-panel-${id}`}
+                tabIndex={tab === id ? 0 : -1}
+                onKeyDown={event => {
+                  const index = TABS.indexOf(id);
+                  const next = event.key === "ArrowRight" ? (index + 1) % TABS.length : event.key === "ArrowLeft" ? (index + TABS.length - 1) % TABS.length : event.key === "Home" ? 0 : event.key === "End" ? TABS.length - 1 : null;
+                  if (next === null) return;
+                  event.preventDefault(); setTab(TABS[next]);
+                  document.getElementById(`family-tab-${TABS[next]}`)?.focus();
+                }}
                 onClick={() => setTab(id)}
                 className={`bevel pixel-btn font-pixel px-2 py-1 text-base uppercase ${tab === id ? "glow" : ""}`}
                 style={{ ["--bevel-fill" as string]: tab === id ? "var(--color-cyan-dark)" : "var(--color-steel-800)" }}
@@ -61,7 +69,7 @@ export function FamilyModal({ open, onClose, progress }: Props) {
               </button>
             ))}
           </div>
-          <div role="tabpanel" id={`family-panel-${tab}`} aria-labelledby={`family-tab-${tab}`} className="max-h-[55vh] overflow-y-auto pr-2">
+          <div role="tabpanel" tabIndex={0} id={`family-panel-${tab}`} aria-labelledby={`family-tab-${tab}`} className="max-h-[55vh] overflow-y-auto pr-2">
             {tab === "pass" && <PassTab />}
             {tab === "diploma" && <DiplomaTab progress={progress} />}
             {tab === "together" && <TogetherTab />}
@@ -143,6 +151,7 @@ function PassTab() {
   const passIcons: IconName[] = ["heart", "shelter", "medal", "book", "explore"];
   return (
     <div className="flex flex-col gap-4">
+      <p className="bevel-inset p-2 text-lg text-amber">{t.family.previewNote}</p>
       <p className="text-lg text-steel-200">{t.family.passIntro}</p>
 
       <div className="grid gap-3 md:grid-cols-2">
