@@ -54,6 +54,10 @@ Para comprobar sólo el arranque y cierre, sin abrir navegador ni crear sesiones
 .\RockieOS.cmd present --smoke --no-browser
 ```
 
+### Sólo el backend (para programar con `npm run dev`)
+
+Abre **Backend.cmd** con doble clic (o `.\Backend.cmd` en PowerShell) y deja la ventana abierta; en otra terminal ejecuta `npm run dev`. `.env.local` ya apunta a `http://127.0.0.1:8000`. No lo combines con `RockieOS.cmd present` o `dev`, que arrancan su propio backend y juego en los mismos puertos. Requiere haber ejecutado antes la opción 1 del lanzador.
+
 En Linux/macOS el mismo controlador se ejecuta con `python3.12 scripts/rockieos.py present` y los demás nombres de acción. El acceso por doble clic es específico de Windows.
 
 ## Evidencia para la entrega
