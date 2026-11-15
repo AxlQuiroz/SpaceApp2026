@@ -207,19 +207,21 @@ export function PreviewPanel({ label, hint, icon, result, current, names, note, 
     return () => window.removeEventListener("keydown", onKey);
   }, [onCancel]);
 
-  const rows: { key: string; icon: IconName; text: string; up: boolean }[] = [];
+  // `up` es la dirección del cambio (flecha); `good` decide el color (verde = bueno, rojo = malo).
+  const rows: { key: string; icon: IconName; text: string; up: boolean; good: boolean }[] = [];
   if (result && result !== "error") {
     const after = result.result.mission.state;
     for (const row of PREVIEW_ROWS) {
       const diff = (after.resources as Record<string, number>)[row.key] - current.resources[row.key];
       if (Math.abs(diff) < 10 ** -row.d / 2) continue;
-      rows.push({ key: row.key, icon: row.icon, up: diff > 0, text: `${names[row.key]} ${diff > 0 ? "+" : "−"}${Math.abs(diff).toFixed(row.d)} ${row.unit}` });
+      rows.push({ key: row.key, icon: row.icon, up: diff > 0, good: diff > 0, text: `${names[row.key]} ${diff > 0 ? "+" : "−"}${Math.abs(diff).toFixed(row.d)} ${row.unit}` });
     }
     const science = after.science_points - current.science_points;
-    if (science) rows.push({ key: "science", icon: "explore", up: true, text: `${t.preview.science} +${science}` });
+    if (science) rows.push({ key: "science", icon: "explore", up: science > 0, good: science > 0, text: `${t.preview.science} ${science > 0 ? "+" : "−"}${Math.abs(science)}` });
     const exposure = after.exposure_risk_index - current.exposure_risk_index;
-    // Más exposición es malo: se pinta como una bajada.
-    if (Math.abs(exposure) >= 0.05) rows.push({ key: "exposure", icon: "warning", up: exposure < 0, text: `${t.preview.exposure} +${exposure.toFixed(1)}` });
+    // Más exposición es malo: flecha hacia arriba pero en rojo.
+    if (Math.abs(exposure) >= 0.05)
+      rows.push({ key: "exposure", icon: "warning", up: exposure > 0, good: exposure < 0, text: `${t.preview.exposure} ${exposure > 0 ? "+" : "−"}${Math.abs(exposure).toFixed(1)}` });
   }
 
   return (
@@ -236,7 +238,7 @@ export function PreviewPanel({ label, hint, icon, result, current, names, note, 
         {!failed && result !== null && rows.length === 0 && <p className="text-lg text-steel-200">{copy.noImmediate}</p>}
         <ul className="flex flex-wrap gap-x-4 gap-y-1">
           {rows.map((row) => (
-            <li key={row.key} className="flex items-center gap-1 text-lg" style={{ color: row.up ? "var(--color-lime)" : "var(--color-alert)" }}>
+            <li key={row.key} className="flex items-center gap-1 text-lg" style={{ color: row.good ? "var(--color-lime)" : "var(--color-alert)" }}>
               <PixelSprite icon={row.icon} scale={1} />
               <span aria-hidden>{row.up ? "▲" : "▼"}</span>
               {row.text}

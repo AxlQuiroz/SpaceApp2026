@@ -4,8 +4,9 @@
  * Modelo de negocio (docs/modelo-de-negocio.md): los cosméticos NUNCA cambian la simulación.
  * - "free": disponibles desde el principio.
  * - "medal": se ganan jugando (cada medalla desbloquea un traje), así nadie se queda sin personalizar.
- * - "pass": solo con el Pase de Familia (pago único de los padres). Todavía no hay pasarela de pago,
- *   así que se muestran bloqueados y sin precio: el niño nunca ve un botón de compra.
+ * - "pass": solo mientras el Plan Familiar (suscripción mensual de los padres) está activo; al cancelar,
+ *   el traje vuelve a uno gratuito, pero lo ganado con medallas se conserva. Todavía no hay pasarela de
+ *   pago, así que se ocultan al niño y se muestran sin precio en "Para familias": nunca ve un botón de compra.
  *
  * La elección se guarda solo en este navegador.
  */
@@ -39,7 +40,7 @@ export const SUITS: Suit[] = [
   { id: "cream", name: { es: "Crema estelar", en: "Star cream" }, swap: { O: "S" }, unlock: { kind: "medal", medal: "healthy" } },
   { id: "rust", name: { es: "Óxido marciano", en: "Martian rust" }, swap: { O: "R" }, unlock: { kind: "medal", medal: "mars_pioneer" } },
   { id: "steel", name: { es: "Acero de comandante", en: "Commander steel" }, swap: { O: "G" }, unlock: { kind: "medal", medal: "commander" } },
-  // Pase de Familia: trajes de dos tonos (cambian también el blanco del traje).
+  // Plan Familiar (suscripción mensual): trajes de dos tonos (cambian también el blanco del traje).
   { id: "regolith", name: { es: "Polvo lunar", en: "Moon dust" }, swap: { W: "M", O: "O" }, unlock: { kind: "pass" } },
   { id: "night", name: { es: "Noche estelar", en: "Starry night" }, swap: { W: "b", O: "C" }, unlock: { kind: "pass" } },
   { id: "redplanet", name: { es: "Planeta rojo", en: "Red planet" }, swap: { W: "R", O: "Y" }, unlock: { kind: "pass" } },
@@ -54,7 +55,7 @@ export const DEFAULT_LOOK = ["orange", "cyan", "lime", "amber"];
 export function suitUnlocked(suit: Suit, medals: string[]): boolean {
   if (suit.unlock.kind === "free") return true;
   if (suit.unlock.kind === "medal") return medals.includes(suit.unlock.medal);
-  return false; // el Pase de Familia aún no se puede comprar
+  return false; // el Plan Familiar aún no se puede contratar (sin pasarela ni cuenta del adulto)
 }
 
 export function suitForMedal(medalId: string): Suit | undefined {

@@ -13,6 +13,7 @@ import {
   ResourceCounter,
   SettingsBar,
   SpaceWeather,
+  TONE_COLOR,
   UnitPanel,
   type Command,
   type UnitStat,
@@ -44,6 +45,7 @@ import {
   type TurnPayload,
 } from "./model";
 import { missionErrorText, reviewText } from "./reviewText";
+import { actionTag, costText, reasonText, suggestAction } from "./actionGuide";
 import { TurnReport } from "./TurnReport";
 import { isDemo, type ActionId, type MissionController, type ScenarioParams } from "./useMission";
 
@@ -54,24 +56,6 @@ type Narration =
   | { kind: "term"; term: Term }
   | { kind: "quiz"; quiz: Quiz }
   | { kind: "medal"; medal: Medal };
-
-const COST_UNITS: Record<string, [string, number]> = {
-  energy_kwh: ["kWh", 1],
-  oxygen_kg: ["kg O₂", 2],
-  water_l: ["L", 1],
-  food_kg: ["kg", 1],
-  spare_parts: ["⚙", 0],
-};
-
-function formatCosts(costs: Record<string, number>) {
-  return Object.entries(costs)
-    .filter(([, v]) => v > 0)
-    .map(([k, v]) => {
-      const [unit, d] = COST_UNITS[k] ?? [k, 1];
-      return `−${v.toFixed(d)} ${unit}`;
-    })
-    .join(" · ");
-}
 
 type Props = { game: MissionController & { mission: MissionView } };
 
@@ -269,22 +253,22 @@ export function MissionHud({ game }: Props) {
   }, [canAdvance, game, overlayOpen]);
 
   /* ---------- Tarjeta de comandos ---------- */
+  const suggestion = active ? suggestAction(t, mission, weather) : null;
   const commands: Command[] = commandLayout(mission).map(({ id, icon }) => {
     const opt = mission.available_actions.find((a) => a.id === id);
-    const enabled = !!opt?.enabled && actionsLeft > 0 && active && !busy && !game.hasPending && !commandsBlocked;
-    const reason = !opt?.enabled
-      ? locale === "es"
-        ? (opt?.disabled_reason ?? t.game.unavailable)
-        : t.game.unavailable
-      : actionsLeft === 0
-        ? t.game.noActionsLeft
-        : null;
-    const costs = opt ? formatCosts(opt.costs) : "";
+    const allowed = !!opt?.enabled && actionsLeft > 0 && active;
+    // Ocupado (esperando al backend o con una ventana abierta) no es "bloqueado": no se explica como tal.
+    const enabled = allowed && !busy && !game.hasPending && !commandsBlocked;
+    const tag = actionTag(t, mission, id);
     return {
       id,
       icon,
       label: actionText(t, mission, id).label,
-      hint: [actionText(t, mission, id).hint, costs && `${t.game.cost}: ${costs}`, reason && `✖ ${reason}`].filter(Boolean).join("\n"),
+      hint: actionText(t, mission, id).hint,
+      tag: allowed ? tag : { text: actionsLeft === 0 ? t.commands.tags.noActions : t.commands.tags.blocked, tone: "muted" },
+      reason: allowed ? null : active ? reasonText(t, opt?.disabled_reason, actionsLeft) : t.commands.reasons.inactive,
+      cost: opt ? costText(t, opt.costs) : undefined,
+      suggested: suggestion?.id === id,
       locked: !enabled,
       onActivate: () => askPreview(id),
     };
@@ -466,7 +450,7 @@ export function MissionHud({ game }: Props) {
                 <span key={i} aria-hidden className="inline-block h-3 w-3" style={{ background: i < actionsLeft ? "var(--color-lime)" : "var(--color-steel-700)" }} />
               ))}
             </span>
-            <CommandCard commands={commands} hotkeys={!overlayOpen} />
+            <CommandCard commands={commands} hotkeys={!overlayOpen} suggestion={suggestion && { label: actionText(t, mission, suggestion.id).label, why: suggestion.why }} />
           </div>
           <PixelButton
             data-tour="advance"
@@ -525,22 +509,54 @@ export function MissionHud({ game }: Props) {
       </nav>
 
       <Modal open={actionsOpen} title={`${t.game.actionsLeft} · ${actionsLeft}/${p.actions_per_turn}`} onClose={() => setActionsOpen(false)}>
+        {suggestion && (
+          <p className="bevel-inset mb-2 px-3 py-2 text-lg">
+            <span className="font-pixel text-amber">★ {t.commands.suggested}: {actionText(t, mission, suggestion.id).label}.</span> {suggestion.why}
+          </p>
+        )}
+        {/* Primero lo que se puede hacer; lo bloqueado va al final y explica por qué. */}
         <ul className="flex max-h-[65vh] flex-col gap-2 overflow-y-auto pr-1">
-          {commands.map((c) => (
+          {[...commands].sort((a, b) => Number(!!a.locked) - Number(!!b.locked) || Number(!!b.suggested) - Number(!!a.suggested)).map((c) => (
             <li key={c.id}>
               <button
                 type="button"
                 disabled={c.locked}
+                data-command={c.id}
                 onClick={() => {
                   setActionsOpen(false);
                   c.onActivate?.();
                 }}
                 className="bevel pixel-btn flex w-full items-start gap-3 p-3 text-left"
+                style={
+                  c.suggested && !c.locked
+                    ? { ["--bevel-light" as string]: "var(--color-amber)", outline: "var(--px) solid var(--color-amber)" }
+                    : c.locked
+                      ? // Sin el filtro gris de :disabled, para que la razón se lea bien.
+                        { ["--bevel-fill" as string]: "var(--color-steel-900)", filter: "none" }
+                      : undefined
+                }
               >
-                <PixelSprite icon={c.locked ? "lock" : c.icon} scale={2} />
-                <span className="flex flex-col">
-                  <span className="font-pixel text-lg text-neon-cyan">{c.label}</span>
-                  <span className="whitespace-pre-line text-lg text-steel-200">{c.hint}</span>
+                <span className={c.locked ? "opacity-40 grayscale" : ""}>
+                  <PixelSprite icon={c.icon} scale={2} />
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="flex flex-wrap items-center gap-x-2">
+                    <span className={`font-pixel text-lg ${c.locked ? "text-steel-400" : "text-neon-cyan"}`}>
+                      {c.label}
+                      {c.suggested && !c.locked && <span className="text-amber"> ★ {t.commands.suggested}</span>}
+                    </span>
+                    {c.tag && (
+                      <span className="font-tiny text-sm uppercase" style={{ color: TONE_COLOR[c.locked ? "muted" : c.tag.tone] }}>
+                        {c.tag.text}
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-lg text-steel-200">{c.hint}</span>
+                  {c.locked ? (
+                    <span className="text-lg text-amber">✖ {c.reason ?? t.commands.locked}</span>
+                  ) : (
+                    c.cost && <span className="text-base text-steel-400">{c.cost}</span>
+                  )}
                 </span>
               </button>
             </li>

@@ -10,7 +10,7 @@ import type { Dict } from "@/i18n/dictionaries";
 
 /**
  * Sección "Para familias" (docs/modelo-de-negocio.md):
- * puerta parental → Pase de Familia (sin pasarela todavía), diploma imprimible,
+ * puerta parental → Plan Familiar mensual (sin pasarela todavía), diploma imprimible,
  * guía para jugar juntos y licencia para escuelas.
  */
 
@@ -140,7 +140,7 @@ function PassTab() {
   const { t, locale } = useI18n();
   const lang = locale as Lang;
   const [asked, setAsked] = useState(false);
-  const passIcons: IconName[] = ["heart", "shelter", "medal", "book", "explore"];
+  const passIcons: IconName[] = ["heart", "shelter", "medal", "book", "explore", "day", "flask"];
   return (
     <div className="flex flex-col gap-4">
       <p className="text-lg text-steel-200">{t.family.passIntro}</p>
@@ -179,6 +179,18 @@ function PassTab() {
             <li key={s.id} className="bevel-inset flex flex-col items-center gap-1 p-2">
               <PixelSprite sprite="astronaut" anim="idle" scale={3} swap={s.swap} />
               <span className="font-tiny text-xs">{s.name[lang]}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="bevel-inset p-3">
+        <h3 className="font-pixel mb-2 text-lg text-neon-cyan uppercase">{t.family.cancelTitle}</h3>
+        <ul className="flex flex-col gap-1 text-lg">
+          {t.family.cancelItems.map((item) => (
+            <li key={item} className="flex gap-2">
+              <span aria-hidden className="text-neon-cyan">◆</span>
+              {item}
             </li>
           ))}
         </ul>

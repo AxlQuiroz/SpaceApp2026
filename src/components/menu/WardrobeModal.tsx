@@ -16,7 +16,7 @@ type Props = {
 
 /**
  * Vestidor para niñas y niños: solo trajes gratis y los que se ganan con medallas.
- * Los trajes del Pase de Familia no se muestran aquí (se ven en la zona de adultos),
+ * Los trajes del Plan Familiar no se muestran aquí (se ven en la zona de adultos),
  * para no presionar a nadie a pedir una compra.
  */
 export function WardrobeModal({ open, onClose, medals, look, dress }: Props) {

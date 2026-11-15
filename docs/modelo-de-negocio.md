@@ -1,72 +1,96 @@
 # Modelo de negocio · Base Selene / Órbita
 
-Público: niñas y niños de 7 a 12 años. Quien paga: **sus familias**. Condiciones que pidió el equipo: nada de pagar para avanzar, ninguna ventaja para quien paga, poco invasivo y atractivo.
+Público: niñas y niños de 7 a 12 años. Quien paga: **sus familias**. Condiciones que pidió el equipo: nada de pagar para avanzar, ninguna ventaja para quien paga, poco invasivo y atractivo. Desde el 15 de noviembre de 2026 el plan para familias es **una suscripción mensual**, no un pago único.
 
 ## Recomendación en una frase
 
-**Juego completo gratis + un único pago opcional de los padres ("Pase de Familia") que desbloquea solo cosas para verse y para compartir en casa: nunca reglas, recursos, misiones ni ayudas.**
+**Juego completo gratis + una suscripción mensual opcional de los padres ("Plan Familiar") que, mientras está activa, añade cosas para verse, novedades cada mes y extras para compartir en casa: nunca reglas, recursos, misiones ni ayudas.**
 
-## Por qué este modelo y no otros
+## Por qué una suscripción mensual y qué la justifica
+
+Un cobro recurrente solo es honesto si cada mes trae algo nuevo. Por eso el plan no es "el mismo paquete cobrado doce veces":
+
+- **Novedad cada mes**: un traje, una decoración de base y un reto familiar nuevos.
+- **Resumen mensual para la familia**: qué palabras aprendió y qué medallas ganó en el mes (se calcula en el navegador; no se envía a ningún servidor).
+- **Ingreso estable** para mantener el backend, añadir misiones gratuitas (que siguen siendo para todos) y actualizar las capturas de datos NASA.
 
 | Modelo | ¿Cumple "sin ventaja"? | ¿Poco invasivo? | Veredicto |
 | --- | --- | --- | --- |
 | Anuncios | Sí | **No**: interrumpen, y la publicidad dirigida a menores está muy restringida | Descartado |
 | Monedas, cofres o energía que se recarga pagando | **No** | **No**: empuja a comprar por impulso | Descartado |
-| Suscripción mensual | Sí, si es cosmética | Regular: cobro recurrente que los padres olvidan y luego resienten | No recomendado para empezar |
-| Vender misiones extra | Dudoso: quien paga aprende más contenido | Sí | Evitar; las misiones deben ser para todos |
-| **Pago único cosmético de los padres** | **Sí** | **Sí** | **Recomendado** |
+| Pago único cosmético | Sí | Sí | Modelo anterior; deja sin ingresos para mantener el juego |
+| **Suscripción mensual cosmética de los padres** | **Sí** | **Sí, con las reglas de abajo** | **Elegido** |
+| Vender misiones extra | Dudoso: quien paga aprende más contenido | Sí | Evitar; las misiones son para todos |
 | Donación ("invita un café al equipo") | Sí | Sí | Complemento |
 
-## Qué es gratis (siempre)
+El riesgo conocido de las suscripciones es que las familias olvidan el cobro y luego lo resienten. Las reglas de cancelación y aviso de más abajo existen para evitarlo.
 
-Todo lo que enseña o afecta la partida: las dos misiones (Luna y Marte), las dos dificultades, el tutorial, las palabras de la bitácora, las preguntas de R0-B1, las medallas, las fuentes NASA y cualquier misión futura.
+## Qué es gratis (siempre, con o sin plan)
 
-## Qué incluye el Pase de Familia (pago único)
+Todo lo que enseña o afecta la partida: las dos misiones (Luna y Marte), las dos dificultades, el tutorial, las palabras de la bitácora, las preguntas de R0-B1, las medallas, los trajes que se ganan con medallas, las fuentes NASA y cualquier misión futura.
 
-Solo apariencia y recuerdos. Ninguna de estas cosas cambia un número de la simulación:
+## Qué incluye el Plan Familiar (mientras esté activo)
 
-1. **Vestidor**: colores y diseños de traje para los cuatro astronautas, y aspectos para R0-B1 (por ejemplo, R0-B1 con bufanda).
+Solo apariencia, novedades y recuerdos. Ninguna de estas cosas cambia un número de la simulación:
+
+1. **Vestidor ampliado**: trajes de dos tonos para los cuatro astronautas y aspectos para R0-B1.
 2. **Decoración de la base**: banderas, pósteres y mascota robot en el hábitat; temas de color del HUD.
-3. **Diploma imprimible** con el nombre que escriban los padres y las medallas ganadas (se genera en el navegador; no se guarda ningún nombre en servidores).
-4. **Álbum de misión**: tarjetas coleccionables con los datos reales de cada partida (la tormenta del 20 de mayo de 2024, etc.) para imprimir o compartir.
-5. **Modo familia**: guía para jugar juntos con preguntas para conversar ("¿qué habrías apagado tú?").
+3. **Diploma decorado** con el nombre que escriban los padres y las medallas ganadas (se genera en el navegador; no se guarda ningún nombre en servidores).
+4. **Álbum de misión**: tarjetas coleccionables con los datos reales de cada partida.
+5. **Guía Modo familia**: preguntas y retos para jugar y conversar juntos.
+6. **Novedad cada mes**: un traje, una decoración y un reto familiar nuevos.
+7. **Resumen para la familia** del mes, calculado en el navegador.
 
-Precio sugerido: un solo pago en el rango de **3 a 6 USD** (o su equivalente local), con una versión "apoya el proyecto" de precio libre por encima del mínimo. Es una hipótesis para validar, no un dato de mercado.
+## Qué pasa si se cancela
+
+- **Se conserva todo lo ganado jugando**: medallas, bitácora, progreso y trajes de medallas.
+- Los trajes, decoraciones y extras del plan se desactivan **al terminar el mes ya pagado** (nunca a mitad de mes). El juego vuelve al traje gratuito elegido antes.
+- Al reactivar el plan, todo lo del plan reaparece. No se pierde nada.
+
+Así nadie siente que "le quitaron" lo que ganó, y la ventaja del plan es solo seguir recibiendo novedades y extras.
+
+## Precio sugerido
+
+**De 1.99 a 2.99 USD al mes** (o su equivalente local). Es una hipótesis para validar con familias, no un dato de mercado. Opcional, cuando haya datos: un plan anual con descuento para quien lo prefiera, siempre con el mensual como opción principal.
 
 ## Reglas que hacen que no sea invasivo
 
-1. **El niño nunca ve un precio ni un botón de compra dentro de la partida.** La tienda vive en una sección "Para familias" del menú principal.
-2. **Puerta parental** antes de cualquier enlace de pago (por ejemplo, una multiplicación de dos cifras o escribir el año de nacimiento de un adulto).
-3. **Sin temporizadores, sin ofertas "solo hoy", sin contadores, sin ventanas emergentes** y sin notificaciones de venta.
-4. **Los cosméticos también se pueden ganar jugando**: cada medalla desbloquea un color o adorno gratis. El pase solo añade más variedad. Así nadie se queda sin personalizar su base.
-5. **El pago lo procesa un tercero** (tienda de aplicaciones o pasarela). El juego no guarda tarjetas.
+1. **El niño nunca ve un precio ni un botón de suscripción dentro de la partida.** La información vive en "Para familias" del menú principal.
+2. **Puerta parental** antes de cualquier enlace de pago (por ejemplo, una multiplicación de dos cifras).
+3. **Aviso antes de cada cobro mensual** y **cancelación en cualquier momento** en el mismo lugar donde se contrató, sin llamadas ni formularios.
+4. **Sin pruebas gratis que se convierten en cobro sin avisar**, sin ofertas "solo hoy", sin contadores, sin ventanas emergentes y sin notificaciones de venta.
+5. **Los cosméticos también se ganan jugando**: cada medalla desbloquea un traje gratis. El plan solo añade más variedad.
+6. **El cobro lo procesa un tercero** (tienda de aplicaciones o pasarela con soporte de suscripciones). El juego no guarda tarjetas.
 
 ## Privacidad y normas (resumen, no asesoría legal)
 
-El juego ya funciona con **sesiones anónimas**: sin nombre, correo ni contraseña, y el progreso educativo se guarda solo en el navegador. Conviene mantenerlo así porque los servicios dirigidos a menores están regulados (COPPA en Estados Unidos, RGPD en Europa, y en México la Ley Federal de Protección de Datos Personales en Posesión de los Particulares). Antes de cobrar, un abogado debe revisar el aviso de privacidad, el consentimiento de los padres y las reglas de la tienda donde se publique.
+El juego funciona con **sesiones anónimas**: sin nombre, correo ni contraseña, y el progreso educativo se guarda solo en el navegador. Conviene mantenerlo así porque los servicios dirigidos a menores están regulados (COPPA en Estados Unidos, RGPD en Europa, y en México la Ley Federal de Protección de Datos Personales en Posesión de los Particulares).
+
+Una suscripción añade obligaciones propias: en muchos países hay reglas sobre **renovación automática** (consentimiento claro, aviso previo y cancelación sencilla) y protección al consumidor (en México, la PROFECO). Además, para saber si una familia tiene el plan activo hará falta **una cuenta del adulto** o un comprobante de la tienda. Esa cuenta debe ser del adulto, nunca del niño. Antes de cobrar, un abogado debe revisar el aviso de privacidad, el consentimiento de los padres, las condiciones de renovación y las reglas de la tienda donde se publique.
 
 ## Ingresos secundarios compatibles
 
-- **Licencia para escuelas, museos y planetarios**: panel del docente, guías de clase alineadas al plan de estudios y modo quiosco. Paga la institución; los alumnos no ven compras.
-- **Becas y convocatorias** de divulgación científica y de educación STEM.
-- **Patrocinio discreto** de instituciones afines ("Misión apoyada por…") solo en la pantalla de créditos, sin marcas dentro de la partida.
+- **Licencia para escuelas, museos y planetarios** (también mensual o por ciclo escolar): panel del docente, guías de clase y modo quiosco. Paga la institución; los alumnos no ven compras.
+- **Becas y convocatorias** de divulgación científica y educación STEM.
+- **Patrocinio discreto** de instituciones afines ("Misión apoyada por…") solo en la pantalla de créditos.
 
 ## Costos y punto de equilibrio (ejemplo con supuestos)
 
-Los costos fijos son bajos: el frontend es estático y el backend usa SQLite con capturas NASA sin costo por consulta. Con los supuestos de la tabla, bastan pocos cientos de familias para cubrir la operación. **Los porcentajes son supuestos para ilustrar el cálculo; hay que medirlos.**
+Los costos fijos son bajos: el frontend es estático y el backend usa SQLite con capturas NASA sin costo por consulta. **Todas las cifras son supuestos para ilustrar el cálculo; hay que medirlas.**
 
 | Supuesto | Valor de ejemplo |
 | --- | --- |
 | Hosting, dominio y herramientas | 40 USD al mes |
-| Precio del pase | 4 USD |
+| Precio del plan | 2.49 USD al mes |
 | Comisión de la pasarela o tienda | 15 a 30 % |
-| Familias que compran, de cada 100 que juegan | 2 a 5 |
+| Familias que se suscriben, de cada 100 que juegan | 2 a 4 |
+| Bajas mensuales (familias que cancelan cada mes) | 8 a 12 % |
 
-Con 4 USD y 30 % de comisión, cada pase deja 2.80 USD: se necesitan unas 15 compras al mes para cubrir 40 USD. Si compran 3 de cada 100 familias, eso son unas 500 familias activas al mes.
+Con 2.49 USD y 30 % de comisión, cada suscripción deja unos 1.74 USD al mes: bastan **unas 23 suscripciones activas** para cubrir 40 USD mensuales. A diferencia del pago único, esas familias pagan otra vez el mes siguiente, así que el ingreso se acumula mientras las bajas sean menores que las altas. Con un 10 % de bajas, una familia se queda en promedio unos 10 meses, que equivalen a unos 17 USD netos por familia, frente a 2.80 USD del pase único anterior.
 
 ## Cómo medir si funciona (sin rastrear a los niños)
 
-Solo contadores agregados y anónimos: misiones iniciadas y completadas, palabras aprendidas por partida, porcentaje que termina el tutorial y compras del pase. Nada de perfiles individuales ni identificadores de publicidad.
+Solo contadores agregados y anónimos: misiones iniciadas y completadas, palabras aprendidas por partida, porcentaje que termina el tutorial, altas, bajas y reactivaciones del plan. Nada de perfiles individuales ni identificadores de publicidad. Si las bajas son altas, la señal es que las novedades mensuales no valen el precio: se mejora el contenido, no se dificulta cancelar.
 
 ## Qué ya está listo en el código y qué falta
 
@@ -75,12 +99,15 @@ Solo contadores agregados y anónimos: misiones iniciadas y completadas, palabra
 | Juego completo gratis, sin cuentas | Hecho |
 | Medallas y bitácora (base de los desbloqueos gratuitos) | Hecho (`src/game/learning.ts`) |
 | Vestidor gratuito ligado a medallas (`src/game/wardrobe.ts`, menú principal) | Hecho; se aplica en la partida |
-| Sección "Para familias" con puerta parental, diploma imprimible, guía para jugar juntos y licencia escolar (`src/components/menu/FamilyModal.tsx`) | Hecho, sin cobro |
-| Pasarela de pago y revisión legal | Por hacer; requiere decisión del equipo |
+| Sección "Para familias" con puerta parental, explicación del Plan Familiar mensual (qué incluye, qué pasa al cancelar), diploma, guía para jugar juntos y licencia escolar (`src/components/menu/FamilyModal.tsx`) | Hecho, sin cobro |
+| Saber si el plan está activo (cuenta del adulto o comprobante de la tienda) | Por hacer |
+| Contenido mensual (trajes, decoraciones, retos) y resumen para la familia | Por hacer |
+| Pasarela con suscripciones, avisos de renovación y revisión legal | Por hacer; requiere decisión del equipo |
 
 ## Orden sugerido
 
-1. Vestidor gratuito ligado a medallas (prueba si a los niños les importa personalizar).
-2. Diploma imprimible y sección "Para familias" con puerta parental, todavía sin cobro.
-3. Prueba con 10 a 20 familias: ¿pagarían?, ¿cuánto?, ¿qué valoran?
-4. Solo entonces, revisión legal y pasarela de pago.
+1. Vestidor gratuito ligado a medallas (prueba si a los niños les importa personalizar). Hecho.
+2. Sección "Para familias" con puerta parental, todavía sin cobro. Hecho.
+3. Preparar al menos tres meses de novedades antes de cobrar el primero, para que el plan cumpla lo que promete.
+4. Prueba con 10 a 20 familias: ¿se suscribirían?, ¿cuánto pagarían al mes?, ¿qué los haría cancelar?
+5. Solo entonces: cuenta del adulto, pasarela con suscripciones y revisión legal.
