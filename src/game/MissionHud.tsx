@@ -161,7 +161,7 @@ export function MissionHud({ game }: Props) {
   }, []);
 
   /* ---------- Espacio = avanzar turno ---------- */
-  const canAdvance = active && !busy;
+  const canAdvance = active && !busy && !game.hasPending;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.code !== "Space" || tutorialOpen || queue.length) return;
@@ -177,7 +177,7 @@ export function MissionHud({ game }: Props) {
   /* ---------- Tarjeta de comandos ---------- */
   const commands: Command[] = COMMAND_LAYOUT.map(({ id, icon }) => {
     const opt = mission.available_actions.find((a) => a.id === id);
-    const enabled = !!opt?.enabled && actionsLeft > 0 && active && !busy;
+    const enabled = !!opt?.enabled && actionsLeft > 0 && active && !busy && !game.hasPending;
     const reason = !opt?.enabled
       ? locale === "es"
         ? (opt?.disabled_reason ?? t.game.unavailable)
@@ -232,7 +232,7 @@ export function MissionHud({ game }: Props) {
   const hour = String(s.elapsed_hours).padStart(2, "0");
 
   return (
-    <div className="flex min-h-dvh flex-col gap-2 p-2 pb-24 md:p-3 lg:pb-3">
+    <div data-testid="mission-hud" data-mission-id={s.id} data-turn={s.turn} data-version={s.version} className="flex min-h-dvh flex-col gap-2 p-2 pb-24 md:p-3 lg:pb-3">
       {/* ================= BARRA SUPERIOR ================= */}
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -290,7 +290,7 @@ export function MissionHud({ game }: Props) {
       {game.error && (
         <div role="alert" className="bevel flex items-center gap-3 px-3 py-2" style={{ ["--bevel-fill" as string]: "var(--color-alert-dark)" }}>
           <span className="flex-1">{game.error}</span>
-          <PixelButton onClick={() => void game.retry()}>{t.menu.retry}</PixelButton>
+          {game.canRetry && <PixelButton disabled={busy || game.retryIn > 0} onClick={() => void game.retry()}>{t.menu.retry}{game.retryIn > 0 ? ` (${game.retryIn}s)` : ""}</PixelButton>}
         </div>
       )}
 
@@ -391,7 +391,7 @@ export function MissionHud({ game }: Props) {
         <PixelButton
           data-tour="commands"
           className="flex-1"
-          disabled={!active || busy}
+          disabled={!active || busy || game.hasPending}
           onClick={() => setActionsOpen(true)}
           aria-haspopup="dialog"
           icon={<PixelSprite icon="explore" scale={2} />}
@@ -444,12 +444,12 @@ export function MissionHud({ game }: Props) {
 
       {/* ================= NARRACIÓN ================= */}
       {queue[0]?.kind === "text" && !tutorialOpen && (
-        <div className="fixed inset-x-2 bottom-2 z-40 mx-auto max-w-2xl">
+        <div data-testid="narration" className="fixed inset-x-2 bottom-2 z-40 mx-auto max-w-2xl">
           <DialogBox key={queue[0].text + queue.length} speaker={t.assistant.name} text={queue[0].text} onConfirm={nextNarration} />
         </div>
       )}
       {queue[0]?.kind === "report" && !tutorialOpen && (
-        <div className="fixed inset-0 z-40 grid place-items-center overflow-y-auto bg-void/60 p-2">
+        <div data-testid="narration" className="fixed inset-0 z-40 grid place-items-center overflow-y-auto bg-void/60 p-2">
           <div className="w-full max-w-3xl">
             <TurnReport
               key={queue[0].turn}
@@ -471,16 +471,23 @@ export function MissionHud({ game }: Props) {
           <PixelButton onClick={() => { setMenuOpen(false); setGlossaryOpen(true); }}>{t.game.glossary}</PixelButton>
           <PixelButton onClick={() => { setMenuOpen(false); setSourcesOpen(true); }}>{t.game.sources}</PixelButton>
           <SettingsBar />
-          <PixelButton variant="ghost" onClick={() => { setMenuOpen(false); game.exitToMenu(); }}>{t.game.exit}</PixelButton>
-          {active && (
-            <PixelButton variant="danger" onClick={() => { setMenuOpen(false); void game.abort(); }}>{t.game.abort}</PixelButton>
+          {(active || s.status === "paused") && (
+            <PixelButton disabled={busy || game.hasPending} onClick={() => { setMenuOpen(false); void (active ? game.pause() : game.resume()); }}>
+              {active ? t.game.pause : t.game.resume}
+            </PixelButton>
+          )}
+          <PixelButton disabled={busy || game.hasPending} variant="ghost" onClick={() => { setMenuOpen(false); game.exitToMenu(); }}>{t.game.exit}</PixelButton>
+          {(active || s.status === "paused") && (
+            <PixelButton disabled={busy || game.hasPending} variant="danger" onClick={() => { setMenuOpen(false); void game.abort(); }}>{t.game.abort}</PixelButton>
           )}
         </div>
       </Modal>
       <GlossaryModal open={glossaryOpen} onClose={() => setGlossaryOpen(false)} />
-      <SourcesModal open={sourcesOpen} onClose={() => setSourcesOpen(false)} load={game.science} />
-      <EndModal evaluation={queue.length ? null : game.evaluation} onAgain={() => void game.restart()} onMenu={game.exitToMenu} />
+      <SourcesModal key={s.id} open={sourcesOpen} onClose={() => setSourcesOpen(false)} load={game.science} />
+      <EndModal evaluation={queue.length ? null : game.evaluation} onAgain={() => void game.restart()} onMenu={game.exitToMenu}
+        busy={busy} hasPending={game.hasPending} error={game.error} retryIn={game.retryIn} onRetry={game.canRetry ? () => void game.retry() : undefined} />
       <Tutorial open={tutorialOpen} onClose={closeTutorial} />
     </div>
   );
 }
+

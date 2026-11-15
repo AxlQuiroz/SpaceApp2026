@@ -57,7 +57,11 @@ export class MissionApiClient {
         key, Number(response.headers.get("Retry-After")) || undefined);
     }
     if (response.status === 204) return undefined as T;
-    return response.json() as Promise<T>;
+    try {
+      return await response.json() as T;
+    } catch {
+      throw new MissionApiError("La respuesta se interrumpió. Reintenta con la misma clave.", 0, "NETWORK_ERROR", response.headers.get("X-Request-ID") ?? undefined, key);
+    }
   }
 
   async createSession(): Promise<SessionResponse> {
@@ -91,3 +95,4 @@ export class MissionApiClient {
   science(id: string): Promise<ScienceBundle> { return this.request(`/missions/${encodeURIComponent(id)}/science`); }
   evaluation(id: string): Promise<Evaluation> { return this.request(`/missions/${encodeURIComponent(id)}/evaluation`); }
 }
+

@@ -1,0 +1,11 @@
+import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+const root = fileURLToPath(new URL("../", import.meta.url));
+const venv = root + (process.platform === "win32" ? "API/.venv/Scripts/python.exe" : "API/.venv/bin/python");
+const python = process.env.PYTHON_EXECUTABLE || (existsSync(venv) ? venv : process.platform === "win32" ? "py" : "python3");
+const args = [...(python === "py" ? ["-3.12"] : []), root + "scripts/e2e_backend.py"];
+const child = spawn(python, args, { stdio: "inherit", cwd: root });
+child.on("error", error => { console.error(error.message); process.exitCode = 1; });
+child.on("exit", code => { process.exitCode = code ?? 1; });
+for (const signal of ["SIGINT", "SIGTERM"]) process.on(signal, () => child.kill(signal));

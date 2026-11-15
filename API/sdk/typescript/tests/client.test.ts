@@ -61,6 +61,17 @@ test("cerrar sesión admite 204 sin JSON", async () => {
   assert.equal(await api.logout(), undefined);
 });
 
+test("una respuesta 200 incompleta conserva la clave para un reintento seguro", async () => {
+  const key = crypto.randomUUID();
+  const api = new MissionApiClient({ fetcher: (async () => new Response("{", { status: 200 })) as typeof fetch });
+  await assert.rejects(api.command("mission", { type: "advance", expected_version: 1 }, key), (error: unknown) => {
+    assert.ok(error instanceof MissionApiError);
+    assert.equal(error.code, "NETWORK_ERROR");
+    assert.equal(error.idempotencyKey, key);
+    return true;
+  });
+});
+
 test("conserva Retry-After para esperar antes del siguiente intento", async () => {
   const api = new MissionApiClient({ fetcher: (async () => Response.json({ error: { code: "RATE_LIMITED" } },
     { status: 429, headers: { "Retry-After": "30" } })) as typeof fetch });
@@ -86,3 +97,4 @@ test("sin fetcher propio usa el fetch global sin cambiarle el contexto (navegado
     globalThis.fetch = original;
   }
 });
+

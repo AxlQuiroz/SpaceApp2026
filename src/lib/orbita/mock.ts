@@ -150,7 +150,7 @@ const evt = (s: MissionState, type: string, message: string, payload: Record<str
 });
 
 export class MockMissionClient {
-  private missions = new Map<string, { state: MissionState; events: TimelineEvent[] }>();
+  private records = new Map<string, { state: MissionState; events: TimelineEvent[] }>();
 
   async createSession() {
     return { session_id: "demo", created_at: now(), expires_at: now() };
@@ -161,29 +161,33 @@ export class MockMissionClient {
   async createMission(body: CreateMission = {}): Promise<MutationResult> {
     const state = initialState(body);
     const events = [evt(state, "mission_created", "Misión creada (demo).")];
-    this.missions.set(state.id, { state, events });
+    this.records.set(state.id, { state, events });
     return { mission: view(state), events };
   }
+  async missions(limit = 100, offset = 0) {
+    const all = [...this.records.values()].map(({ state }) => ({ ...state }));
+    return { data: all.slice(offset, offset + limit), total: all.length, limit, offset };
+  }
   async mission(id: string): Promise<MissionView> {
-    const m = this.missions.get(id);
+    const m = this.records.get(id);
     if (!m) throw new Error("Misión demo no encontrada");
     return view(m.state);
   }
   async events(id: string): Promise<EventList> {
-    const m = this.missions.get(id);
+    const m = this.records.get(id);
     const data = (m?.events ?? []).map((event, i) => ({ sequence: i, mission_version: 0, event }));
     return { data, total: data.length, limit: 100, offset: 0 };
   }
   async restart(id: string): Promise<MutationResult> {
-    const old = this.missions.get(id)!.state;
+    const old = this.records.get(id)!.state;
     const state = initialState({ difficulty: old.difficulty, seed: old.seed }, id);
     const events = [evt(state, "mission_restarted", "Misión reiniciada (demo).")];
-    this.missions.set(state.id, { state, events });
+    this.records.set(state.id, { state, events });
     return { mission: view(state), events };
   }
 
   async command(id: string, command: Command): Promise<MutationResult> {
-    const m = this.missions.get(id)!;
+    const m = this.records.get(id)!;
     const s = m.state;
     const r = s.resources;
     const sy = s.systems;
@@ -192,7 +196,11 @@ export class MockMissionClient {
     const delta = () =>
       Object.fromEntries(Object.entries(r).map(([k, v]) => [k, round(v - (before as Record<string, number>)[k])]));
 
-    if (command.type === "abort") {
+    if (command.type === "pause") {
+      s.status = "paused";
+    } else if (command.type === "resume") {
+      s.status = "active";
+    } else if (command.type === "abort") {
       s.status = "aborted";
       s.end_reason = "Misión finalizada por el jugador.";
       out.push(evt(s, "mission_aborted", s.end_reason));
@@ -296,7 +304,7 @@ export class MockMissionClient {
   }
 
   async evaluation(id: string): Promise<Evaluation> {
-    const s = this.missions.get(id)!.state;
+    const s = this.records.get(id)!.state;
     const objectives = {
       completed_duration: s.status === "completed",
       healthy_crew: s.crew_health_pct >= 60,
@@ -330,3 +338,4 @@ export class MockMissionClient {
     };
   }
 }
+

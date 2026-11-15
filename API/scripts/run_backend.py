@@ -17,10 +17,18 @@ def main():
     try:
         from mission_api.config import Settings
         from resource_api.config import Settings as ResourceSettings
+        from resource_api.snapshot_store import SnapshotStore
+        from verify_snapshots import verify
         Settings(_env_file=root / ".env")
         ResourceSettings(_env_file=root / ".env")
     except Exception as exc:
         raise SystemExit(f"Configuración inválida ({type(exc).__name__}). Revisa .env.example sin compartir tus tokens.") from None
+    try:
+        _, repaired = verify(SnapshotStore().root, repair=True)
+        if repaired:
+            print("Capturas históricas: saltos de línea normalizados y SHA-256 verificado.", flush=True)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from None
     children = []
     exit_code = 0
     try:
