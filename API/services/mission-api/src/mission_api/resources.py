@@ -81,7 +81,9 @@ class ResourceClient:
         except (ValidationError, ValueError, json.JSONDecodeError):
             raise MissionError("RESOURCE_CONTRACT_ERROR", "La respuesta científica no cumple el contrato esperado.", 502) from None
 
-    async def capture(self, mode: str, now: datetime) -> ScienceBundle:
+    async def capture(self, mode: str, now: datetime, scenario_id: str = "lunar-outpost-v1") -> ScienceBundle:
+        if scenario_id == "mars-outpost-v1":
+            return await self._capture_mars(mode, now)
         weather, radiation, study = await asyncio.gather(
             self._collect("/internal/v1/space-weather", {"start": "2024-05-10", "end": "2024-05-10", "event_type": "FLR", "mode": mode}, "donki"),
             self._collect("/internal/v1/radiation", {"start": "2014-01-01T00:00:00Z", "end": "2014-01-01T01:00:00Z", "instrument": "CRaTER", "mode": mode}, "radlab"),
@@ -92,6 +94,23 @@ class ResourceClient:
             SourceItem(id="radlab-reference", role="Lectura dosimétrica de referencia", interpretation="CRaTER/LRO en órbita lunar, 1 de enero de 2014; no representa la superficie ni el interior del refugio simulado.", records=radiation[0], pages_meta=radiation[1]),
             SourceItem(id="osdr-study", role="Referencia educativa sobre investigación biológica", interpretation="OSD-104 estudia ratones. No se derivan de este estudio parámetros de salud humana.", records=study[0], pages_meta=study[1]),
         ]
+        return self._bundle(sources, mode, now)
+
+    async def _capture_mars(self, mode: str, now: datetime) -> ScienceBundle:
+        weather, radiation, study = await asyncio.gather(
+            self._collect("/internal/v1/space-weather", {"start": "2024-05-20", "end": "2024-05-20", "event_type": "CME", "mode": mode}, "donki"),
+            self._collect("/internal/v1/radiation", {"start": "2024-05-20T00:00:00Z", "end": "2024-05-21T00:00:00Z", "instrument": "MSL-RAD", "mode": mode}, "radlab"),
+            self._collect("/internal/v1/studies/104", {"mode": mode}, "osdr"),
+        )
+        sources = [
+            SourceItem(id="donki-episode", role="Eyecciones de masa coronal del 20 de mayo de 2024", interpretation="La de las 05:36 UTC salió de la cara oculta del Sol. El aviso del juego se adelanta un turno para poder prepararse.", records=weather[0], pages_meta=weather[1]),
+            SourceItem(id="radlab-reference", role="Radiación medida en la superficie de Marte", interpretation="MSL-RAD, rover Curiosity, 20 de mayo de 2024. La media de cada dos horas da forma al índice de exposición del juego; no es una dosis para personas.", records=radiation[0], pages_meta=radiation[1]),
+            SourceItem(id="osdr-study", role="Referencia educativa sobre investigación biológica", interpretation="OSD-104 estudia ratones. No se derivan de este estudio parámetros de salud humana.", records=study[0], pages_meta=study[1]),
+        ]
+        return self._bundle(sources, mode, now)
+
+    @staticmethod
+    def _bundle(sources, mode: str, now: datetime) -> ScienceBundle:
         canonical = json.dumps([s.model_dump(mode="json") for s in sources], sort_keys=True, separators=(",", ":"))
         return ScienceBundle(id=hashlib.sha256(canonical.encode()).hexdigest(), requested_mode=mode, captured_at=now, sources=sources)
 

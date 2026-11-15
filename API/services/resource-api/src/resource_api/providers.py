@@ -61,13 +61,19 @@ def weather_spec(query: WeatherQuery, settings: Settings) -> ResourceSpec:
                         url, params, "NASA CCMC / Moon to Mars Space Weather Analysis Office — DONKI")
 
 
+# El analizador de expresiones de RadLab rechaza valores con guion (instrument='MSL-RAD' devuelve 500).
+# MSL-RAD es el único instrumento del rover Curiosity, así que se selecciona por nave.
+RADLAB_SELECTORS = {"MSL-RAD": "spacecraft='Curiosity'"}
+
+
 def radiation_spec(query: RadiationQuery) -> ResourceSpec:
     # Sintaxis booleana para expresar exactamente el intervalo [start, end).
     # RadLab rechaza el sufijo Z en la expresión: enviar UTC sin sufijo sólo al proveedor.
     # El contrato propio y la identidad de consulta conservan UTC explícito.
     start = query.start.astimezone(UTC).replace(tzinfo=None).isoformat()
     end = query.end.astimezone(UTC).replace(tzinfo=None).isoformat()
-    expression = f"(timestamp>={start})AND(timestamp<{end})AND(instrument='{query.instrument}')"
+    selector = RADLAB_SELECTORS.get(query.instrument, f"instrument='{query.instrument}'")
+    expression = f"(timestamp>={start})AND(timestamp<{end})AND({selector})"
     params = {"query": expression,
               "fields": "absorbed_dose_rate,dose_equivalent_rate,celestial_body,spacecraft,trajectory", "format": "json"}
     return ResourceSpec("radlab", "radlab", {"start": iso(query.start), "end": iso(query.end), "instrument": query.instrument},

@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MissionApiClient, MissionApiError, newIdempotencyKey } from "@/lib/orbita/client";
 import { MockMissionClient } from "@/lib/orbita/mock";
-import type { ActionOption, Command, CreateMission, Evaluation, MissionSummary, MissionView, MutationResult, ScienceBundle, TimelineEvent } from "@/lib/orbita/schema";
+import type { ActionOption, Command, CreateMission, Evaluation, MissionSummary, MissionView, MutationResult, PreviewResult, ScienceBundle, TimelineEvent } from "@/lib/orbita/schema";
 
 export type ScenarioParams = {
   turns: number; actions_per_turn: number; energy_capacity_kwh: number;
   oxygen_capacity_kg: number; water_capacity_l: number; food_capacity_kg: number; science_target: number;
 };
-export type Scenario = { title: string; description: string; objectives: string[]; assumptions: string[]; parameters: ScenarioParams };
+export type ScenarioId = MissionView["state"]["scenario_id"];
+export type Scenario = { id: ScenarioId; title: string; description: string; objectives: string[]; assumptions: string[]; parameters: ScenarioParams };
 export type ActionId = ActionOption["id"];
 type Phase = "connecting" | "menu" | "playing" | "offline";
 type Pending =
@@ -51,7 +52,7 @@ function readPending(): SavedPending | null {
 export function useMission(client?: MissionApiClient) {
   const [api] = useState(() => client ?? (isDemo() ? new MockMissionClient() as unknown as MissionApiClient : new MissionApiClient()));
   const [phase, setPhase] = useState<Phase>("connecting");
-  const [scenario, setScenario] = useState<Scenario | null>(null);
+  const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [mission, setMission] = useState<MissionView | null>(null);
   const [savedMissions, setSavedMissions] = useState<MissionSummary[]>([]);
   const [log, setLog] = useState<TimelineEvent[]>([]);
@@ -167,9 +168,9 @@ export function useMission(client?: MissionApiClient) {
     sessionId.current = session.session_id;
     const saved = readPending();
     setPending(saved?.sessionId === session.session_id ? saved.operation : null);
-    const sc = (await api.scenarios()).find(s => s.id === "lunar-outpost-v1");
-    if (!sc?.parameters) throw new MissionApiError("El escenario no está disponible.", 503, "SCENARIO_UNAVAILABLE");
-    setScenario(sc as unknown as Scenario);
+    const catalog = (await api.scenarios()).filter(s => s.parameters) as unknown as Scenario[];
+    if (!catalog.some(s => s.id === "lunar-outpost-v1")) throw new MissionApiError("El escenario no está disponible.", 503, "SCENARIO_UNAVAILABLE");
+    setScenarios(catalog);
     if (pending.current) {
       const operation = pending.current;
       retryTask.current = () => execute(operation);
@@ -215,9 +216,13 @@ export function useMission(client?: MissionApiClient) {
   }, [phase, run]);
   const version = mission?.state.version ?? 0;
   const missionId = mission?.state.id;
+  // El escenario activo es el de la partida abierta; en el menú, el lunar.
+  const scenario = scenarios.find(sc => sc.id === (mission?.state.scenario_id ?? "lunar-outpost-v1")) ?? scenarios[0] ?? null;
+  /** "¿Qué pasaría si…?": el backend calcula la acción sin guardarla. */
+  const preview = useCallback((action_id: ActionId): Promise<PreviewResult> | null => missionId ? api.preview(missionId, action_id, version) : null, [api, missionId, version]);
   const science = useCallback((): Promise<ScienceBundle> | null => missionId ? api.science(missionId) : null, [api, missionId]);
   return {
-    phase, scenario, mission, savedMissions, log, latest, busy, error, evaluation, hasPending, canRetry, retryIn,
+    phase, scenario, scenarios, mission, savedMissions, log, latest, busy, error, evaluation, hasPending, canRetry, retryIn,
     connect, start, restart, exitToMenu, openMission, retry,
     clearLatest: () => setLatest([]),
     act: (action_id: ActionId) => send({ type: "action", action_id, expected_version: version }),
@@ -225,7 +230,7 @@ export function useMission(client?: MissionApiClient) {
     abort: () => send({ type: "abort", expected_version: version }),
     pause: () => send({ type: "pause", expected_version: version }),
     resume: () => send({ type: "resume", expected_version: version }),
-    science,
+    science, preview,
   };
 }
 export type MissionController = ReturnType<typeof useMission>;

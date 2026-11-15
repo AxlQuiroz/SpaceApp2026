@@ -231,6 +231,15 @@ svg.pixel {
   animation: fall 1.2s steps(10, end) infinite;
 }
 
+/* Polvo marciano cruzando el cielo de lado a lado */
+@keyframes dust-blow {
+  from { left: 105%; }
+  to { left: -10%; }
+}
+.dust-particle {
+  animation: dust-blow 1.6s steps(16, end) infinite;
+}
+
 /* Módulo que se enciende/apaga */
 @keyframes flicker {
   0%, 40%, 80% { filter: brightness(1.8); }
@@ -264,6 +273,7 @@ svg.pixel {
     animation: none !important;
   }
   .storm-particle,
+  .dust-particle,
   .turn-banner {
     display: none;
   }

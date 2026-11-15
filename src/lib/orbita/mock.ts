@@ -1,8 +1,8 @@
 /**
  * BACKEND FALSO para ver la interfaz sin encender Python (`/mision?demo=1`).
  *
- * ⚠️ Sólo para previsualizar el diseño. Los números son aproximados y NO son las reglas
- * oficiales (esas viven en el backend, `mission_api/rules.py`). No usar para la entrega.
+ * ⚠️ Sólo para previsualizar el diseño. Imita las reglas del backend, pero la fuente oficial
+ * es `API/services/mission-api` (rules.py y engine.py). No usar para la entrega.
  */
 import { newIdempotencyKey } from "./client";
 import type {
@@ -14,51 +14,78 @@ import type {
   MissionState,
   MissionView,
   MutationResult,
+  PreviewResult,
   ScienceBundle,
   TimelineEvent,
 } from "./schema";
 
 type ActionId = ActionOption["id"];
+type ScenarioId = MissionState["scenario_id"];
+type ActionDef = { title: string; costs: Record<string, number> };
 
-const ACTIONS: Record<ActionId, { title: string; costs: Record<string, number> }> = {
-  repair_water_loop: { title: "Reparar circuito de agua", costs: { spare_parts: 2, energy_kwh: 2 } },
+const LUNAR_ACTIONS: Partial<Record<ActionId, ActionDef>> = {
+  repair_water_loop: { title: "Reparar fuga", costs: { spare_parts: 2, energy_kwh: 2 } },
   repair_solar_panels: { title: "Reparar paneles", costs: { spare_parts: 2, energy_kwh: 3 } },
   enter_shelter: { title: "Entrar al refugio", costs: {} },
   leave_shelter: { title: "Salir del refugio", costs: {} },
   explore: { title: "Explorar", costs: { energy_kwh: 2, oxygen_kg: 0.12, water_l: 0.5, food_kg: 0.1 } },
-  activate_oxygen_reserve: { title: "Usar reserva de oxígeno", costs: {} },
-  activate_water_reserve: { title: "Usar reserva de agua", costs: {} },
+  activate_oxygen_reserve: { title: "Abrir reserva de oxígeno", costs: {} },
+  activate_water_reserve: { title: "Abrir reserva de agua", costs: {} },
   toggle_greenhouse: { title: "Invernadero", costs: {} },
   toggle_oxygen_generator: { title: "Generador de oxígeno", costs: {} },
 };
-
-const SCENARIO = {
-  id: "lunar-outpost-v1",
-  title: "Órbita: primer turno lunar (DEMO)",
-  description: "Modo demo sin backend.",
-  objectives: ["Completar 12 turnos", "Salud final de al menos 60", "Conseguir 24 puntos científicos"],
-  assumptions: ["Modo demo: números aproximados."],
-  parameters: {
-    turns: 12,
-    actions_per_turn: 2,
-    energy_capacity_kwh: 50,
-    oxygen_capacity_kg: 6,
-    water_capacity_l: 30,
-    food_capacity_kg: 6,
-    science_target: 24,
-  },
+const MARS_ACTIONS: Partial<Record<ActionId, ActionDef>> = {
+  repair_solar_panels: { title: "Limpiar paneles", costs: {} },
+  enter_shelter: LUNAR_ACTIONS.enter_shelter!,
+  leave_shelter: LUNAR_ACTIONS.leave_shelter!,
+  explore: LUNAR_ACTIONS.explore!,
+  activate_oxygen_reserve: LUNAR_ACTIONS.activate_oxygen_reserve!,
+  activate_water_reserve: LUNAR_ACTIONS.activate_water_reserve!,
+  toggle_greenhouse: LUNAR_ACTIONS.toggle_greenhouse!,
+  toggle_oxygen_generator: LUNAR_ACTIONS.toggle_oxygen_generator!,
+  contact_earth: { title: "Informar a la Tierra", costs: { energy_kwh: 1 } },
 };
 
+/** Media real de MSL-RAD por bloque de 2 h (uGy/h), 20 de mayo de 2024. Igual que rules.py. */
+const MARS_RAD = [3.81, 3.93, 60.05, 246.39, 122.15, 91.23, 72.12, 48.51, 38.63, 31.07, 27.25, 22.93];
+
+const RULES = {
+  "lunar-outpost-v1": { version: "lunar-1.0.0" as const, actions: LUNAR_ACTIONS, solarKwh: 11, oxygenKwh: 2.4, generatorWater: 0.45, science: 24 },
+  "mars-outpost-v1": { version: "mars-1.0.0" as const, actions: MARS_ACTIONS, solarKwh: 11.008, oxygenKwh: 4, generatorWater: 0, science: 30 },
+};
+const DUST_TURNS = [6, 7, 8, 9];
+
+const BASE_PARAMS = { turns: 12, actions_per_turn: 2, energy_capacity_kwh: 50, oxygen_capacity_kg: 6, water_capacity_l: 30, food_capacity_kg: 6 };
+const SCENARIOS = [
+  {
+    id: "lunar-outpost-v1",
+    title: "Órbita: primer turno lunar (DEMO)",
+    description: "Modo demo sin backend.",
+    objectives: ["Completar 12 turnos", "Salud final de al menos 60", "Conseguir 24 puntos científicos"],
+    assumptions: ["Modo demo: imita las reglas del backend."],
+    parameters: { ...BASE_PARAMS, science_target: 24 },
+  },
+  {
+    id: "mars-outpost-v1",
+    title: "Órbita: un sol en Marte (DEMO)",
+    description: "Modo demo sin backend.",
+    objectives: ["Completar 12 turnos", "Salud final de al menos 60", "Conseguir 30 puntos científicos"],
+    assumptions: ["Modo demo: imita las reglas del backend."],
+    parameters: { ...BASE_PARAMS, science_target: 30 },
+  },
+];
+
 const now = () => new Date().toISOString();
-const round = (n: number) => Math.round(n * 1000) / 1000;
+const round = (n: number) => Math.round(n * 1e6) / 1e6;
 const clamp = (n: number, max: number) => Math.min(max, Math.max(0, n));
 
 function initialState(opts: CreateMission, parent: string | null = null): MissionState {
   const k = opts.difficulty === "commander" ? 0.75 : 1;
+  const scenario: ScenarioId = opts.scenario_id ?? "lunar-outpost-v1";
   return {
     id: newIdempotencyKey(),
-    scenario_id: "lunar-outpost-v1",
-    rules_version: "lunar-1.0.0",
+    scenario_id: scenario,
+    rules_version: RULES[scenario].version,
     version: 1,
     status: "active",
     difficulty: opts.difficulty ?? "cadet",
@@ -87,6 +114,8 @@ function initialState(opts: CreateMission, parent: string | null = null): Missio
       greenhouse_on: true,
       water_leak_active: false,
       crew_in_shelter: false,
+      dust_storm_active: false,
+      earth_message_pending: false,
     },
     created_at: now(),
     updated_at: now(),
@@ -99,43 +128,42 @@ function initialState(opts: CreateMission, parent: string | null = null): Missio
 function reason(s: MissionState, id: ActionId): string | null {
   const r = s.resources;
   const sy = s.systems;
+  const def = RULES[s.scenario_id].actions[id];
+  if (!def) return "Esta acción no existe en esta misión.";
   if (s.status !== "active") return "La misión debe estar activa.";
-  if (s.actions_used >= 2) return "Ya usaste las acciones de este turno.";
-  for (const [k, v] of Object.entries(ACTIONS[id].costs)) {
-    if ((r as Record<string, number>)[k] < v) return "No hay recursos suficientes.";
+  if (s.actions_used >= 2) return "Ya utilizaste las dos acciones de este turno; avanza el tiempo.";
+  if (id === "repair_water_loop" && !sy.water_leak_active) return "No hay una fuga activa.";
+  if (id === "repair_solar_panels" && sy.solar_integrity_pct >= 100) return "Los paneles ya están reparados.";
+  if ((id === "explore" || id === "repair_solar_panels") && sy.crew_in_shelter) return "La tripulación está en el refugio.";
+  if (id === "enter_shelter" && sy.crew_in_shelter) return "La tripulación ya está en el refugio.";
+  if (id === "leave_shelter" && !sy.crew_in_shelter) return "La tripulación ya está fuera del refugio.";
+  if (id === "activate_oxygen_reserve" && (r.reserve_oxygen_kg <= 0 || r.oxygen_kg >= 6)) return "La reserva está vacía o el depósito de oxígeno está lleno.";
+  if (id === "activate_water_reserve" && (r.reserve_water_l <= 0 || r.water_l >= 30)) return "La reserva está vacía o el depósito de agua está lleno.";
+  if (id === "contact_earth" && sy.earth_message_pending) return "Ya enviaste un informe; espera la respuesta de la Tierra.";
+  for (const [k, v] of Object.entries(def.costs)) {
+    if ((r as Record<string, number>)[k] < v) return `Recurso insuficiente: ${k}.`;
   }
-  switch (id) {
-    case "repair_water_loop":
-      return sy.water_leak_active ? null : "No hay ninguna fuga que reparar.";
-    case "repair_solar_panels":
-      return sy.solar_integrity_pct < 100 ? (sy.crew_in_shelter ? "Sal del refugio primero." : null) : "Los paneles están bien.";
-    case "enter_shelter":
-      return sy.crew_in_shelter ? "La tripulación ya está en el refugio." : null;
-    case "leave_shelter":
-      return sy.crew_in_shelter ? null : "La tripulación no está en el refugio.";
-    case "explore":
-      return sy.crew_in_shelter ? "No se puede explorar desde el refugio." : null;
-    case "activate_oxygen_reserve":
-      return r.reserve_oxygen_kg > 0 && r.oxygen_kg < 6 ? null : "No queda reserva o el tanque está lleno.";
-    case "activate_water_reserve":
-      return r.reserve_water_l > 0 && r.water_l < 30 ? null : "No queda reserva o el tanque está lleno.";
-    default:
-      return null;
-  }
+  return null;
 }
 
 function view(s: MissionState): MissionView {
+  const mars = s.scenario_id === "mars-outpost-v1";
   const alerts: string[] = [];
   if (s.systems.water_leak_active) alerts.push("Fuga activa: el agua se pierde cada turno hasta repararla.");
-  if (s.systems.solar_integrity_pct < 100) alerts.push("Paneles dañados: la producción eléctrica está reducida.");
-  if (s.turn === 5) alerts.push("El próximo avance incluye un incidente solar simulado: considera entrar al refugio.");
+  if (s.systems.solar_integrity_pct < 100)
+    alerts.push(mars ? "Paneles con polvo: la producción eléctrica está reducida." : "Paneles dañados: la producción eléctrica está reducida.");
+  if (s.systems.dust_storm_active) alerts.push("Tormenta de polvo: llega muy poca luz a los paneles.");
+  if (mars && s.turn === 2) alerts.push("El próximo avance trae la radiación de una eyección solar real: considera entrar al refugio.");
+  if (mars && s.turn === DUST_TURNS[0] - 1) alerts.push("Se acerca una tormenta de polvo: ahorra batería antes del próximo avance.");
+  if (!mars && s.turn === 5) alerts.push("El próximo avance incluye un incidente solar simulado: considera entrar al refugio.");
   if (s.resources.oxygen_kg < 0.8) alerts.push("Reserva principal de oxígeno baja.");
   if (s.resources.water_l < 4) alerts.push("Reserva principal de agua baja.");
   if (s.resources.food_kg < 0.8) alerts.push("Alimentos bajos.");
   if (s.resources.energy_kwh < 8) alerts.push("Batería baja.");
-  const available_actions = (Object.keys(ACTIONS) as ActionId[]).map((id) => {
+  const actions = RULES[s.scenario_id].actions;
+  const available_actions = (Object.keys(actions) as ActionId[]).map((id) => {
     const why = reason(s, id);
-    return { id, title: ACTIONS[id].title, description: "", enabled: why === null, disabled_reason: why, costs: ACTIONS[id].costs };
+    return { id, title: actions[id]!.title, description: "", enabled: why === null, disabled_reason: why, costs: actions[id]!.costs };
   });
   return { state: structuredClone(s), available_actions, alerts };
 }
@@ -150,6 +178,153 @@ const evt = (s: MissionState, type: string, message: string, payload: Record<str
   rule_origin: "simulation",
 });
 
+/** Aplica una orden sobre `s` (lo modifica) y devuelve los eventos. */
+function transition(s: MissionState, command: Command): TimelineEvent[] {
+  const rules = RULES[s.scenario_id];
+  const mars = s.scenario_id === "mars-outpost-v1";
+  const r = s.resources;
+  const sy = s.systems;
+  const out: TimelineEvent[] = [];
+  const before = { ...r };
+  const delta = () => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, round(v - (before as Record<string, number>)[k])]));
+
+  if (command.type === "pause") {
+    s.status = "paused";
+    out.push(evt(s, "mission_paused", "Misión pausada."));
+  } else if (command.type === "resume") {
+    s.status = "active";
+    out.push(evt(s, "mission_resumed", "Misión reanudada."));
+  } else if (command.type === "abort") {
+    s.status = "aborted";
+    s.end_reason = "Misión finalizada por el jugador.";
+    out.push(evt(s, "mission_aborted", s.end_reason));
+  } else if (command.type === "action" && command.action_id) {
+    const id = command.action_id;
+    const why = reason(s, id);
+    if (why) throw new Error(why);
+    for (const [k, v] of Object.entries(rules.actions[id]!.costs)) (r as Record<string, number>)[k] -= v;
+    if (id === "repair_water_loop") sy.water_leak_active = false;
+    if (id === "repair_solar_panels") sy.solar_integrity_pct = Math.min(100, sy.solar_integrity_pct + 50);
+    if (id === "enter_shelter") sy.crew_in_shelter = true;
+    if (id === "leave_shelter") sy.crew_in_shelter = false;
+    if (id === "explore") {
+      s.science_points += 12;
+      s.exposure_risk_index = Math.min(100, s.exposure_risk_index + 1);
+    }
+    if (id === "toggle_greenhouse") sy.greenhouse_on = !sy.greenhouse_on;
+    if (id === "toggle_oxygen_generator") sy.oxygen_generator_on = !sy.oxygen_generator_on;
+    if (id === "contact_earth") sy.earth_message_pending = true;
+    if (id === "activate_oxygen_reserve") {
+      const x = Math.min(0.6, r.reserve_oxygen_kg, 6 - r.oxygen_kg);
+      r.reserve_oxygen_kg -= x;
+      r.oxygen_kg += x;
+    }
+    if (id === "activate_water_reserve") {
+      const x = Math.min(3, r.reserve_water_l, 30 - r.water_l);
+      r.reserve_water_l -= x;
+      r.water_l += x;
+    }
+    s.actions_used += 1;
+    out.push(evt(s, "action_applied", rules.actions[id]!.title, { action_id: id, resource_delta: delta() }));
+  } else if (command.type === "advance") {
+    s.turn += 1;
+    s.elapsed_hours = s.turn * 2;
+    s.actions_used = 0;
+    let storm = false;
+    let sky = 1;
+    let dose: number | null = null;
+    if (mars) {
+      dose = MARS_RAD[s.turn - 1];
+      if (sy.earth_message_pending) {
+        sy.earth_message_pending = false;
+        s.science_points += 6;
+        out.push(evt(s, "earth_reply", "La Tierra respondió.", { science_points: 6 }));
+      }
+      if (s.turn === 2) out.push(evt(s, "solar_warning", "Aviso de clima espacial.", { cme_start_utc: "2024-05-20T05:36Z" }));
+      if (s.turn === 3) out.push(evt(s, "solar_incident", "Llegó la radiación.", { sheltered: sy.crew_in_shelter, dose_rate_ugy_h: dose }));
+      if (s.turn === DUST_TURNS[0] - 1) out.push(evt(s, "dust_warning", "Se acerca una tormenta de polvo."));
+      if (s.turn === DUST_TURNS[0]) {
+        sy.dust_storm_active = true;
+        out.push(evt(s, "dust_storm", "Tormenta de polvo.", { generation_factor: 0.2 }));
+      }
+      if (s.turn === DUST_TURNS[DUST_TURNS.length - 1] + 1) {
+        sy.dust_storm_active = false;
+        sy.solar_integrity_pct = Math.max(0, sy.solar_integrity_pct - 40);
+        out.push(evt(s, "dust_cleared", "La tormenta terminó.", { deposit_pct: 40 }));
+      }
+      sky = sy.dust_storm_active ? 0.2 : 1;
+    } else {
+      if (s.turn === 2) {
+        sy.water_leak_active = true;
+        out.push(evt(s, "water_leak", "Fuga de agua."));
+      }
+      if (s.turn === 5) out.push(evt(s, "solar_warning", "Aviso solar."));
+      if (s.turn === 8) {
+        sy.solar_integrity_pct = Math.max(0, sy.solar_integrity_pct - 50);
+        out.push(evt(s, "panel_damage", "Polvo en paneles."));
+      }
+      storm = s.turn === 6;
+      sky = storm ? 0.3 : 1;
+    }
+    const gen = rules.solarKwh * (sy.solar_integrity_pct / 100) * sky;
+    let avail = r.energy_kwh + gen;
+    const fr: Record<string, number> = {};
+    for (const [name, need, on] of [
+      ["habitat", 4, true],
+      ["oxygen", rules.oxygenKwh, sy.oxygen_generator_on],
+      ["water", 0.8, true],
+      ["greenhouse", 2, sy.greenhouse_on],
+    ] as [string, number, boolean][]) {
+      const d = on ? need : 0;
+      const a = Math.min(avail, d);
+      avail -= a;
+      fr[name] = d ? a / d : 0;
+    }
+    r.energy_kwh = clamp(avail, 50);
+    r.water_l += 0.6 * fr.water;
+    const genFr = rules.generatorWater ? Math.min(fr.oxygen, r.water_l / rules.generatorWater) : fr.oxygen;
+    r.water_l -= rules.generatorWater * genFr;
+    r.oxygen_kg = clamp(r.oxygen_kg + 0.4 * genFr - 0.28, 6);
+    r.food_kg = clamp(r.food_kg + 0.07 * fr.greenhouse - 0.2, 6);
+    r.water_l = clamp(r.water_l - 1.2 - (sy.water_leak_active ? 1.6 : 0), 30);
+    let risk = mars ? dose! * 0.13 : 0.2;
+    if (storm) {
+      risk += 28;
+      out.push(evt(s, "solar_incident", "Tormenta solar.", { sheltered: sy.crew_in_shelter }));
+    }
+    if (sy.crew_in_shelter) risk *= 0.1;
+    s.exposure_risk_index = round(Math.min(100, s.exposure_risk_index + risk));
+    let loss = 35 * (1 - fr.habitat);
+    if (r.oxygen_kg <= 0) loss += 40;
+    if (r.water_l <= 0) loss += 25;
+    if (r.food_kg <= 0) loss += 10;
+    loss += Math.max(0, s.exposure_risk_index - 60) / 10;
+    s.crew_health_pct = Math.max(0, round(s.crew_health_pct - loss));
+    out.push(
+      evt(s, "turn_advanced", "Turno calculado.", {
+        resource_delta: delta(),
+        generated_kwh: round(gen),
+        curtailed_kwh: 0,
+        power_fractions: fr,
+        risk_delta_points: round(risk),
+        health_loss_points: round(loss),
+        ...(dose !== null ? { dose_rate_ugy_h: dose, dose_rate_source: "radlab-reference", sky_factor: sky } : {}),
+      }),
+    );
+    if (s.crew_health_pct <= 0) {
+      s.status = "failed";
+      out.push(evt(s, "mission_failed", "Salud en cero."));
+    } else if (s.turn >= 12) {
+      s.status = "completed";
+      out.push(evt(s, "mission_completed", "Misión completada."));
+    }
+  }
+  for (const k of Object.keys(r) as (keyof typeof r)[]) r[k] = round(Math.max(0, r[k]));
+  s.version += 1;
+  s.updated_at = now();
+  return out;
+}
+
 export class MockMissionClient {
   private records = new Map<string, { state: MissionState; events: TimelineEvent[] }>();
 
@@ -157,7 +332,7 @@ export class MockMissionClient {
     return { session_id: "demo", created_at: now(), expires_at: now() };
   }
   async scenarios() {
-    return [SCENARIO as unknown as Record<string, unknown>];
+    return SCENARIOS as unknown as Array<Record<string, unknown>>;
   }
   async createMission(body: CreateMission = {}): Promise<MutationResult> {
     const state = initialState(body);
@@ -181,148 +356,44 @@ export class MockMissionClient {
   }
   async restart(id: string): Promise<MutationResult> {
     const old = this.records.get(id)!.state;
-    const state = initialState({ difficulty: old.difficulty, seed: old.seed }, id);
+    const state = initialState({ scenario_id: old.scenario_id, difficulty: old.difficulty, seed: old.seed }, id);
     const events = [evt(state, "mission_restarted", "Misión reiniciada (demo).")];
     this.records.set(state.id, { state, events });
     return { mission: view(state), events };
   }
-
   async command(id: string, command: Command): Promise<MutationResult> {
     const m = this.records.get(id)!;
-    const s = m.state;
-    const r = s.resources;
-    const sy = s.systems;
-    const out: TimelineEvent[] = [];
-    const before = { ...r };
-    const delta = () =>
-      Object.fromEntries(Object.entries(r).map(([k, v]) => [k, round(v - (before as Record<string, number>)[k])]));
-
-    if (command.type === "pause") {
-      s.status = "paused";
-    } else if (command.type === "resume") {
-      s.status = "active";
-    } else if (command.type === "abort") {
-      s.status = "aborted";
-      s.end_reason = "Misión finalizada por el jugador.";
-      out.push(evt(s, "mission_aborted", s.end_reason));
-    } else if (command.type === "action" && command.action_id) {
-      const id = command.action_id;
-      const why = reason(s, id);
-      if (why) throw new Error(why);
-      for (const [k, v] of Object.entries(ACTIONS[id].costs)) (r as Record<string, number>)[k] -= v;
-      if (id === "repair_water_loop") sy.water_leak_active = false;
-      if (id === "repair_solar_panels") sy.solar_integrity_pct = Math.min(100, sy.solar_integrity_pct + 50);
-      if (id === "enter_shelter") sy.crew_in_shelter = true;
-      if (id === "leave_shelter") sy.crew_in_shelter = false;
-      if (id === "explore") {
-        s.science_points += 12;
-        s.exposure_risk_index += 1;
-      }
-      if (id === "toggle_greenhouse") sy.greenhouse_on = !sy.greenhouse_on;
-      if (id === "toggle_oxygen_generator") sy.oxygen_generator_on = !sy.oxygen_generator_on;
-      if (id === "activate_oxygen_reserve") {
-        const x = Math.min(0.6, r.reserve_oxygen_kg, 6 - r.oxygen_kg);
-        r.reserve_oxygen_kg -= x;
-        r.oxygen_kg += x;
-      }
-      if (id === "activate_water_reserve") {
-        const x = Math.min(3, r.reserve_water_l, 30 - r.water_l);
-        r.reserve_water_l -= x;
-        r.water_l += x;
-      }
-      s.actions_used += 1;
-      out.push(evt(s, "action_applied", ACTIONS[id].title, { action_id: id, resource_delta: delta() }));
-    } else if (command.type === "advance") {
-      s.turn += 1;
-      s.elapsed_hours += 2;
-      s.actions_used = 0;
-      if (s.turn === 2) {
-        sy.water_leak_active = true;
-        out.push(evt(s, "water_leak", "Fuga de agua (demo)."));
-      }
-      if (s.turn === 5) out.push(evt(s, "solar_warning", "Aviso solar (demo)."));
-      if (s.turn === 8) {
-        sy.solar_integrity_pct = Math.max(0, sy.solar_integrity_pct - 50);
-        out.push(evt(s, "panel_damage", "Polvo en paneles (demo)."));
-      }
-      const storm = s.turn === 6;
-      const gen = 11 * (sy.solar_integrity_pct / 100) * (storm ? 0.3 : 1);
-      let avail = r.energy_kwh + gen;
-      const fr: Record<string, number> = {};
-      for (const [name, need, on] of [
-        ["habitat", 4, true],
-        ["oxygen", 2.4, sy.oxygen_generator_on],
-        ["water", 0.8, true],
-        ["greenhouse", 2, sy.greenhouse_on],
-      ] as [string, number, boolean][]) {
-        const d = on ? need : 0;
-        const a = Math.min(avail, d);
-        avail -= a;
-        fr[name] = d ? a / d : 0;
-      }
-      r.energy_kwh = clamp(avail, 50);
-      r.water_l += 0.6 * fr.water - 0.45 * fr.oxygen;
-      r.oxygen_kg += 0.4 * fr.oxygen - 0.28;
-      r.food_kg += 0.07 * fr.greenhouse - 0.2;
-      r.water_l -= 1.2 + (sy.water_leak_active ? 1.6 : 0);
-      r.oxygen_kg = clamp(r.oxygen_kg, 6);
-      r.water_l = clamp(r.water_l, 30);
-      r.food_kg = clamp(r.food_kg, 6);
-      let risk = 0.2 + (storm ? 28 : 0);
-      if (sy.crew_in_shelter) risk *= 0.1;
-      if (storm) out.push(evt(s, "solar_incident", "Tormenta solar (demo).", { sheltered: sy.crew_in_shelter }));
-      s.exposure_risk_index = Math.min(100, s.exposure_risk_index + risk);
-      let loss = 35 * (1 - fr.habitat);
-      if (r.oxygen_kg <= 0) loss += 40;
-      if (r.water_l <= 0) loss += 25;
-      if (r.food_kg <= 0) loss += 10;
-      loss += Math.max(0, s.exposure_risk_index - 60) / 10;
-      s.crew_health_pct = Math.max(0, round(s.crew_health_pct - loss));
-      out.push(
-        evt(s, "turn_advanced", "Turno calculado (demo).", {
-          resource_delta: delta(),
-          generated_kwh: round(gen),
-          curtailed_kwh: 0,
-          power_fractions: fr,
-          risk_delta_points: round(risk),
-          health_loss_points: round(loss),
-        }),
-      );
-      if (s.crew_health_pct <= 0) {
-        s.status = "failed";
-        out.push(evt(s, "mission_failed", "Salud en cero (demo)."));
-      } else if (s.turn >= 12) {
-        s.status = "completed";
-        out.push(evt(s, "mission_completed", "Misión completada (demo)."));
-      }
-    }
-    for (const k of Object.keys(r) as (keyof typeof r)[]) r[k] = round(r[k]);
-    s.exposure_risk_index = round(s.exposure_risk_index);
-    s.version += 1;
-    s.updated_at = now();
+    const out = transition(m.state, command);
     m.events.push(...out);
-    return { mission: view(s), events: out };
+    return { mission: view(m.state), events: out };
+  }
+  /** Igual que el backend: calcula el resultado de una acción sin guardarlo. */
+  async preview(id: string, actionId: ActionId, expectedVersion: number): Promise<PreviewResult> {
+    const copy = structuredClone(this.records.get(id)!.state);
+    const events = transition(copy, { type: "action", action_id: actionId, expected_version: expectedVersion });
+    return { persisted: false, based_on_version: expectedVersion, result: { mission: view(copy), events } };
   }
 
   async evaluation(id: string): Promise<Evaluation> {
     const s = this.records.get(id)!.state;
+    const target = RULES[s.scenario_id].science;
     const objectives = {
-      completed_duration: s.status === "completed",
+      completed_duration: s.turn >= 12,
       healthy_crew: s.crew_health_pct >= 60,
-      science_target: s.science_points >= 24,
+      science_target: s.science_points >= target,
     };
     const score = Math.round(
-      (s.turn / 12) * 40 + (s.crew_health_pct / 100) * 30 + Math.min(1, s.science_points / 24) * 20 + (1 - Math.min(1, s.exposure_risk_index / 60)) * 10,
+      (s.turn / 12) * 40 + (s.crew_health_pct / 100) * 30 + Math.min(1, s.science_points / target) * 20 + (1 - s.exposure_risk_index / 100) * 10,
     );
     const ok = Object.values(objectives).every(Boolean);
     return {
       mission_id: id,
       final: s.status !== "active" && s.status !== "paused",
-      outcome: s.status === "aborted" ? "aborted" : s.status === "failed" ? "failed" : ok ? "success" : "partial",
-      score,
+      outcome: s.status === "aborted" ? "aborted" : s.status === "failed" ? "failed" : s.status === "completed" ? (ok ? "success" : "partial") : "in_progress",
+      score: Math.max(0, Math.min(100, score)),
       objectives,
-      feedback: ["Modo demo: la puntuación es aproximada."],
-      rules_version: "lunar-1.0.0",
+      feedback: ["Modo demo: enciende el backend para la evaluación oficial."],
+      rules_version: s.rules_version,
     };
   }
 
@@ -339,4 +410,3 @@ export class MockMissionClient {
     };
   }
 }
-

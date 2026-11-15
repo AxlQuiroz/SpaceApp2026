@@ -3,16 +3,21 @@
 import { useState } from "react";
 import { Panel, PixelButton, PixelSprite, SettingsBar, Starfield } from "@/components/hud";
 import { MissionHud } from "@/game/MissionHud";
-import { useMission } from "@/game/useMission";
+import { useMission, type ScenarioId } from "@/game/useMission";
 import { useI18n } from "@/lib/providers";
 
 export default function MissionPage() {
   const game = useMission();
   const { t } = useI18n();
   const [difficulty, setDifficulty] = useState<"cadet" | "commander">("cadet");
+  const [destination, setDestination] = useState<ScenarioId>("lunar-outpost-v1");
+  // Marte sólo se ofrece si el backend conectado ya lo incluye.
+  const destinations = (["lunar-outpost-v1", "mars-outpost-v1"] as const).filter((id) => game.scenarios.some((sc) => sc.id === id));
+  const mars = destination === "mars-outpost-v1";
 
   if (game.phase === "playing" && game.mission) {
-    return <MissionHud game={{ ...game, mission: game.mission }} />;
+    // key: cada partida estrena su propio HUD (alertas, cola de R0-B1 y tutorial empiezan limpios).
+    return <MissionHud key={game.mission.state.id} game={{ ...game, mission: game.mission }} />;
   }
 
   return (
@@ -20,7 +25,7 @@ export default function MissionPage() {
       <div className="absolute inset-0">
         <Starfield />
       </div>
-      <Panel className="relative z-10 w-full max-w-2xl" scanlines>
+      <Panel className="relative z-10 w-full max-w-3xl" scanlines>
         <div className="flex flex-col items-center gap-4 p-2 text-center">
           <h1 className="font-pixel text-4xl text-neon-cyan">{t.app.title}</h1>
 
@@ -52,7 +57,26 @@ export default function MissionPage() {
 
           {game.phase === "menu" && (
             <>
-              <p className="text-xl text-steel-200">{t.menu.goal}</p>
+              <fieldset className="grid w-full gap-3 sm:grid-cols-2">
+                <legend className="font-pixel mb-2 text-lg text-amber uppercase">{t.destination.title}</legend>
+                {destinations.map((id) => {
+                  const isMarsCard = id === "mars-outpost-v1";
+                  return (
+                    <label
+                      key={id}
+                      className={`bevel pixel-btn relative flex cursor-pointer flex-col items-center gap-2 p-4 ${destination === id ? "glow" : ""}`}
+                      style={{ ["--bevel-fill" as string]: destination === id ? (isMarsCard ? "var(--color-mars-dark)" : "var(--color-cyan-dark)") : "var(--color-steel-800)" }}
+                    >
+                      <input type="radio" name="destination" value={id} checked={destination === id} onChange={() => setDestination(id)} className="sr-only" />
+                      <PixelSprite icon={isMarsCard ? "mars" : "day"} scale={4} />
+                      <span className="font-pixel text-2xl">{isMarsCard ? t.destination.mars : t.destination.moon}</span>
+                      <span className="text-lg text-steel-200">{isMarsCard ? t.destination.marsDesc : t.destination.moonDesc}</span>
+                      {!isMarsCard && <span className="font-tiny bg-lime px-2 py-0.5 text-xs text-void uppercase">{t.destination.recommended}</span>}
+                    </label>
+                  );
+                })}
+              </fieldset>
+              <p className="text-xl text-steel-200">{mars ? t.destination.goalMars : t.destination.goalMoon}</p>
               {game.savedMissions.length > 0 && (
                 <section className="w-full text-left" aria-label={t.menu.saved}>
                   <h2 className="font-pixel text-xl text-neon-cyan">{t.menu.saved}</h2>
@@ -60,7 +84,7 @@ export default function MissionPage() {
                     {game.savedMissions.map(m => (
                       <li key={m.id}>
                         <PixelButton className="w-full" disabled={game.busy || game.hasPending} onClick={() => void game.openMission(m.id)}>
-                          {t.menu.continue} · {t.game.turn} {m.turn}/12 · {t.missionStatus[m.status]} · {m.id.slice(0, 6)}
+                          {t.menu.continue} · {m.scenario_id === "mars-outpost-v1" ? t.destination.mars : t.destination.moon} · {t.game.turn} {m.turn}/12 · {t.missionStatus[m.status]} · {m.id.slice(0, 6)}
                         </PixelButton>
                       </li>
                     ))}
@@ -95,7 +119,7 @@ export default function MissionPage() {
                 variant="primary"
                 className="px-8 text-2xl"
                 disabled={game.busy || game.hasPending}
-                onClick={() => void game.start({ difficulty, seed: Math.floor(Math.random() * 1_000_000) })}
+                onClick={() => void game.start({ scenario_id: destination, difficulty, seed: Math.floor(Math.random() * 1_000_000) })}
                 icon={<PixelSprite icon="next" scale={3} />}
               >
                 {game.busy ? "…" : t.menu.play}

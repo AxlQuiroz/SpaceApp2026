@@ -185,5 +185,100 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(MissionState.model_validate_json(self.state.model_dump_json()), self.state)
 
 
+class MarsEngineTests(unittest.TestCase):
+    def setUp(self):
+        self.state = new_mission("mars-mission", CreateMission(scenario_id="mars-outpost-v1"), "test-bundle", NOW)
+
+    def step(self, kind="advance", action=None):
+        result = transition(self.state, Command(type=kind, action_id=action, expected_version=self.state.version), NOW)
+        self.state = result.mission.state
+        return result
+
+    def types(self, result):
+        return [event.type for event in result.events]
+
+    def test_identity_actions_and_first_turn(self):
+        self.assertEqual((self.state.scenario_id, self.state.rules_version), ("mars-outpost-v1", "mars-1.0.0"))
+        ids = [option.id for option in transition(self.state, Command(type="pause", expected_version=1), NOW).mission.available_actions]
+        self.assertIn("contact_earth", ids)
+        self.assertNotIn("repair_water_loop", ids)
+        result = self.step()
+        payload = result.events[-1].payload
+        # 12.8 kW x 0.43 x 2 h = 11.008 kWh; demanda 2 + 2 + 0.4 + 1 = 5.4 kW.
+        self.assertAlmostEqual(payload["generated_kwh"], 11.008)
+        self.assertAlmostEqual(self.state.resources.energy_kwh, 32 + 11.008 - 10.8)
+        # El generador marciano no gasta agua: 18 + 0.6 recuperados - 1.2 de tripulación.
+        self.assertAlmostEqual(self.state.resources.water_l, 17.4)
+        self.assertAlmostEqual(self.state.resources.oxygen_kg, 2.92)
+        self.assertEqual(payload["dose_rate_ugy_h"], 3.81)
+        self.assertAlmostEqual(self.state.exposure_risk_index, 3.81 * 0.13, places=4)
+
+    def test_lunar_mission_rejects_mars_action(self):
+        lunar = new_mission("lunar", CreateMission(), "test-bundle", NOW)
+        with self.assertRaises(MissionError):
+            transition(lunar, Command(type="action", action_id="contact_earth", expected_version=1), NOW)
+
+    def test_radiation_follows_real_profile_and_shelter_reduces_it(self):
+        exposed = new_mission("exposed", CreateMission(scenario_id="mars-outpost-v1"), "b", NOW)
+        for _ in range(4):
+            exposed = transition(exposed, Command(type="advance", expected_version=exposed.version), NOW).mission.state
+        self.step()
+        warning = self.step()
+        self.assertIn("solar_warning", self.types(warning))
+        self.assertTrue(any("eyección solar real" in alert for alert in warning.mission.alerts))
+        self.step("action", "enter_shelter")
+        incident = self.step()
+        self.assertIn("solar_incident", self.types(incident))
+        self.assertEqual(incident.events[-1].payload["dose_rate_ugy_h"], 60.05)
+        self.step()
+        self.assertAlmostEqual(exposed.exposure_risk_index, (3.81 + 3.93 + 60.05 + 246.39) * 0.13, places=3)
+        self.assertAlmostEqual(self.state.exposure_risk_index, (3.81 + 3.93) * 0.13 + (60.05 + 246.39) * 0.013, places=3)
+
+    def test_contact_earth_reply_arrives_next_turn(self):
+        self.step("action", "contact_earth")
+        self.assertTrue(self.state.systems.earth_message_pending)
+        with self.assertRaises(MissionError):
+            self.step("action", "contact_earth")
+        result = self.step()
+        self.assertIn("earth_reply", self.types(result))
+        self.assertEqual(self.state.science_points, 6)
+        self.assertFalse(self.state.systems.earth_message_pending)
+
+    def test_dust_storm_cuts_power_then_leaves_dust(self):
+        for _ in range(5):
+            result = self.step()
+        self.assertIn("dust_warning", self.types(result))
+        result = self.step()
+        self.assertIn("dust_storm", self.types(result))
+        self.assertTrue(self.state.systems.dust_storm_active)
+        self.assertAlmostEqual(result.events[-1].payload["generated_kwh"], 11.008 * 0.2, places=4)
+        self.step()
+        self.step()
+        self.step()
+        result = self.step()
+        self.assertIn("dust_cleared", self.types(result))
+        self.assertFalse(self.state.systems.dust_storm_active)
+        self.assertEqual(self.state.systems.solar_integrity_pct, 60)
+        spare = self.state.resources.spare_parts
+        self.step("action", "repair_solar_panels")
+        self.assertEqual(self.state.systems.solar_integrity_pct, 100)
+        self.assertEqual(self.state.resources.spare_parts, spare)
+
+    def test_good_plan_succeeds_and_passive_play_does_not(self):
+        plan = {0: ["explore", "contact_earth"], 2: ["enter_shelter"], 5: ["toggle_greenhouse", "toggle_oxygen_generator"],
+                7: ["leave_shelter", "explore"], 10: ["repair_solar_panels", "toggle_oxygen_generator"], 11: ["toggle_greenhouse"]}
+        for turn in range(12):
+            for action in plan.get(turn, []):
+                self.step("action", action)
+            self.step()
+        report = evaluate(self.state)
+        self.assertEqual(report.outcome, "success", report)
+        self.assertGreaterEqual(self.state.science_points, 30)
+        passive = new_mission("passive", CreateMission(scenario_id="mars-outpost-v1", difficulty="commander"), "b", NOW)
+        while passive.status == "active":
+            passive = transition(passive, Command(type="advance", expected_version=passive.version), NOW).mission.state
+        self.assertNotEqual(evaluate(passive).outcome, "success")
+
+
 if __name__ == "__main__":
     unittest.main()

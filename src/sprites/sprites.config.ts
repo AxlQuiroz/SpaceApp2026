@@ -562,6 +562,78 @@ const BASE_ICONS = {
     "................",
     "................",
   ]),
+  antenna: icon([
+    "................",
+    "..KKKKKKK.......",
+    ".KGGGGGGGK...C..",
+    ".KGWGGGGGGK.C.C.",
+    "..KGGGGGGGGK..C.",
+    "...KGGGGGGGK.C..",
+    "....KGGGGGGK....",
+    ".....KGGGGK.....",
+    "......KGGK......",
+    ".......KK.......",
+    ".......KK.......",
+    "......KGGK......",
+    ".....KGGGGK.....",
+    "....KKKKKKKK....",
+    "................",
+    "................",
+  ]),
+  medal: icon([
+    "................",
+    "...KKK....KKK...",
+    "...KCCK..KCCK...",
+    "....KCCKKCCK....",
+    ".....KCCCCK.....",
+    "......KKKK......",
+    ".....KYYYYK.....",
+    "....KYYYYYYK....",
+    "...KYYYSYYYYK...",
+    "...KYYSSSYYYK...",
+    "...KYYYSYYYYK...",
+    "...KYYYYYYYOK...",
+    "....KYYYYYOK....",
+    ".....KOOOOK.....",
+    "......KKKK......",
+    "................",
+  ]),
+  book: icon([
+    "................",
+    "................",
+    "..KKKKKK.KKKKKK.",
+    ".KWWWWWWKWWWWWWK",
+    ".KWggggWKWggggWK",
+    ".KWWWWWWKWWWWWWK",
+    ".KWggggWKWgggWWK",
+    ".KWWWWWWKWWWWWWK",
+    ".KWgggWWKWggggWK",
+    ".KWWWWWWKWWWWWWK",
+    ".KWggggWKWggWWWK",
+    ".KWWWWWWKWWWWWWK",
+    ".KCCCCCCKCCCCCCK",
+    "..KKKKKKKKKKKKK.",
+    "................",
+    "................",
+  ]),
+  mars: icon([
+    "................",
+    ".....KKKKKK.....",
+    "...KKRRRRRRKK...",
+    "..KRRRRORRRRRK..",
+    "..KRRRRRRRRRRK..",
+    ".KRROORRRRRMRRK.",
+    ".KRRORRRRRMMRRK.",
+    ".KRRRRRRRRRRRRK.",
+    ".KRRRRRORRRRRRK.",
+    ".KRRRRRRRRRRRRK.",
+    ".KMRRRRRRRROORK.",
+    "..KRRRRRRRRRRK..",
+    "..KRRRMMRRRRRK..",
+    "...KKRRRRRRKK...",
+    ".....KKKKKK.....",
+    "................",
+  ]),
 } satisfies Record<string, SpriteAnimation>;
 
 // Variantes por recoloreo (sin redibujar)
@@ -677,12 +749,22 @@ const FLAG: [number, number, string][] = [
 ];
 astronaut.explore = { fps: 6, frames: [overlay(ASTRO_BASE, FLAG), overlay(ASTRO_STEP, FLAG)] };
 
+/* ------------------------------------------------------------------ */
+/* MOXIE: el generador de oxígeno marciano (mismo dibujo, colores cálidos) */
+/* ------------------------------------------------------------------ */
+
+const moxie: SpriteDef = {
+  on: { fps: oxygenGen.on.fps, frames: oxygenGen.on.frames.map((f) => recolor(f, { G: "Y", g: "O" })) },
+  off: { fps: 1, frames: oxygenGen.off.frames.map((f) => recolor(f, { G: "M" })) },
+};
+
 export const SPRITES = {
   astronaut,
   robot,
   greenhouse,
   solarPanel,
   oxygenGen,
+  moxie,
   waterTank,
 } satisfies Record<string, SpriteDef>;
 

@@ -134,9 +134,9 @@ class ApiTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.json()["error"]["code"], "SNAPSHOT_NOT_FOUND")
         self.assertFalse(self.calls)
 
-    async def test_snapshot_catalog_has_six_verified_captures(self):
+    async def test_snapshot_catalog_has_eight_verified_captures(self):
         body = (await self.client.get("/internal/v1/snapshots")).json()
-        self.assertEqual(len(body["snapshots"]), 6)
+        self.assertEqual(len(body["snapshots"]), 8)
         for entry in body["snapshots"]:
             self.snapshots.read(entry["resource"], entry["query"])
 

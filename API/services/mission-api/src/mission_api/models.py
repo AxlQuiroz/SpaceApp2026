@@ -8,7 +8,9 @@ Status = Literal["active", "paused", "completed", "failed", "aborted"]
 ActionId = Literal[
     "repair_water_loop", "repair_solar_panels", "enter_shelter", "leave_shelter", "explore",
     "activate_oxygen_reserve", "activate_water_reserve", "toggle_greenhouse", "toggle_oxygen_generator",
+    "contact_earth",
 ]
+ScenarioId = Literal["lunar-outpost-v1", "mars-outpost-v1"]
 NonNegative = Annotated[float, Field(ge=0, allow_inf_nan=False)]
 Percent = Annotated[float, Field(ge=0, le=100, allow_inf_nan=False)]
 
@@ -18,7 +20,7 @@ class Model(BaseModel):
 
 
 class CreateMission(Model):
-    scenario_id: Literal["lunar-outpost-v1"] = "lunar-outpost-v1"
+    scenario_id: ScenarioId = "lunar-outpost-v1"
     difficulty: Difficulty = "cadet"
     seed: Annotated[int, Field(strict=True, ge=0, le=2147483647)] = 42
     data_mode: Literal["snapshot", "live"] = "snapshot"
@@ -61,12 +63,15 @@ class Systems(Model):
     greenhouse_on: bool = True
     water_leak_active: bool = False
     crew_in_shelter: bool = False
+    # Sólo cambian en el escenario marciano.
+    dust_storm_active: bool = False
+    earth_message_pending: bool = False
 
 
 class MissionState(Model):
     id: str
-    scenario_id: str = "lunar-outpost-v1"
-    rules_version: Literal["lunar-1.0.0"] = "lunar-1.0.0"
+    scenario_id: ScenarioId = "lunar-outpost-v1"
+    rules_version: Literal["lunar-1.0.0", "mars-1.0.0"] = "lunar-1.0.0"
     version: int = 1
     status: Status = "active"
     difficulty: Difficulty

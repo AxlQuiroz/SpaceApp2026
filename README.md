@@ -39,6 +39,20 @@ npm run dev                        # http://localhost:3000
 
 Las capturas NASA están protegidas por `.gitattributes`. El lanzador del backend también puede corregir conversiones CRLF de clones anteriores, verificando el SHA-256 original. Una captura con cambios de contenido se rechaza. Ver [diagnóstico y reparación](docs/pruebas-del-proyecto.md#capturas-en-windows).
 
+### Misiones y aprendizaje
+
+| Misión | Qué la hace distinta |
+| --- | --- |
+| **Luna** (`lunar-outpost-v1`) | Fuga de agua, tormenta solar (DONKI, 10 de mayo de 2024) y polvo lunar |
+| **Marte** (`mars-outpost-v1`) | La radiación de cada turno sigue las mediciones reales del rover Curiosity (MSL-RAD, 20 de mayo de 2024), tormenta de polvo, oxígeno del aire marciano (MOXIE) y llamadas a la Tierra con retraso |
+
+R0-B1 explica cada tecnicismo la primera vez que aparece (bitácora), hace mini-preguntas sin castigo, muestra
+«¿Qué pasaría si…?» antes de confirmar una acción y entrega medallas. La primera misión empieza con un tutorial jugable.
+
+- Contenido y datos reales: [`docs/contenido-educativo.md`](docs/contenido-educativo.md).
+- Reglas de Marte: [`API/docs/simulation-rules.md`](API/docs/simulation-rules.md).
+- Modelo de negocio (familias, sin ventajas por pagar): [`docs/modelo-de-negocio.md`](docs/modelo-de-negocio.md).
+
 ### Cómo encaja con el backend
 
 El motor de reglas vive en Python; el frontend **no** recalcula nada. `src/game/useMission.ts` usa el

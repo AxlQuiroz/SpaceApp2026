@@ -1,7 +1,7 @@
 // Generado por scripts/export_contracts.py. No editar a mano.
 
 export type ActionOption = {
-  "id": "repair_water_loop" | "repair_solar_panels" | "enter_shelter" | "leave_shelter" | "explore" | "activate_oxygen_reserve" | "activate_water_reserve" | "toggle_greenhouse" | "toggle_oxygen_generator";
+  "id": "repair_water_loop" | "repair_solar_panels" | "enter_shelter" | "leave_shelter" | "explore" | "activate_oxygen_reserve" | "activate_water_reserve" | "toggle_greenhouse" | "toggle_oxygen_generator" | "contact_earth";
   "title": string;
   "description": string;
   "enabled": boolean;
@@ -12,11 +12,11 @@ export type ActionOption = {
 export type Command = {
   "type": "action" | "advance" | "pause" | "resume" | "abort";
   "expected_version": number;
-  "action_id"?: ("repair_water_loop" | "repair_solar_panels" | "enter_shelter" | "leave_shelter" | "explore" | "activate_oxygen_reserve" | "activate_water_reserve" | "toggle_greenhouse" | "toggle_oxygen_generator" | null);
+  "action_id"?: ("repair_water_loop" | "repair_solar_panels" | "enter_shelter" | "leave_shelter" | "explore" | "activate_oxygen_reserve" | "activate_water_reserve" | "toggle_greenhouse" | "toggle_oxygen_generator" | "contact_earth" | null);
 };
 
 export type CreateMission = {
-  "scenario_id"?: "lunar-outpost-v1";
+  "scenario_id"?: "lunar-outpost-v1" | "mars-outpost-v1";
   "difficulty"?: "cadet" | "commander";
   "seed"?: number;
   "data_mode"?: "snapshot" | "live";
@@ -65,8 +65,8 @@ export type MissionList = {
 
 export type MissionState = {
   "id": string;
-  "scenario_id": string;
-  "rules_version": "lunar-1.0.0";
+  "scenario_id": "lunar-outpost-v1" | "mars-outpost-v1";
+  "rules_version": "lunar-1.0.0" | "mars-1.0.0";
   "version": number;
   "status": "active" | "paused" | "completed" | "failed" | "aborted";
   "difficulty": "cadet" | "commander";
@@ -110,7 +110,7 @@ export type MutationResult = {
 };
 
 export type Preview = {
-  "action_id": "repair_water_loop" | "repair_solar_panels" | "enter_shelter" | "leave_shelter" | "explore" | "activate_oxygen_reserve" | "activate_water_reserve" | "toggle_greenhouse" | "toggle_oxygen_generator";
+  "action_id": "repair_water_loop" | "repair_solar_panels" | "enter_shelter" | "leave_shelter" | "explore" | "activate_oxygen_reserve" | "activate_water_reserve" | "toggle_greenhouse" | "toggle_oxygen_generator" | "contact_earth";
   "expected_version": number;
 };
 
@@ -177,6 +177,8 @@ export type Systems = {
   "greenhouse_on": boolean;
   "water_leak_active": boolean;
   "crew_in_shelter": boolean;
+  "dust_storm_active": boolean;
+  "earth_message_pending": boolean;
 };
 
 export type TimelineEvent = {

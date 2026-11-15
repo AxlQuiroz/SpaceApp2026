@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge, Modal, PixelButton, PixelSprite } from "@/components/hud";
 import type { Evaluation, ScienceBundle } from "@/lib/orbita/schema";
 import { useAudio, useI18n } from "@/lib/providers";
-import { useFocusTrap } from "@/lib/hooks";
 
 /* ------------------------------------------------------------------ */
 /* Fin de misión                                                       */
@@ -148,119 +147,3 @@ export function SourcesModal({ open, onClose, load }: { open: boolean; onClose: 
     </Modal>
   );
 }
-
-/* ------------------------------------------------------------------ */
-/* Glosario                                                            */
-/* ------------------------------------------------------------------ */
-
-export function GlossaryModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { t } = useI18n();
-  return (
-    <Modal open={open} title={t.glossary.title} onClose={onClose}>
-      <dl className="flex max-h-[60vh] flex-col gap-3 overflow-y-auto pr-2">
-        {t.glossary.items.map(([term, def]) => (
-          <div key={term}>
-            <dt className="font-pixel text-lg text-neon-cyan">{term}</dt>
-            <dd className="text-steel-200">{def}</dd>
-          </div>
-        ))}
-      </dl>
-    </Modal>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Tutorial guiado: resalta una zona del HUD por paso                  */
-/* ------------------------------------------------------------------ */
-
-export const TOUR_TARGETS = ["resources", "base", "commands", "advance", "crew"] as const;
-
-export function Tutorial({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { t } = useI18n();
-  const trap = useFocusTrap<HTMLDivElement>(open);
-  const [step, setStep] = useState(0);
-  const [rect, setRect] = useState<DOMRect | null>(null);
-  const nextRef = useRef<HTMLButtonElement>(null);
-  const last = step === TOUR_TARGETS.length - 1;
-
-  useEffect(() => {
-    if (open) setStep(0);
-  }, [open]);
-
-  useLayoutEffect(() => {
-    if (!open) return;
-    // Puede haber dos objetivos (escritorio y dock móvil): usamos el que está visible.
-    const el = [...document.querySelectorAll<HTMLElement>(`[data-tour="${TOUR_TARGETS[step]}"]`)].find(
-      (n) => n.getClientRects().length > 0,
-    );
-    const update = () => setRect(el?.getBoundingClientRect() ?? null);
-    el?.scrollIntoView({ block: "nearest" });
-    update();
-    window.addEventListener("resize", update);
-    window.addEventListener("scroll", update, true);
-    nextRef.current?.focus();
-    return () => {
-      window.removeEventListener("resize", update);
-      window.removeEventListener("scroll", update, true);
-    };
-  }, [open, step]);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
-
-  if (!open) return null;
-  const pad = 6;
-  // Caja de texto en la mitad opuesta a la zona resaltada
-  const boxAtTop = rect ? rect.top + rect.height / 2 > window.innerHeight / 2 : false;
-
-  return (
-    <div ref={trap} className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={t.game.tutorial}>
-      {rect && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute"
-          style={{
-            left: rect.left - pad,
-            top: rect.top - pad,
-            width: rect.width + pad * 2,
-            height: rect.height + pad * 2,
-            boxShadow: "0 0 0 9999px rgb(10 14 22 / 0.78)",
-            outline: "calc(var(--px) * 2) solid var(--color-neon-cyan)",
-          }}
-        />
-      )}
-      <div className={`absolute inset-x-0 mx-auto w-[min(94vw,640px)] ${boxAtTop ? "top-4" : "bottom-4"}`}>
-        <div className="bevel rivets flex gap-3" style={{ padding: "calc(var(--px) * 5)" }}>
-          <div className="bevel-inset shrink-0 self-start p-2">
-            <PixelSprite sprite="robot" anim="talk" scale={4} label="R0-B1" />
-          </div>
-          <div className="flex flex-1 flex-col gap-2">
-            <span className="font-tiny text-xs text-steel-400">
-              {step + 1} / {TOUR_TARGETS.length}
-            </span>
-            <p className="text-xl" aria-live="polite">
-              {t.tutorial.steps[step]}
-            </p>
-            <div className="flex flex-wrap justify-end gap-2">
-              <PixelButton variant="ghost" onClick={onClose}>
-                {t.tutorial.skip}
-              </PixelButton>
-              <PixelButton
-                ref={nextRef}
-                variant="primary"
-                onClick={() => (last ? onClose() : setStep((s) => s + 1))}
-              >
-                {last ? t.tutorial.done : t.tutorial.next}
-              </PixelButton>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-

@@ -72,6 +72,31 @@
       "source_url": "https://osdr.nasa.gov/osdr/data/osd/meta/104",
       "retrieved_at": "2026-11-14T20:42:31.688505+00:00",
       "sha256": "3c3f371ff4484cca884154522f8056115a5abf288d7321c52ccdc4f01488eff5"
+    },
+    {
+      "id": "donki-cme-2024-05-20",
+      "resource": "donki:CME",
+      "query": {
+        "start": "2024-05-20",
+        "end": "2024-05-20"
+      },
+      "file": "donki-cme-2024-05-20.json",
+      "source_url": "https://ccmc.gsfc.nasa.gov/DONKI/WS/get/CME?startDate=2024-05-20&endDate=2024-05-20",
+      "retrieved_at": "2026-11-15T03:39:00.418289+00:00",
+      "sha256": "469a405b51f04890be0b41a3ff2b9130d0d6e1ab18e9e5042a889ab468557072"
+    },
+    {
+      "id": "radlab-msl-rad-2024-05-20",
+      "resource": "radlab",
+      "query": {
+        "start": "2024-05-20T00:00:00Z",
+        "end": "2024-05-21T00:00:00Z",
+        "instrument": "MSL-RAD"
+      },
+      "file": "radlab-msl-rad-2024-05-20.json",
+      "source_url": "https://visualization.osdr.nasa.gov/radlab/api/?query=%28timestamp%3E%3D2024-05-20T00%3A00%3A00%29AND%28timestamp%3C2024-05-21T00%3A00%3A00%29AND%28spacecraft%3D%27Curiosity%27%29&fields=absorbed_dose_rate%2Cdose_equivalent_rate%2Ccelestial_body%2Cspacecraft%2Ctrajectory&format=json",
+      "retrieved_at": "2026-11-15T03:39:00.418289+00:00",
+      "sha256": "29065bafc5637994ee742ac9a071ba52b8e7ba18935ae13e0dc9874451db1cc7"
     }
   ]
 }

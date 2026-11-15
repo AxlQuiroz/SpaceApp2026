@@ -2,7 +2,8 @@ import { test, expect, type Page } from "@playwright/test";
 
 async function dismissNarration(page: Page) {
   const box = page.getByTestId("narration");
-  for (let i = 0; i < 6 && await box.count(); i++) {
+  // Mensajes, palabras nuevas, preguntas, medallas e informe: una tarjeta por clic (dos en las preguntas).
+  for (let i = 0; i < 16 && await box.count(); i++) {
     const previous = await box.innerText();
     await box.getByRole("button").last().click();
     await expect.poll(async () => await box.count() ? box.innerText() : "").not.toBe(previous);
@@ -24,7 +25,10 @@ async function action(page: Page, name: string) {
     await mobile.click();
     await page.getByRole("dialog").getByRole("button", { name: new RegExp(`^${name}`) }).click();
   } else await page.getByRole("button", { name, exact: true }).click();
+  // "¿Qué pasaría si…?": la orden sólo se envía al confirmar.
+  await page.getByTestId("preview").getByRole("button", { name: "¡Hazlo!", exact: true }).click();
   const response = await confirmed;
+  await dismissNarration(page);
   expect(response.ok()).toBe(true);
   const result = await response.json();
   await expect(page.getByTestId("mission-hud")).toHaveAttribute("data-version", String(result.mission.state.version));
@@ -78,7 +82,7 @@ test("misión real completa, fuentes, recarga y menú", async ({ page }, info) =
   await expect(page.getByTestId("mission-hud")).toHaveAttribute("data-turn", "0");
   await page.getByRole("button", { name: "☰ Menú", exact: true }).click();
   await page.getByRole("button", { name: "Salir al menú", exact: true }).click();
-  await expect(page.getByRole("button", { name: /Continuar misión · Turno 12/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Continuar misión · Luna · Turno 12/ })).toBeVisible();
   expect(errors).toEqual([]);
 });
 test("503 al reanudar conserva la partida", async ({ page }) => {

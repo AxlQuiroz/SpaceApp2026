@@ -25,7 +25,7 @@ from .models import (Command, CreateMission, ErrorResponse, Evaluation, EventLis
                      MissionView, Model, MutationResult, Preview, PreviewResult, RestartMission,
                      ScienceBundle, SessionCreated, SessionInfo)
 from .resources import ResourceClient, make_http_client
-from .rules import scenario_catalog
+from .rules import RULESETS, scenario_catalog
 from .storage import Store, fingerprint
 
 logger = logging.getLogger(__name__)
@@ -130,13 +130,13 @@ def create_app(settings: Settings | None = None, resource_transport: httpx.Async
 
     @app.get("/api/v1/scenarios", tags=["catalog"])
     async def scenarios() -> list[dict]:
-        return [scenario_catalog()]
+        return [scenario_catalog(scenario_id) for scenario_id in RULESETS]
 
     @app.get("/api/v1/scenarios/{scenario_id}", tags=["catalog"])
     async def scenario(scenario_id: str) -> dict:
-        if scenario_id != "lunar-outpost-v1":
+        if scenario_id not in RULESETS:
             raise MissionError("SCENARIO_NOT_FOUND", "No existe ese escenario.", 404)
-        return scenario_catalog()
+        return scenario_catalog(scenario_id)
 
     @app.post("/api/v1/missions", response_model=MutationResult, status_code=201, tags=["missions"])
     async def create_mission(request: Request, body: CreateMission, current: Session, key: Key, response: Response):
@@ -145,7 +145,7 @@ def create_app(settings: Settings | None = None, resource_transport: httpx.Async
         store = request.app.state.store
         result = await asyncio.to_thread(store.receipt, current.session_id, "create", str(key), digest, now)
         if result is None:
-            bundle = await request.app.state.resources.capture(body.data_mode, now)
+            bundle = await request.app.state.resources.capture(body.data_mode, now, body.scenario_id)
             result = await asyncio.to_thread(store.create_mission, current.session_id, body, bundle, str(key), digest, datetime.now(UTC))
         result_headers(response, result)
         return result

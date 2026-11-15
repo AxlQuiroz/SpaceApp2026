@@ -5,7 +5,7 @@ import { Badge, PixelSprite, Starfield } from "@/components/hud";
 import type { SpaceWeatherLevel } from "@/components/hud";
 import type { MissionView } from "@/lib/orbita/schema";
 import { useI18n } from "@/lib/providers";
-import { CREW, crewAnim, crewPlacement, type Activity, type BaseModule, type ModuleId, type ModuleStatus } from "./model";
+import { CREW, crewAnim, crewPlacement, isMars, moduleText, type Activity, type BaseModule, type ModuleId, type ModuleStatus } from "./model";
 
 type Props = {
   mission: MissionView;
@@ -89,12 +89,18 @@ export function BaseScene({ mission, modules, weather, selected, onSelect, activ
   const placement = crewPlacement(mission);
   const baseAnim = crewAnim(mission);
   const solar = byId.solar;
+  const mars = isMars(mission);
+  const dust = mission.state.systems.dust_storm_active;
+  const name = (id: ModuleId) => moduleText(t, mission, id).name;
+  // Colores del terreno según el planeta.
+  const ground = mars ? "bg-mars" : "bg-regolith";
+  const groundDark = mars ? "bg-mars-dark" : "bg-regolith-dark";
 
   // El explorador o el reparador de paneles "sale" de su módulo mientras dura la animación.
   const awayIndex = activity?.explorer || activity?.surfaceWorker ? 0 : -1;
 
   const statusText = (st: ModuleStatus) =>
-    ({ ok: t.game.ok, off: t.game.off, damaged: t.game.damaged, leak: t.game.leak, occupied: t.game.inShelter })[st];
+    ({ ok: t.game.ok, off: t.game.off, damaged: mars ? t.game.dusty : t.game.damaged, leak: t.game.leak, occupied: t.game.inShelter })[st];
   const statusBadge = (s: ModuleStatus) => {
     const tone = ({ ok: "ok", off: "warn", damaged: "bad", leak: "bad", occupied: "info" } as const)[s];
     return <Badge tone={tone}>{statusText(s)}</Badge>;
@@ -106,8 +112,8 @@ export function BaseScene({ mission, modules, weather, selected, onSelect, activ
       crew={CREW.filter((_, i) => placement[i] === id && i !== awayIndex)}
       anim={activity?.workRoom === id ? "work" : baseAnim}
       selected={selected === id}
-      name={t.modules[id].name}
-      label={`${t.modules[id].name}: ${statusText(byId[id].status)}`}
+      name={name(id)}
+      label={`${name(id)}: ${statusText(byId[id].status)}`}
       badge={statusBadge(byId[id].status)}
       onSelect={onSelect}
       flicker={activity?.flicker === id}
@@ -122,11 +128,22 @@ export function BaseScene({ mission, modules, weather, selected, onSelect, activ
         type="button"
         onClick={() => onSelect("solar")}
         aria-pressed={selected === "solar"}
-        aria-label={`${t.modules.solar.name}: ${mission.state.systems.solar_integrity_pct}%`}
+        aria-label={`${name("solar")}: ${mission.state.systems.solar_integrity_pct}%${dust ? `. ${t.game.dustStorm}` : ""}`}
         className="bevel-inset pixel-btn relative h-28 overflow-hidden md:h-36"
         style={{ outline: selected === "solar" ? "var(--px) solid var(--color-amber)" : undefined }}
       >
         <Starfield className="absolute inset-0" />
+        {/* Marte: cielo anaranjado por el polvo en suspensión; más denso durante la tormenta. */}
+        {mars && <div aria-hidden className="absolute inset-0" style={{ background: dust ? "rgb(122 47 26 / 0.85)" : "rgb(194 86 47 / 0.35)" }} />}
+        {dust &&
+          PARTICLES.map((p, i) => (
+            <span
+              key={`d${i}`}
+              aria-hidden
+              className="dust-particle absolute h-[calc(var(--px)*2)] w-[calc(var(--px)*4)] bg-mars"
+              style={{ top: `${(i * 29) % 90}%`, animationDelay: p.delay }}
+            />
+          ))}
         {weather !== "calm" && (
           <div
             aria-hidden
@@ -143,15 +160,22 @@ export function BaseScene({ mission, modules, weather, selected, onSelect, activ
               style={{ left: p.left, top: p.top, animationDelay: p.delay }}
             />
           ))}
-        <div className="absolute top-2 right-3">
+        <div className={`absolute top-2 right-3 ${dust ? "opacity-30" : ""}`}>
           <PixelSprite icon="sun" scale={weather === "storm" ? 4 : 3} className={weather === "storm" ? "blink" : undefined} />
         </div>
 
         {/* suelo con cráteres */}
-        <div className="absolute inset-x-0 bottom-0 h-8 bg-regolith" />
-        <div className="absolute bottom-5 left-[40%] h-1 w-6 bg-regolith-dark" />
-        <div className="absolute bottom-3 left-[78%] h-1 w-10 bg-regolith-dark" />
-        <div className="absolute inset-x-0 bottom-0 h-2 bg-regolith-dark" />
+        <div className={`absolute inset-x-0 bottom-0 h-8 ${ground}`} />
+        <div className={`absolute bottom-5 left-[40%] h-1 w-6 ${groundDark}`} />
+        <div className={`absolute bottom-3 left-[78%] h-1 w-10 ${groundDark}`} />
+        <div className={`absolute inset-x-0 bottom-0 h-2 ${groundDark}`} />
+        {/* Antena de comunicaciones (Marte) con ondas al llamar a la Tierra */}
+        {mars && (
+          <div className="absolute right-[14%] bottom-6 flex items-end">
+            <PixelSprite icon="antenna" scale={3} />
+            {activity?.radio && <span key={activity.key} aria-hidden className="font-pixel blink -ml-2 mb-6 text-2xl text-neon-cyan">)))</span>}
+          </div>
+        )}
 
         <div className="absolute bottom-6 left-3 flex items-end gap-1 md:gap-2">
           {[0, 1, 2].map((i) => (
@@ -169,14 +193,15 @@ export function BaseScene({ mission, modules, weather, selected, onSelect, activ
         )}
 
         <div className="absolute bottom-1 left-1/2 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap">
-          <span className="font-tiny hidden text-xs text-void uppercase sm:inline">{t.modules.solar.name}</span>
+          <span className="font-tiny hidden text-xs text-void uppercase sm:inline">{name("solar")}</span>
           {statusBadge(solar.status)}
+          {dust && <Badge tone="bad">{t.game.dustStorm}</Badge>}
           <span className="font-pixel text-base text-void">{mission.state.systems.solar_integrity_pct}%</span>
         </div>
       </button>
 
       {/* ---------- Subsuelo: módulos ---------- */}
-      <div className="grid flex-1 grid-cols-2 gap-[calc(var(--px)*2)] bg-regolith-dark p-[calc(var(--px)*2)] md:grid-cols-6">
+      <div className={`grid flex-1 grid-cols-2 gap-[calc(var(--px)*2)] ${groundDark} p-[calc(var(--px)*2)] md:grid-cols-6`}>
         {room("habitat", "md:col-span-2")}
         {room("oxygen", "md:col-span-2")}
         {room("water", "col-span-2 md:col-span-2")}

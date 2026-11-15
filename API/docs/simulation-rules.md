@@ -79,3 +79,51 @@ Salud cero produce `failed`. Doce turnos producen `completed`. La evaluación es
 Puntuación: 40 puntos por duración completada, 30 por salud conservada, 20 por ciencia y 10 por menor exposición, limitada a 0–100. Se añaden comentarios educativos según el estado final.
 
 Mismas condiciones, versión, semilla y decisiones producen los mismos resultados del modelo. Identificadores y fechas de auditoría pueden cambiar. Una modificación de coeficientes requiere otra versión de reglas para no reinterpretar partidas anteriores.
+
+---
+
+# Modelo marciano · mars-1.0.0
+
+Escenario `mars-outpost-v1`: 24 horas, cuatro tripulantes, 12 turnos de dos horas y dos acciones por turno, ambientado el **20 de mayo de 2024**. Los consumos de tripulación, capacidades, salud y puntuación son los del modelo lunar. Los parámetros completos se devuelven en `/api/v1/scenarios/mars-outpost-v1`.
+
+## Datos reales que usa el modelo
+
+| Dato | Fuente | Uso |
+| --- | --- | --- |
+| Tasa de dosis absorbida en la superficie, 139 lecturas del 20 de mayo de 2024 | MSL-RAD (rover Curiosity) vía RadLab, captura `radlab-msl-rad-2024-05-20` | La media de cada bloque de dos horas UTC da forma al índice de exposición de cada turno |
+| Eyección de masa coronal de las 05:36 UTC | DONKI, captura `donki-cme-2024-05-20` | Motivo del aviso solar |
+
+Medias por turno (uGy/h): `3.81, 3.93, 60.05, 246.39, 122.15, 91.23, 72.12, 48.51, 38.63, 31.07, 27.25, 22.93`. `scripts/tests/test_mars_profile.py` recalcula estas medias a partir de la captura y falla si no coinciden con `rules.py`.
+
+Cada turno suma `media × 0.13` puntos didácticos de exposición; el refugio multiplica por 0.1. **El factor 0.13 es una regla del juego**: el índice sigue sin ser Gy, Sv ni un riesgo clínico, y no considera el blindaje real de un hábitat.
+
+## Datos físicos de referencia (constantes, no consultas en vivo)
+
+| Dato | Valor | Uso |
+| --- | --- | --- |
+| Luz solar respecto a la órbita terrestre | ≈ 43 % | Paneles de 12.8 kW nominales rinden 5.5 kW |
+| Atmósfera | ≈ 95 % CO₂ | El generador obtiene oxígeno del aire, como el experimento MOXIE del rover Perseverance |
+| Retraso de radio Tierra–Marte | 5 a 20 min por sentido | La respuesta a `contact_earth` llega en el turno siguiente |
+| Duración de un sol | 24 h 39 min 35 s | Se simplifica a 24 h con luz disponible |
+
+## Diferencias con la Luna
+
+| Elemento | Marte |
+| --- | --- |
+| Generador de oxígeno | 2.0 kW y **no consume agua** |
+| Fuga de agua | No existe; `repair_water_loop` no se ofrece |
+| `repair_solar_panels` | Se llama «Limpiar paneles» y no tiene coste |
+| `contact_earth` | −1 kWh; en el siguiente avance llega `earth_reply` con +6 puntos científicos |
+| Objetivo científico | 30 puntos |
+
+## Incidentes
+
+| Turno al que se avanza | Suceso |
+| --- | --- |
+| 2 | `solar_warning`. Simplificación: en la realidad la eyección (05:36 UTC) y la subida de radiación fueron casi simultáneas; el juego avisa un turno antes |
+| 3 | `solar_incident`: la exposición sigue el perfil real hasta el final de la misión |
+| 5 | `dust_warning` |
+| 6 a 9 | `dust_storm`: generación × 0.2 |
+| 10 | `dust_cleared`: integridad de paneles −40 hasta limpiarlos |
+
+La tormenta de polvo es un incidente del simulador inspirado en tormentas reales (como la global de 2018); **no ocurrió el 20 de mayo de 2024**. El evento `turn_advanced` añade `dose_rate_ugy_h`, `dose_rate_source` y `sky_factor`.

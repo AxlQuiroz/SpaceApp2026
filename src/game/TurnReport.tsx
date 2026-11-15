@@ -24,6 +24,8 @@ type Props = {
   /** estado de encendido de los sistemas (para distinguir "apagado" de "sin energía") */
   systemsOn: Record<(typeof SYSTEMS)[number], boolean>;
   storm: boolean;
+  /** nombre visible de cada módulo (cambia entre la Luna y Marte) */
+  moduleName?: (id: (typeof SYSTEMS)[number]) => string;
   onClose: () => void;
 };
 
@@ -32,7 +34,7 @@ type Props = {
  * cuánto subió o bajó cada recurso y una pista para el siguiente turno.
  * Todos los números vienen del evento `turn_advanced` del backend.
  */
-export function TurnReport({ turn, payload, params, systemsOn, storm, onClose }: Props) {
+export function TurnReport({ turn, payload, params, systemsOn, storm, moduleName, onClose }: Props) {
   const { t } = useI18n();
   const trap = useFocusTrap<HTMLElement>();
   const btn = useRef<HTMLButtonElement>(null);
@@ -42,7 +44,15 @@ export function TurnReport({ turn, payload, params, systemsOn, storm, onClose }:
   const worst = RESOURCES.map((r) => ({ key: r.key, rel: (payload.resource_delta[r.key] ?? 0) / Number(params[r.cap]) })).sort(
     (a, b) => a.rel - b.rel,
   )[0];
-  const tip = worst && worst.rel < -0.02 ? t.report.tips[worst.key] : t.report.tips.ok;
+  // Lo más urgente primero: salud, radiación y, después, el recurso que más bajó.
+  const tip =
+    payload.health_loss_points >= 1 && (payload.power_fractions.habitat ?? 1) < 1
+      ? t.report.tips.habitat
+      : payload.risk_delta_points >= 5
+        ? t.report.tips.exposure
+        : worst && worst.rel < -0.02
+          ? t.report.tips[worst.key]
+          : t.report.tips.ok;
 
   return (
     <section
@@ -68,6 +78,7 @@ export function TurnReport({ turn, payload, params, systemsOn, storm, onClose }:
             {t.report.sun} <strong className="font-pixel text-amber">{payload.generated_kwh.toFixed(1)} kWh</strong>
           </p>
           {storm && <p className="text-lg text-orange">▲ {t.report.stormCut}</p>}
+          {payload.sky_factor !== undefined && payload.sky_factor < 1 && <p className="text-lg text-orange">▲ {t.report.dustCut}</p>}
           <h3 className="font-tiny text-xs text-steel-400 uppercase">{t.report.power}</h3>
           <ul className="flex flex-col gap-1">
             {SYSTEMS.map((s) => {
@@ -77,7 +88,7 @@ export function TurnReport({ turn, payload, params, systemsOn, storm, onClose }:
               const color = !on ? "var(--color-steel-400)" : f >= 0.999 ? "var(--color-lime)" : f > 0 ? "var(--color-amber)" : "var(--color-alert)";
               return (
                 <li key={s} className="flex items-center gap-2 text-lg">
-                  <span className="w-36 truncate">{t.modules[s].name}</span>
+                  <span className="w-36 truncate">{moduleName ? moduleName(s) : t.modules[s].name}</span>
                   <span className="flex h-3 flex-1 bg-steel-950" aria-hidden>
                     <span style={{ width: `${on ? Math.round(f * 100) : 0}%`, background: color }} />
                   </span>
@@ -129,6 +140,16 @@ export function TurnReport({ turn, payload, params, systemsOn, storm, onClose }:
           </p>
         </div>
       </div>
+
+      {payload.dose_rate_ugy_h !== undefined && (
+        <p className="bevel-inset flex flex-wrap items-center gap-2 p-3 text-lg">
+          <span className="font-tiny bg-neon-cyan px-2 py-0.5 text-xs text-void uppercase">{t.report.realData}</span>
+          <PixelSprite icon="flask" scale={2} />
+          <span>
+            {t.report.radReading} <strong className="font-pixel text-amber">{payload.dose_rate_ugy_h.toFixed(1)}</strong> {t.report.radUnit}.
+          </span>
+        </p>
+      )}
 
       <p className="bevel-inset flex items-start gap-2 p-3 text-lg text-steel-50">
         <span className="font-pixel text-amber">★ {t.report.tip}:</span>
