@@ -1,10 +1,13 @@
-name: Backend
+name: Proyecto
 on: [push, pull_request]
 permissions:
   contents: read
 jobs:
   python:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     defaults:
       run:
         working-directory: API
@@ -16,6 +19,7 @@ jobs:
       - run: python -m pip install -r backend-requirements.lock
       - run: python -m pip install -e services/resource-api -e services/mission-api --no-deps
       - run: python scripts/test_backend.py
+      - run: python scripts/verify_snapshots.py
       - run: python scripts/verify_backend.py
       - run: python scripts/export_contracts.py
       - run: git diff --exit-code -- docs/mission-api-openapi.json sdk/typescript/schema.ts
@@ -40,3 +44,32 @@ jobs:
       - run: python -m pip install -r backend-requirements.lock
       - run: python -m pip install -e services/resource-api -e services/mission-api --no-deps
       - run: python scripts/verify_backend.py --nextjs
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run lint
+      - run: npm run check:contracts
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r API/backend-requirements.lock
+      - run: python -m pip install -e API/services/resource-api -e API/services/mission-api --no-deps
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pruebas-navegador
+          path: |
+            playwright-report/
+            test-results/
+

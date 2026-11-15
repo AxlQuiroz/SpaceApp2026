@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { PixelSprite } from "./PixelSprite";
 import { PixelButton } from "./PixelButton";
 import { useAudio, useI18n } from "@/lib/providers";
@@ -105,6 +105,7 @@ type ModalProps = { open: boolean; title: string; onClose: () => void; children:
 
 export function Modal({ open, title, onClose, children }: ModalProps) {
   const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
   const { t } = useI18n();
 
   useEffect(() => {
@@ -121,13 +122,14 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
   return (
     <dialog
       ref={ref}
-      onClose={onClose}
+      onClose={() => { if (open) onClose(); }}
+      onCancel={event => { event.preventDefault(); onClose(); }}
       onClick={(e) => e.target === ref.current && onClose()}
-      aria-labelledby="modal-title"
+      aria-labelledby={titleId}
       className="bevel rivets pop-in m-auto w-[min(92vw,560px)] p-0 text-steel-50 backdrop:bg-void/80"
     >
       <header className="flex items-center justify-between bg-steel-900 py-1 pr-2 pl-4" style={{ margin: "calc(var(--px) * 2)" }}>
-        <h2 id="modal-title" className="font-pixel text-xl text-neon-cyan uppercase">
+        <h2 id={titleId} className="font-pixel text-xl text-neon-cyan uppercase">
           {title}
         </h2>
         <button
@@ -144,3 +146,4 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
     </dialog>
   );
 }
+

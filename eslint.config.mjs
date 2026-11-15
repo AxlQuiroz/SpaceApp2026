@@ -17,6 +17,9 @@ const eslintConfig = [
       ".next/**",
       "out/**",
       "build/**",
+      "playwright-report/**",
+      "test-results/**",
+      "coverage/**",
       "next-env.d.ts",
       // El backend (Python + su SDK/adaptador TS) tiene sus propias herramientas y CI.
       "API/**",
@@ -25,3 +28,4 @@ const eslintConfig = [
 ];
 
 export default eslintConfig;
+

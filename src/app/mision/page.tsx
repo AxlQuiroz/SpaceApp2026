@@ -38,8 +38,8 @@ export default function MissionPage() {
               <p className="text-xl text-steel-200">{t.menu.offlineBody}</p>
               {game.error && <p className="font-tiny text-xs text-steel-400">{game.error}</p>}
               <div className="flex flex-wrap justify-center gap-2">
-                <PixelButton variant="primary" onClick={() => void game.connect()}>
-                  {t.menu.retry}
+                <PixelButton variant="primary" disabled={game.busy || game.retryIn > 0} onClick={() => void game.connect()}>
+                  {t.menu.retry}{game.retryIn > 0 ? ` (${game.retryIn}s)` : ""}
                 </PixelButton>
                 {/* recarga completa: el cliente (real o demo) se elige al montar */}
                 <a href="/mision?demo=1" className="bevel pixel-btn font-pixel inline-flex items-center px-4 py-2 text-lg uppercase">
@@ -53,6 +53,20 @@ export default function MissionPage() {
           {game.phase === "menu" && (
             <>
               <p className="text-xl text-steel-200">{t.menu.goal}</p>
+              {game.savedMissions.length > 0 && (
+                <section className="w-full text-left" aria-label={t.menu.saved}>
+                  <h2 className="font-pixel text-xl text-neon-cyan">{t.menu.saved}</h2>
+                  <ul className="flex max-h-48 flex-col gap-2 overflow-y-auto py-2">
+                    {game.savedMissions.map(m => (
+                      <li key={m.id}>
+                        <PixelButton className="w-full" disabled={game.busy || game.hasPending} onClick={() => void game.openMission(m.id)}>
+                          {t.menu.continue} · {t.game.turn} {m.turn}/12 · {t.missionStatus[m.status]} · {m.id.slice(0, 6)}
+                        </PixelButton>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
               <fieldset className="grid w-full gap-3 sm:grid-cols-2">
                 <legend className="font-pixel mb-2 text-lg text-amber uppercase">{t.menu.difficulty}</legend>
                 {(["cadet", "commander"] as const).map((d) => (
@@ -80,13 +94,14 @@ export default function MissionPage() {
               <PixelButton
                 variant="primary"
                 className="px-8 text-2xl"
-                disabled={game.busy}
+                disabled={game.busy || game.hasPending}
                 onClick={() => void game.start({ difficulty, seed: Math.floor(Math.random() * 1_000_000) })}
                 icon={<PixelSprite icon="next" scale={3} />}
               >
                 {game.busy ? "…" : t.menu.play}
               </PixelButton>
-              {game.error && <p className="text-alert">{game.error}</p>}
+              {game.error && <p role="alert" className="text-alert">{game.error}</p>}
+              {game.canRetry && <PixelButton disabled={game.busy || game.retryIn > 0} onClick={() => void game.retry()}>{t.menu.retry}{game.retryIn > 0 ? ` (${game.retryIn}s)` : ""}</PixelButton>}
             </>
           )}
 
@@ -96,3 +111,4 @@ export default function MissionPage() {
     </main>
   );
 }
+

@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { PixelButton, PixelSprite } from "@/components/hud";
 import type { IconName } from "@/sprites/sprites.config";
 import { useI18n } from "@/lib/providers";
+import { useFocusTrap } from "@/lib/hooks";
 import type { TurnPayload } from "./model";
 import type { ScenarioParams } from "./useMission";
 
@@ -33,6 +34,7 @@ type Props = {
  */
 export function TurnReport({ turn, payload, params, systemsOn, storm, onClose }: Props) {
   const { t } = useI18n();
+  const trap = useFocusTrap<HTMLElement>();
   const btn = useRef<HTMLButtonElement>(null);
   useEffect(() => btn.current?.focus({ preventScroll: true }), []);
 
@@ -44,6 +46,9 @@ export function TurnReport({ turn, payload, params, systemsOn, storm, onClose }:
 
   return (
     <section
+      ref={trap}
+      role="dialog"
+      aria-modal="true"
       className="bevel rivets pop-in flex flex-col gap-3"
       style={{ padding: "calc(var(--px) * 5)" }}
       aria-labelledby="turn-report-title"
@@ -138,3 +143,4 @@ export function TurnReport({ turn, payload, params, systemsOn, storm, onClose }:
     </section>
   );
 }
+

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { MissionApiClient, MissionApiError } from "../client.ts";
+import { MissionApiClient, MissionApiError, newIdempotencyKey } from "../client.ts";
 
 test("Next.js usa el proxy con cookies sin token de recursos", async () => {
   const calls: Array<{ url: string; init?: RequestInit }> = [];
@@ -61,6 +61,17 @@ test("cerrar sesión admite 204 sin JSON", async () => {
   assert.equal(await api.logout(), undefined);
 });
 
+test("una respuesta 200 incompleta conserva la clave para un reintento seguro", async () => {
+  const key = crypto.randomUUID();
+  const api = new MissionApiClient({ fetcher: (async () => new Response("{", { status: 200 })) as typeof fetch });
+  await assert.rejects(api.command("mission", { type: "advance", expected_version: 1 }, key), (error: unknown) => {
+    assert.ok(error instanceof MissionApiError);
+    assert.equal(error.code, "NETWORK_ERROR");
+    assert.equal(error.idempotencyKey, key);
+    return true;
+  });
+});
+
 test("conserva Retry-After para esperar antes del siguiente intento", async () => {
   const api = new MissionApiClient({ fetcher: (async () => Response.json({ error: { code: "RATE_LIMITED" } },
     { status: 429, headers: { "Retry-After": "30" } })) as typeof fetch });
@@ -84,5 +95,21 @@ test("sin fetcher propio usa el fetch global sin cambiarle el contexto (navegado
     assert.equal(session.session_id, "player");
   } finally {
     globalThis.fetch = original;
+  }
+});
+
+
+
+test("genera UUID v4 sin randomUUID usando getRandomValues", () => {
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, "crypto");
+  let calls = 0;
+  Object.defineProperty(globalThis, "crypto", { configurable: true, value: {
+    getRandomValues: (array: Uint8Array) => { calls++; array.forEach((_v, i) => { array[i] = i; }); return array; },
+  } });
+  try {
+    assert.match(newIdempotencyKey(), /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    assert.equal(calls, 1);
+  } finally {
+    if (descriptor) Object.defineProperty(globalThis, "crypto", descriptor);
   }
 });

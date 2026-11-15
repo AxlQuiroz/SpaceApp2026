@@ -90,6 +90,7 @@ export const es = {
   menu: {
     play: "Jugar",
     continue: "Continuar misión",
+    saved: "Misiones guardadas",
     difficulty: "Dificultad",
     cadet: "Cadete",
     cadetDesc: "Empiezas con más recursos. Ideal para tu primera misión.",
@@ -98,7 +99,7 @@ export const es = {
     connecting: "Conectando con la base…",
     offlineTitle: "Sin conexión con la base",
     offlineBody:
-      "No pudimos hablar con el servidor de la misión. Pide a un adulto que encienda el backend (API/README.md) y vuelve a intentarlo.",
+      "La base no pudo responder. Tu misión guardada se conserva: vuelve a intentarlo en un momento.",
     retry: "Reintentar",
     demo: "Ver en modo demo",
     demoNote: "Modo demo: números aproximados, sólo para ver la interfaz.",
@@ -128,6 +129,8 @@ export const es = {
     tutorial: "Tutorial",
     exit: "Salir al menú",
     abort: "Abandonar misión",
+    pause: "Pausar misión",
+    resume: "Reanudar misión",
     on: "Encendido",
     off: "Apagado",
     ok: "Bien",
@@ -139,6 +142,7 @@ export const es = {
     exposureNote: "Puntos de juego, no una dosis real de radiación.",
     selectHint: "Toca un módulo de la base para ver qué hace.",
   },
+  missionStatus: { active: "Activa", paused: "En pausa", completed: "Completada", failed: "Fallida", aborted: "Abandonada" },
   actions: {
     explore: { label: "Explorar", hint: "Sal a investigar la Luna: +12 de ciencia." },
     repair_water_loop: { label: "Reparar agua", hint: "Tapa la fuga del circuito de agua." },
@@ -200,6 +204,9 @@ export const es = {
       "Este juego usa datos históricos reales de la NASA como referencia. Los números del juego (consumos, daños, salud) son reglas educativas, no mediciones reales.",
     role: "Para qué se usa",
     records: "registros",
+    mode: "Modo de consulta",
+    retrieved: "Recuperado (UTC)",
+    original: "Abrir fuente original NASA",
     loading: "Cargando fuentes…",
     credits: "Juego creado para NASA Space Apps Challenge. Arte pixel original.",
   },
@@ -332,6 +339,7 @@ export const en: DeepString<Dict> = {
   menu: {
     play: "Play",
     continue: "Continue mission",
+    saved: "Saved missions",
     difficulty: "Difficulty",
     cadet: "Cadet",
     cadetDesc: "You start with more supplies. Great for your first mission.",
@@ -340,7 +348,7 @@ export const en: DeepString<Dict> = {
     connecting: "Connecting to the base…",
     offlineTitle: "No connection to the base",
     offlineBody:
-      "We couldn't reach the mission server. Ask an adult to start the backend (API/README.md) and try again.",
+      "The base could not respond. Your saved mission is kept: try again in a moment.",
     retry: "Retry",
     demo: "Try demo mode",
     demoNote: "Demo mode: approximate numbers, only to preview the interface.",
@@ -370,6 +378,8 @@ export const en: DeepString<Dict> = {
     tutorial: "Tutorial",
     exit: "Exit to menu",
     abort: "Abort mission",
+    pause: "Pause mission",
+    resume: "Resume mission",
     on: "On",
     off: "Off",
     ok: "OK",
@@ -381,6 +391,7 @@ export const en: DeepString<Dict> = {
     exposureNote: "Game points, not a real radiation dose.",
     selectHint: "Tap a base module to see what it does.",
   },
+  missionStatus: { active: "Active", paused: "Paused", completed: "Completed", failed: "Failed", aborted: "Aborted" },
   actions: {
     explore: { label: "Explore", hint: "Go out and study the Moon: +12 science." },
     repair_water_loop: { label: "Fix water", hint: "Seal the leak in the water loop." },
@@ -442,6 +453,9 @@ export const en: DeepString<Dict> = {
       "This game uses real historical NASA data as reference. The game numbers (consumption, damage, health) are educational rules, not real measurements.",
     role: "What it's used for",
     records: "records",
+    mode: "Retrieval mode",
+    retrieved: "Retrieved (UTC)",
+    original: "Open original NASA source",
     loading: "Loading sources…",
     credits: "Game made for the NASA Space Apps Challenge. Original pixel art.",
   },
@@ -483,3 +497,4 @@ export const en: DeepString<Dict> = {
 
 export const dictionaries = { es, en } as const;
 export type Locale = keyof typeof dictionaries;
+

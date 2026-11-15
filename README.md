@@ -13,7 +13,7 @@ Abre una terminal dentro de `API/` y sigue la [instalación en Windows](API/docs
 - [Reglas del simulador](API/docs/simulation-rules.md).
 - [Pruebas y límites de la validación](API/docs/backend-validation.md).
 
-GitHub Actions verifica Python, TypeScript y el recorrido entre el adaptador Next.js y los dos servicios usando capturas históricas, sin claves NASA ni acceso a sus proveedores.
+GitHub Actions verifica Python en Linux y Windows, contratos, frontend, compilación de producción y partidas completas desde Chromium en escritorio y móvil. Las pruebas usan capturas históricas, sin claves NASA ni acceso a sus proveedores. Consulta [pruebas y recuperación](docs/pruebas-del-proyecto.md).
 
 ## Frontend · Base Selene
 
@@ -26,7 +26,7 @@ Especificación de diseño: [`Claude.md`](./Claude.md).
 2. Frontend:
 
 ```bash
-npm install
+npm ci
 cp .env.local.example .env.local   # ORBITA_API_URL y APP_ORIGIN
 npm run dev                        # http://localhost:3000
 ```
@@ -37,10 +37,7 @@ npm run dev                        # http://localhost:3000
 - `/mision?demo=1` — **el juego sin backend**: usa `src/lib/orbita/mock.ts`, un backend falso en el
   navegador con números aproximados. Sólo para ver la interfaz; las reglas reales están en Python.
 
-> ⚠️ **Windows + `core.autocrlf=true`**: git convierte los saltos de línea de
-> `API/services/resource-api/src/resource_api/snapshots/*.json` y rompe su verificación SHA
-> (`SNAPSHOT_INTEGRITY_FAILED` → crear misión da 503). Solución: añadir en la rama del backend un
-> `.gitattributes` con `API/**/snapshots/*.json -text`, o clonar con `git -c core.autocrlf=false`.
+Las capturas NASA están protegidas por `.gitattributes`. El lanzador del backend también puede corregir conversiones CRLF de clones anteriores, verificando el SHA-256 original. Una captura con cambios de contenido se rechaza. Ver [diagnóstico y reparación](docs/pruebas-del-proyecto.md#capturas-en-windows).
 
 ### Cómo encaja con el backend
 
@@ -56,6 +53,10 @@ en una cookie HttpOnly. `src/game/model.ts` sólo traduce el `MissionView` a lo 
 | eventos `water_leak`, `solar_warning`, `solar_incident`, `panel_damage` | Narración de R0-B1, clima espacial, módulos dañados |
 | `/evaluation` | Modal de fin de misión |
 | `/science` | Modal "Fuentes NASA" |
+
+El menú permite volver a las misiones guardadas, pausarlas y reanudarlas. Un fallo temporal no elimina la referencia de la partida. Las órdenes pendientes conservan su UUID y cuerpo, incluso al recargar la misma pestaña; no se permite iniciar otra decisión hasta resolverlas. Si la sesión expira, las órdenes anteriores no se aplican a la nueva sesión. La conservación tras recargar requiere almacenamiento del navegador habilitado.
+
+`APP_ORIGIN` debe coincidir con el origen exacto utilizado en el navegador. Si abres la web con otra IP, dominio o puerto, actualiza esa variable en `.env.local` y reinicia Next.js. Las sesiones anónimas siguen teniendo el vencimiento documentado por el backend.
 
 ### Estructura
 
@@ -76,3 +77,4 @@ en una cookie HttpOnly. `src/game/model.ts` sólo traduce el `MissionView` a lo 
 - **Sprites en SVG** con `shape-rendering="crispEdges"`, uniendo píxeles contiguos en rectángulos.
 - **Modal con `<dialog>` nativo**: foco atrapado y cierre con Esc sin librerías.
 - **Accesibilidad**: icono + texto siempre, `aria-label`/`role="meter"`, teclas Q-C con `aria-keyshortcuts`, objetivos ≥ 44 px, minimapa colapsable en móvil.
+
