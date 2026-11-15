@@ -61,13 +61,11 @@ function stored(): string | null {
 }
 
 export function useMission() {
-  // El SDK guarda `fetch` y lo llama como método (`this.fetcher(...)`); en el navegador eso lanza
-  // "Illegal invocation". Envolverlo en una flecha conserva el contexto global.
   // En modo demo el cliente falso tiene los mismos métodos que usamos del real.
   const api = useRef(
     isDemo()
       ? (new MockMissionClient() as unknown as MissionApiClient)
-      : new MissionApiClient({ fetcher: (input, init) => fetch(input, init) }),
+      : new MissionApiClient(),
   ).current;
   const [phase, setPhase] = useState<Phase>("connecting");
   const [scenario, setScenario] = useState<Scenario | null>(null);

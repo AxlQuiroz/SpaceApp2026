@@ -70,3 +70,19 @@ test("conserva Retry-After para esperar antes del siguiente intento", async () =
     return true;
   });
 });
+
+test("sin fetcher propio usa el fetch global sin cambiarle el contexto (navegador)", async () => {
+  // En el navegador, `window.fetch` lanza "Illegal invocation" si se llama como método de otro
+  // objeto (this.fetcher(...)). Simulamos esa comprobación con un fetch global falso.
+  const original = globalThis.fetch;
+  globalThis.fetch = function (this: unknown) {
+    if (this !== undefined && this !== globalThis) throw new TypeError("Illegal invocation");
+    return Promise.resolve(Response.json({ session_id: "player", expires_at: "2026-11-21T00:00:00Z" }));
+  } as typeof fetch;
+  try {
+    const session = await new MissionApiClient().createSession();
+    assert.equal(session.session_id, "player");
+  } finally {
+    globalThis.fetch = original;
+  }
+});

@@ -32,7 +32,8 @@ export class MissionApiClient {
   constructor(options: { baseUrl?: string; token?: string; fetcher?: typeof fetch } = {}) {
     this.baseUrl = (options.baseUrl ?? "/api/mission").replace(/\/$/, "");
     this.token = options.token;
-    this.fetcher = options.fetcher ?? fetch;
+    // Envolver fetch: llamarlo como método (this.fetcher(...)) da "Illegal invocation" en navegadores.
+    this.fetcher = options.fetcher ?? ((input, init) => fetch(input, init));
   }
 
   private async request<T>(path: string, method = "GET", body?: unknown, key?: string): Promise<T> {
