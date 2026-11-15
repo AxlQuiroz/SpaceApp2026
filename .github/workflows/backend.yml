@@ -20,7 +20,9 @@ jobs:
       - run: python -m pip install -e services/resource-api -e services/mission-api --no-deps
       - run: python scripts/test_backend.py
       - run: python scripts/verify_snapshots.py
-      - run: python scripts/verify_backend.py
+      - run: python scripts/verify_backend.py --scenario all
+      - run: python -m unittest discover -s scripts/tests -v
+        working-directory: .
       - run: python scripts/export_contracts.py
       - run: git diff --exit-code -- docs/mission-api-openapi.json sdk/typescript/schema.ts
   typescript:
@@ -72,4 +74,29 @@ jobs:
           path: |
             playwright-report/
             test-results/
+  launcher-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: RockieOS entrega
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: RockieOS entrega
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: .\RockieOS.cmd prepare
+      - run: .\RockieOS.cmd test --quick
+      - run: .\RockieOS.cmd present --smoke --no-browser
+      # También debe reutilizar la compilación, sin procesos ni puertos abandonados.
+      - run: .\RockieOS.cmd present --smoke --no-browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: informes-lanzador-windows
+          path: RockieOS entrega/reports/rockieos/
 

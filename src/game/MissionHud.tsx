@@ -346,7 +346,7 @@ export function MissionHud({ game }: Props) {
           )}
           {s.status === "paused" && <Badge tone="warn">{t.missionStatus.paused}</Badge>}
         </div>
-        <div className="bevel flex flex-wrap gap-1 px-1 py-1" data-tour="resources">
+        <div className="bevel flex min-w-0 max-w-full flex-wrap gap-1 px-1 py-1" data-tour="resources">
           <ResourceCounter icon="energy" label={t.resources.energy} value={r.energy_kwh} unit="kWh" decimals={1} max={p.energy_capacity_kwh} dangerBelow={DANGER.energy_kwh} delta={delta("energy_kwh")} />
           <ResourceCounter
             icon="oxygen"
@@ -474,16 +474,17 @@ export function MissionHud({ game }: Props) {
       {/* ================= DOCK MÓVIL (comandos siempre a mano) ================= */}
       <nav
         aria-label={t.game.actionsLeft}
+        data-testid="mobile-dock"
         className="bevel fixed inset-x-0 bottom-0 z-30 flex gap-2 p-2 lg:hidden"
         style={{ ["--bevel-fill" as string]: "var(--color-steel-900)" }}
       >
         <PixelButton
           data-tour="commands"
-          className="flex-1"
+          className="min-w-0 flex-1 flex-wrap px-2 sm:px-4"
           disabled={!active || busy || game.hasPending}
           onClick={() => setActionsOpen(true)}
           aria-haspopup="dialog"
-          icon={<PixelSprite icon="explore" scale={2} />}
+          icon={<span className="hidden sm:inline-flex"><PixelSprite icon="explore" scale={2} /></span>}
         >
           {t.game.actionsLeft}
           <span aria-hidden className="flex gap-1">
@@ -495,13 +496,13 @@ export function MissionHud({ game }: Props) {
         <PixelButton
           data-tour="advance"
           variant="primary"
-          className="flex-1"
+          className="min-w-0 flex-1 flex-wrap px-2 sm:px-4"
           disabled={!canAdvance}
           onClick={() => {
             play("success");
             void game.advance();
           }}
-          icon={<PixelSprite icon="next" scale={2} />}
+          icon={<span className="hidden sm:inline-flex"><PixelSprite icon="next" scale={2} /></span>}
         >
           {busy ? "…" : t.game.advance}
         </PixelButton>

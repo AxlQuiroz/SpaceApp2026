@@ -1,4 +1,5 @@
 """Exporta OpenAPI y tipos TS de sus esquemas. Sin red ni archivos de configuración."""
+import argparse
 import json
 import re
 import secrets
@@ -39,18 +40,29 @@ def ts_type(schema):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--check", action="store_true", help="Comprobar archivos generados sin modificarlos.")
+    args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     settings = Settings(RESOURCE_API_TOKEN=secrets.token_urlsafe(40), _env_file=None)
     schema = create_app(settings).openapi()
-    (root / "docs/mission-api-openapi.json").write_text(json.dumps(schema, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     destination = root / "sdk/typescript"
-    destination.mkdir(parents=True, exist_ok=True)
     lines = ["// Generado por scripts/export_contracts.py. No editar a mano.\n"]
     for name, definition in sorted(schema["components"]["schemas"].items()):
         if not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*", name):
             raise ValueError("Nombre de esquema no compatible con TypeScript.")
         lines.append(f"export type {name} = {ts_type(definition)};\n")
-    (destination / "schema.ts").write_text("\n".join(lines), encoding="utf-8")
+    outputs = {root / "docs/mission-api-openapi.json": json.dumps(schema, ensure_ascii=False, indent=2) + "\n",
+               destination / "schema.ts": "\n".join(lines)}
+    if args.check:
+        for path, expected in outputs.items():
+            if not path.exists() or path.read_text(encoding="utf-8") != expected:
+                raise SystemExit(f"Contrato desactualizado: {path.relative_to(root)}. Regenera con Python 3.12: scripts/export_contracts.py")
+        print("OpenAPI y tipos TypeScript coinciden con el backend Python.")
+        return
+    destination.mkdir(parents=True, exist_ok=True)
+    for path, content in outputs.items():
+        path.write_text(content, encoding="utf-8")
     print("Contrato OpenAPI y tipos TypeScript actualizados.")
 
 

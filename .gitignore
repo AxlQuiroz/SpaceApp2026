@@ -14,6 +14,10 @@
 /coverage
 /test-results/
 /playwright-report/
+/reports/rockieos/
+/.rockieos/
+__pycache__/
+*.py[cod]
 
 # next.js
 /.next/

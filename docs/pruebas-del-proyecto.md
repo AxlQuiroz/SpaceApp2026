@@ -1,6 +1,12 @@
-# Pruebas y recuperación de Base Selene
+# Pruebas y recuperación de RockieOS
 
-El alcance funcional es una misión lunar individual: sesión anónima, dificultad, decisiones, recursos, incidentes, refugio, reparaciones, pausa, reanudación, guardado, evaluación y reinicio. La pantalla real usa el backend Python; `?demo=1` utiliza números aproximados únicamente para previsualizar el diseño.
+El alcance funcional incluye misiones individuales en la Luna y Marte: sesión anónima, dificultad, decisiones, recursos, incidentes, refugio, reparaciones, pausa, reanudación, guardado, evaluación y reinicio. Marte añade comunicación con la Tierra, radiación de Curiosity y tormenta de polvo. La pantalla real usa el backend Python; `?demo=1` utiliza un simulador local para previsualizar el diseño.
+
+## Ejecutar todo desde un menú
+
+Abre `RockieOS.cmd` en la raíz. La opción **1** prepara las dependencias, **2** inicia la presentación y **5** ejecuta las pruebas completas. La opción **4** omite compilación y navegador. Ambas modalidades de pruebas completan misiones de Luna y Marte. Cada ejecución deja un informe HTML y registros en `reports/rockieos/`; la opción **7** abre el último.
+
+En PowerShell también puedes ejecutar ` .\RockieOS.cmd test` o ` .\RockieOS.cmd present`. Consulta la [guía del lanzador](lanzador-windows.md) para requisitos, cierre y diagnóstico. Las instrucciones manuales siguen disponibles abajo.
 
 ## Actualizar e iniciar en Windows
 
@@ -46,6 +52,8 @@ Desde `API/`:
 .\.venv\Scripts\python.exe scripts/test_backend.py
 .\.venv\Scripts\python.exe scripts/verify_snapshots.py
 .\.venv\Scripts\python.exe scripts/verify_backend.py
+.\.venv\Scripts\python.exe scripts/verify_backend.py --scenario all
+.\.venv\Scripts\python.exe scripts/export_contracts.py --check
 node --experimental-strip-types --test sdk/typescript/tests/client.test.ts
 ```
 
@@ -62,7 +70,7 @@ npm.cmd run test:e2e
 
 Las pruebas levantan el frontend en el puerto 3100 y los servicios temporales en 8700/8701. Esos puertos deben estar libres. El lanzador busca `API/.venv`, o usa Python del sistema; también admite `PYTHON_EXECUTABLE` con la ruta de tu intérprete. No modifica `.env` ni las partidas habituales.
 
-Se comprueban una misión completa, fuentes científicas, pausa/reanudación, recarga, final de misión, reinicio con error temporal y reintentos tras errores 503. Se ejecutan en Chromium con resoluciones de escritorio y móvil. El informe queda en `playwright-report/`; las capturas y trazas, en `test-results/`. GitHub Actions conserva ambos como artefacto `pruebas-navegador`.
+Se comprueban misiones completas de Luna y Marte, fuentes científicas, pausa/reanudación, recarga, final de misión, reinicio con error temporal y reintentos tras errores 503. Se ejecutan en Chromium con resoluciones de escritorio y móvil. El informe queda en `playwright-report/`; las capturas y trazas, en `test-results/`. GitHub Actions conserva ambos como artefacto `pruebas-navegador` y prueba el lanzador completo de Windows, incluso desde una carpeta con espacios.
 
 ## Recuperación de conexión
 

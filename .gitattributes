@@ -3,3 +3,5 @@
 # la verificación fallaba (SNAPSHOT_INTEGRITY_FAILED) y crear una misión devolvía 503.
 # -text = git nunca cambia los saltos de línea de estos archivos.
 API/services/resource-api/src/resource_api/snapshots/** -text
+# El acceso directo se ejecuta desde cmd.exe, incluso en clones con autocrlf=false.
+*.cmd text eol=crlf
