@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Panel, PixelButton, PixelSprite, SettingsBar, Starfield } from "@/components/hud";
 import { MissionHud } from "@/game/MissionHud";
 import { isDemo, useMission, type ScenarioId } from "@/game/useMission";
@@ -18,6 +18,12 @@ export default function MissionPage() {
   // Marte sólo se ofrece si el backend conectado ya lo incluye.
   const destinations = (["lunar-outpost-v1", "mars-outpost-v1"] as const).filter((id) => game.scenarios.some((sc) => sc.id === id));
   const mars = destination === "mars-outpost-v1";
+  // Sin backend configurado (p. ej. publicado solo en Vercel), el servidor responde PROXY_CONFIG_ERROR:
+  // en vez de mostrar "Sin conexión", se pasa al modo demo, que simula las reglas en el navegador.
+  const noBackend = game.phase === "offline" && game.errorCode === "PROXY_CONFIG_ERROR" && !isDemo();
+  useEffect(() => {
+    if (noBackend) window.location.replace("/mision?demo=1");
+  }, [noBackend]);
 
   if (game.phase === "playing" && game.mission) {
     // key: cada partida estrena su propio HUD (alertas, cola de R0-B1 y tutorial empiezan limpios).
@@ -33,14 +39,14 @@ export default function MissionPage() {
         <div className="flex flex-col items-center gap-4 p-2 text-center">
           <h1 className="font-pixel text-4xl text-neon-cyan">{t.app.title}</h1>
 
-          {game.phase === "connecting" && (
+          {(game.phase === "connecting" || noBackend) && (
             <>
               <PixelSprite sprite="robot" anim="talk" scale={5} label="R0-B1" />
               <p className="blink text-2xl">{t.menu.connecting}</p>
             </>
           )}
 
-          {game.phase === "offline" && (
+          {game.phase === "offline" && !noBackend && (
             <>
               <PixelSprite sprite="robot" anim="idle" scale={5} label="R0-B1" />
               <h2 className="font-pixel text-2xl text-alert">{t.menu.offlineTitle}</h2>

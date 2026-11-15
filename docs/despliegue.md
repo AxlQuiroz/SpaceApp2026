@@ -2,6 +2,10 @@
 
 La presentación local en Windows usa RockieOS.cmd. Para un servidor con Docker Engine y Compose v2, la raíz incluye los tres servicios, almacenamiento persistente y comprobaciones de disponibilidad.
 
+## Publicación rápida en Vercel (solo modo demo)
+
+Vercel aloja el frontend Next.js, pero no el backend Python: sus archivos SQLite no persisten allí. Para una demo pública basta con importar el repositorio en Vercel **sin variables de entorno**. Al no estar configurados `ORBITA_API_URL` ni `APP_ORIGIN`, el proxy responde `PROXY_CONFIG_ERROR` y `/mision` pasa sola a `/mision?demo=1`, que simula las reglas en el navegador (`src/lib/orbita/mock.ts`). En modo demo la partida no se guarda al recargar. Para el juego completo, despliega el backend con Docker (abajo) y configura esas variables en Vercel.
+
 ## Primera instalación en un servidor
 
 ```bash
