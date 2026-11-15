@@ -189,12 +189,16 @@ test("un reinicio compara las decisiones del intento anterior", async ({page}) =
   const abort = async () => {
     await page.getByRole("button",{name:"☰ Menú",exact:true}).click();
     await page.getByRole("button",{name:"Abandonar misión",exact:true}).click();
+    await expect(page.getByTestId("narration")).toBeVisible();
     await dismissNarration(page);
     await expect(page.getByRole("button",{name:"Jugar otra vez",exact:true})).toBeVisible();
   };
   await abort();
+  const previousId = await page.getByTestId("mission-hud").getAttribute("data-mission-id");
   await page.getByRole("button",{name:"Jugar otra vez",exact:true}).click();
+  await expect(page.getByTestId("mission-hud")).not.toHaveAttribute("data-mission-id",previousId!);
   await expect(page.getByTestId("mission-hud")).toHaveAttribute("data-turn","0");
+  await expect(page.getByTestId("narration")).toBeVisible();
   await dismissNarration(page);
   await abort();
   await expect(page.getByRole("heading",{name:"Comparación con tu intento anterior",exact:true})).toBeVisible();
