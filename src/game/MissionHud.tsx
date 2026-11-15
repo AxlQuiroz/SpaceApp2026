@@ -48,6 +48,7 @@ import {
 import { missionErrorText, reviewText } from "./reviewText";
 import { actionTag, costText, reasonText, suggestAction } from "./actionGuide";
 import { TurnReport } from "./TurnReport";
+import { RadioReport } from "./RadioReport";
 import { isDemo, type ActionId, type MissionController, type ScenarioParams } from "./useMission";
 
 /** Cola de cosas que R0-B1 muestra una por una, en orden. */
@@ -344,7 +345,7 @@ export function MissionHud({ game }: Props) {
             </div>
           </div>
           <Badge tone="info">{mars ? t.destination.mars : t.destination.moon}</Badge>
-          {s.rules_version.endsWith("1.0.0") && <Badge tone="warn">{locale === "en" ? "Previous rules · saved mission" : "Reglas anteriores · partida guardada"}</Badge>}
+          {!s.rules_version.endsWith("1.2.0") && <Badge tone="warn">{locale === "en" ? "Previous rules · saved mission" : "Reglas anteriores · partida guardada"}</Badge>}
           {isDemo() ? <Badge tone="warn">DEMO</Badge> : <Badge tone="info">{copy.historical}{mars ? " · 20-05-2024" : ""}</Badge>}
           {s.status === "paused" && <Badge tone="warn">{t.missionStatus.paused}</Badge>}
         </div>
@@ -383,10 +384,13 @@ export function MissionHud({ game }: Props) {
       {mission.planning && <aside className="bevel-inset flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2 text-base" aria-label={copy.support}>
         <span>{copy.foodHours}: <strong>{mission.planning.food_autonomy_hours.toFixed(1)} h</strong> · {copy.hours}</span>
         <span className={r.food_kg < mission.planning.food_reserve_target_kg ? "text-amber" : "text-lime"}>{copy.foodTarget}: {mission.planning.food_reserve_target_kg.toFixed(1)} kg</span>
+        {mission.planning.exposure_target_points !== null && <span>{copy.exposureTarget}: {mission.planning.exposure_target_points} {copy.points}</span>}
         {mars && <span>{copy.data}: {s.unreported_data_points}</span>}
         {mission.planning.pending_reply_minutes !== null && <span className="text-amber">{copy.pendingRadio}: {mission.planning.pending_reply_minutes} {copy.minutes}</span>}
         <details className="w-full"><summary className="cursor-pointer py-2">{copy.simulation} · {s.practice_mode === "training" ? copy.training : copy.historicalMode}</summary><p>{copy.harvestNote} {mars && copy.radioNote}</p></details>
       </aside>}
+      {active && mission.planning?.shelter_recommended && <p role="status" data-testid="radiation-alert" className="bevel border-l-4 border-amber px-3 py-2 text-lg text-amber">{copy.shelterAlert}</p>}
+      {mars && <RadioReport report={s.earth_guidance} turn={s.turn} />}
       {banner && <AlertBanner icon="warning" message={localizeAlert(banner, locale)} onDismiss={() => setBanner(null)} />}
       {game.error && (
         <div role="alert" className="bevel flex items-center gap-3 px-3 py-2" style={{ ["--bevel-fill" as string]: "var(--color-alert-dark)" }}>
@@ -490,6 +494,7 @@ export function MissionHud({ game }: Props) {
         className="bevel fixed inset-x-0 bottom-0 z-30 flex gap-2 p-2 lg:hidden"
         style={{ ["--bevel-fill" as string]: "var(--color-steel-900)" }}
       >
+        {active && mission.planning?.shelter_recommended && <span aria-hidden className="absolute inset-x-0 bottom-full bg-steel-950 px-3 py-1 text-base text-amber">{copy.shelterShort}</span>}
         <PixelButton
           data-tour="commands"
           className="min-w-0 flex-1 flex-wrap px-2 sm:px-4"
@@ -635,7 +640,8 @@ export function MissionHud({ game }: Props) {
                 reserve_oxygen_kg: `${t.game.reserve} O₂`,
                 reserve_water_l: `${t.game.reserve} ${t.game.water}`,
               }}
-              note={pendingAction.id === "contact_earth" ? t.preview.replyLater : null}
+              note={pendingAction.id === "contact_earth" ? copy.radioChoice : null}
+              onShelter={pendingAction.id === "contact_earth" && mission.planning?.shelter_recommended && mission.available_actions.some(a => a.id === "enter_shelter" && a.enabled) ? () => askPreview("enter_shelter") : undefined}
               busy={busy || game.hasPending}
               onConfirm={confirmAction}
               onCancel={() => setPendingAction(null)}

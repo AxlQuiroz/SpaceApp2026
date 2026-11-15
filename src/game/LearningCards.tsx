@@ -191,9 +191,10 @@ type PreviewProps = {
   onConfirm: () => void;
   onCancel: () => void;
   onRetry?: () => void;
+  onShelter?: () => void;
 };
 
-export function PreviewPanel({ label, hint, icon, result, current, names, note, busy, onConfirm, onCancel, onRetry }: PreviewProps) {
+export function PreviewPanel({ label, hint, icon, result, current, names, note, busy, onConfirm, onCancel, onRetry, onShelter }: PreviewProps) {
   const { t, locale } = useI18n();
   const copy = reviewText(locale);
   const trap = useFocusTrap<HTMLElement>();
@@ -263,6 +264,7 @@ export function PreviewPanel({ label, hint, icon, result, current, names, note, 
       )}
       <p className="text-base text-steel-200">{t.preview.uses}</p>
       <div className="flex flex-wrap justify-end gap-2">
+        {onShelter && <PixelButton disabled={busy} onClick={onShelter}>{copy.shelterFirst}</PixelButton>}
         <PixelButton variant="ghost" onClick={onCancel}>
           {t.preview.cancel}
         </PixelButton>

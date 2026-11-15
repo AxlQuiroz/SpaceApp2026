@@ -136,6 +136,33 @@ test("misión de Marte completa con datos reales, llamadas y tormenta de polvo",
   await expect(page.getByRole("dialog", { name: "¡Misión exitosa!", exact: true })).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test("el aviso persiste durante el pico y la radio entrega un informe útil", async ({ page }, info) => {
+  await start(page, "Marte");
+  await action(page, "Explorar");
+  await action(page, "Llamar a la Tierra");
+  await advance(page, 1);
+  await expect(page.getByTestId("earth-report")).toContainText("3.93");
+  for (let turn = 2; turn <= 4; turn++) await advance(page, turn);
+  await expect(page.getByTestId("radiation-alert")).toBeVisible();
+  await expect(page.getByTestId("radiation-alert")).toContainText("seguirá elevada");
+  await page.screenshot({ path: info.outputPath("mvp-radiacion.png"), fullPage: true });
+  await checkWidth(page);
+  await action(page, "Ir al refugio");
+  await advance(page, 5);
+  await expect(page.getByTestId("radiation-alert")).toBeVisible();
+});
+
+test("el Plan Familiar se identifica como propuesta antes de cualquier clic", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: /Para familias.*Plan Familiar y diploma/ }).click();
+  const family = page.getByRole("dialog", { name: "Para familias", exact: true });
+  await expect(family).toContainText("no vende suscripciones");
+  await expect(family.getByRole("button", { name: "Suscribirse", exact: true })).toHaveCount(0);
+  await family.getByRole("button", { name: "Qué falta para lanzarlo", exact: true }).click();
+  await expect(family).toContainText("faltan el contenido mensual");
+  await checkWidth(page);
+});
 test("503 en una orden reintenta exactamente la misma intención", async ({ page }) => {
   await start(page);
   let failedBody: string | null = null;

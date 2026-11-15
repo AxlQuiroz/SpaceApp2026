@@ -71,10 +71,20 @@ class Systems(Model):
     earth_reply_due_minutes: NonNegative | None = None
 
 
+class EarthGuidance(Model):
+    received_turn: Annotated[int, Field(ge=0, le=12)]
+    valid_until_turn: Annotated[int, Field(ge=0, le=12)]
+    advice_code: Literal["shelter_now", "save_power", "clean_panels", "research_window"]
+    next_turn_dose_rate_ugy_h: NonNegative | None
+    suggested_eva_turn: Annotated[int, Field(ge=0, le=11)] | None
+    dust_start_turn: Annotated[int, Field(ge=0, le=12)] | None
+    dust_end_turn: Annotated[int, Field(ge=0, le=12)] | None
+
+
 class MissionState(Model):
     id: str
     scenario_id: ScenarioId = "lunar-outpost-v1"
-    rules_version: Literal["lunar-1.0.0", "mars-1.0.0", "lunar-1.1.0", "mars-1.1.0"] = "lunar-1.0.0"
+    rules_version: Literal["lunar-1.0.0", "mars-1.0.0", "lunar-1.1.0", "mars-1.1.0", "lunar-1.2.0", "mars-1.2.0"] = "lunar-1.0.0"
     version: int = 1
     status: Status = "active"
     difficulty: Difficulty
@@ -93,6 +103,7 @@ class MissionState(Model):
     practice_mode: Literal["historical", "training"] = "historical"
     radiation_profile_ugy_h: list[NonNegative] = Field(default_factory=list, max_length=12)
     radiation_profile_source_hash: str | None = None
+    earth_guidance: EarthGuidance | None = None
     resources: Resources
     systems: Systems = Field(default_factory=Systems)
     created_at: AwareDatetime
@@ -148,6 +159,8 @@ class PlanningIndicators(Model):
     food_reserve_target_kg: NonNegative
     pending_reply_minutes: NonNegative | None
     radio_round_trip_minutes: int
+    shelter_recommended: bool = False
+    exposure_target_points: NonNegative | None = None
 
 
 class MissionView(Model):

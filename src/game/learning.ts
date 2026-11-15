@@ -329,14 +329,14 @@ export const MEDALS: Medal[] = [
     icon: "repairWater",
     name: { es: "Fontanero lunar", en: "Lunar plumber" },
     how: { es: "Repara la fuga de agua en el mismo turno en que aparece.", en: "Fix the water leak on the same turn it appears." },
-    earned: (i) => acted(i, "repair_water_loop", 2),
+    earned: (i) => i.log.some((e) => e.type === "water_leak" && acted(i, "repair_water_loop", e.turn)),
   },
   {
     id: "storm_safe",
     icon: "shelter",
     name: { es: "A salvo de la tormenta", en: "Safe from the storm" },
-    how: { es: "Termina una misión con la exposición por debajo de 40.", en: "Finish a mission with exposure below 40." },
-    earned: (i) => done(i) && i.mission.state.exposure_risk_index < 40,
+    how: { es: "Termina con menos de 40 puntos de exposición y cumple la meta de protección de tu misión.", en: "Finish below 40 exposure points and meet your mission's protection goal." },
+    earned: (i) => done(i) && i.mission.state.exposure_risk_index < 40 && i.evaluation?.objectives.radiation_protection !== false,
   },
   {
     id: "scientist",

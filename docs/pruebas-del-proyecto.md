@@ -1,5 +1,7 @@
 # Pruebas y recuperación de RockieOS
 
+El MVP 0.4 incorpora regresiones de aviso durante el pico marciano, protección lunar, compatibilidad 1.1, elección entre radio/refugio, vigencia del informe, medalla de fuga variable y navegación de las pestañas de familias. El flujo de CI también arranca la configuración completa de Docker Compose y comprueba `/api/health` y el catálogo a través del proxy.
+
 El alcance funcional incluye misiones individuales en la Luna y Marte: sesión anónima, dificultad, decisiones, recursos, incidentes, refugio, reparaciones, pausa, reanudación, guardado, evaluación y reinicio. Marte añade comunicación con la Tierra, radiación de Curiosity y tormenta de polvo. La pantalla real usa el backend Python; `?demo=1` utiliza un simulador local para previsualizar el diseño.
 
 ## Ejecutar todo desde un menú

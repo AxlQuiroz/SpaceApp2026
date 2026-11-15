@@ -1,5 +1,7 @@
 # Correcciones de la auditoría · versión 0.3
 
+> Registro de la iteración 0.3. El estado actual es el [MVP 0.4 y reglas 1.2](MVP.md), que también conserva las partidas 1.1, corrige la medalla variable, mantiene el aviso marciano y añade la meta de protección y el informe de radio. El código ya incluye licencia MIT.
+
 La actualización conserva el menú, guardarropa y funciones de familias incorporados en main. El motor sigue en Python y la interfaz en Next.js; sus contratos se generan y se comprueban conjuntamente.
 
 ## Cambios y evidencia

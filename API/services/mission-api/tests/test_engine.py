@@ -198,7 +198,7 @@ class MarsEngineTests(unittest.TestCase):
         return [event.type for event in result.events]
 
     def test_identity_actions_and_first_turn(self):
-        self.assertEqual((self.state.scenario_id, self.state.rules_version), ("mars-outpost-v1", "mars-1.1.0"))
+        self.assertEqual((self.state.scenario_id, self.state.rules_version), ("mars-outpost-v1", "mars-1.2.0"))
         ids = [option.id for option in transition(self.state, Command(type="pause", expected_version=1), NOW).mission.available_actions]
         self.assertIn("contact_earth", ids)
         self.assertNotIn("repair_water_loop", ids)

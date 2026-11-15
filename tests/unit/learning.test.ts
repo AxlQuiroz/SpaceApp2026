@@ -63,7 +63,7 @@ describe("Marte en el modo demo", () => {
     const ids = mission.available_actions.map((a) => a.id);
     expect(ids).toContain("contact_earth");
     expect(ids).not.toContain("repair_water_loop");
-    expect(mission.state.rules_version).toBe("mars-1.1.0");
+    expect(mission.state.rules_version).toBe("mars-1.2.0");
   });
   it("la vista previa no modifica la partida", async () => {
     const api = new MockMissionClient();

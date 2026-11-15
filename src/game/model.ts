@@ -190,6 +190,8 @@ const ALERTS_EN: Record<string, string> = {
     "The next advance brings a simulated solar event: consider going to the shelter.",
   "El próximo avance trae la radiación de una eyección solar real: considera entrar al refugio.":
     "The next advance brings radiation from a real solar eruption: consider going to the shelter.",
+  "La radiación sigue elevada: permanece en el refugio o entra antes de avanzar.":
+    "Radiation is still elevated: stay in the shelter or enter before advancing.",
   "Se acerca una tormenta de polvo: ahorra batería antes del próximo avance.": "A dust storm is coming: save battery before the next advance.",
   "Reserva principal de oxígeno baja.": "Main oxygen supply is low.",
   "Reserva principal de agua baja.": "Main water supply is low.",

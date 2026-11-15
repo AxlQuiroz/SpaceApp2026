@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Modal, PixelButton, PixelSprite } from "@/components/hud";
 import { useI18n } from "@/lib/providers";
 import { MEDALS, TERMS, type Lang, type Progress } from "@/game/learning";
@@ -23,6 +23,7 @@ type Props = { open: boolean; onClose: () => void; progress: Progress };
 export function FamilyModal({ open, onClose, progress }: Props) {
   const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("pass");
+  const tabs = useRef<(HTMLButtonElement | null)[]>([]);
 
   // Cada vez que se abre, empieza por el Plan Familiar.
   useEffect(() => {
@@ -33,14 +34,20 @@ export function FamilyModal({ open, onClose, progress }: Props) {
     <Modal open={open} title={t.family.title} onClose={onClose} wide>
       <div className="flex flex-col gap-3">
           <div role="tablist" aria-label={t.family.title} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {TABS.map((id) => (
+            {TABS.map((id, index) => (
               <button
                 key={id}
+                ref={node => { tabs.current[index] = node; }}
                 type="button"
                 role="tab"
                 id={`family-tab-${id}`}
                 aria-selected={tab === id}
                 aria-controls={`family-panel-${id}`}
+                tabIndex={tab === id ? 0 : -1}
+                onKeyDown={e => {
+                  const next = e.key === "ArrowRight" ? (index + 1) % TABS.length : e.key === "ArrowLeft" ? (index + TABS.length - 1) % TABS.length : e.key === "Home" ? 0 : e.key === "End" ? TABS.length - 1 : null;
+                  if (next !== null) { e.preventDefault(); setTab(TABS[next]); tabs.current[next]?.focus(); }
+                }}
                 onClick={() => setTab(id)}
                 className={`bevel pixel-btn font-pixel px-2 py-1 text-base uppercase ${tab === id ? "glow" : ""}`}
                 style={{ ["--bevel-fill" as string]: tab === id ? "var(--color-cyan-dark)" : "var(--color-steel-800)" }}
@@ -75,6 +82,7 @@ function PassTab() {
       {/* Presentación del plan: lo primero que ve la persona adulta al abrir la sección. */}
       <section className="bevel glow flex flex-col items-center gap-3 p-4 text-center" style={{ ["--bevel-fill" as string]: "var(--color-steel-900)" }}>
         <span className="font-tiny bg-amber px-2 py-0.5 text-xs text-void uppercase">{t.family.heroBadge}</span>
+        <p className="text-lg text-amber">{t.family.buySoon}</p>
         <h3 className="font-pixel text-3xl text-amber">{t.family.heroTitle}</h3>
         <p className="max-w-xl text-lg text-steel-200">{t.family.heroBody}</p>
         <ul className="flex flex-wrap justify-center gap-3" aria-label={t.family.passSuits}>
@@ -91,7 +99,7 @@ function PassTab() {
         </PixelButton>
         {asked && (
           <p role="status" className="text-lg text-amber">
-            {t.family.buySoon}
+            {t.family.launchNeeds}
           </p>
         )}
       </section>

@@ -50,8 +50,8 @@ const MARS_ACTIONS: Partial<Record<ActionId, ActionDef>> = {
 const MARS_RAD = [3.81, 3.93, 60.05, 246.39, 122.15, 91.23, 72.12, 48.51, 38.63, 31.07, 27.25, 22.93];
 
 const RULES = {
-  "lunar-outpost-v1": { version: "lunar-1.1.0" as const, actions: LUNAR_ACTIONS, solarKwh: 11, oxygenKwh: 2.4, generatorWater: 0.45, science: 24 },
-  "mars-outpost-v1": { version: "mars-1.1.0" as const, actions: MARS_ACTIONS, solarKwh: 11.008, oxygenKwh: 4, generatorWater: 0, science: 30 },
+  "lunar-outpost-v1": { version: "lunar-1.2.0" as const, actions: LUNAR_ACTIONS, solarKwh: 11, oxygenKwh: 2.4, generatorWater: 0.45, science: 24 },
+  "mars-outpost-v1": { version: "mars-1.2.0" as const, actions: MARS_ACTIONS, solarKwh: 11.008, oxygenKwh: 4, generatorWater: 0, science: 30 },
 };
 const DUST_TURNS = [6, 7, 8, 9];
 
@@ -59,7 +59,7 @@ const BASE_PARAMS = { turns: 12, actions_per_turn: 2, energy_capacity_kwh: 50, o
 const SCENARIOS = [
   {
     id: "lunar-outpost-v1",
-    title: "Órbita: primer turno lunar (DEMO)",
+    title: "RockieOS: primer turno lunar (DEMO)",
     description: "Modo demo sin backend.",
     objectives: ["Completar 12 turnos", "Salud final de al menos 60", "Conseguir 24 puntos científicos"],
     assumptions: ["Modo demo: imita las reglas del backend."],
@@ -67,7 +67,7 @@ const SCENARIOS = [
   },
   {
     id: "mars-outpost-v1",
-    title: "Órbita: un sol en Marte (DEMO)",
+    title: "RockieOS: jornada en Marte (DEMO)",
     description: "Modo demo sin backend.",
     objectives: ["Completar 12 turnos", "Salud final de al menos 60", "Conseguir 30 puntos científicos"],
     assumptions: ["Modo demo: imita las reglas del backend."],
@@ -104,6 +104,7 @@ function initialState(opts: CreateMission, parent: string | null = null): Missio
     practice_mode: "historical", // El demo visual conserva un solo guion.
     radiation_profile_ugy_h: scenario === "mars-outpost-v1" ? MARS_RAD : [],
     radiation_profile_source_hash: null,
+    earth_guidance: null,
     resources: {
       energy_kwh: 32 * k,
       oxygen_kg: 2.8 * k,
@@ -161,6 +162,7 @@ function view(s: MissionState): MissionView {
     alerts.push(mars ? "Paneles con polvo: la producción eléctrica está reducida." : "Paneles dañados: la producción eléctrica está reducida.");
   if (s.systems.dust_storm_active) alerts.push("Tormenta de polvo: llega muy poca luz a los paneles.");
   if (mars && s.turn === 2) alerts.push("El próximo avance trae la radiación de una eyección solar real: considera entrar al refugio.");
+  else if (mars && s.turn < 12 && MARS_RAD[s.turn] >= 20) alerts.push("La radiación sigue elevada: permanece en el refugio o entra antes de avanzar.");
   if (mars && s.turn === DUST_TURNS[0] - 1) alerts.push("Se acerca una tormenta de polvo: ahorra batería antes del próximo avance.");
   if (!mars && s.turn === 5) alerts.push("El próximo avance incluye un incidente solar simulado: considera entrar al refugio.");
   if (s.resources.oxygen_kg < 0.8) alerts.push("Reserva principal de oxígeno baja.");
@@ -176,7 +178,18 @@ function view(s: MissionState): MissionView {
     planning: { food_autonomy_hours: Math.round(s.resources.food_kg / 0.1 * 100) / 100,
       food_reserve_target_kg: s.difficulty === "commander" ? 0.6 : 0.8,
       pending_reply_minutes: s.systems.earth_reply_due_minutes === null ? null : Math.max(0, s.systems.earth_reply_due_minutes - s.elapsed_hours * 60),
-      radio_round_trip_minutes: 40 } };
+      radio_round_trip_minutes: 40, shelter_recommended: s.turn < 12 && (mars ? MARS_RAD[s.turn] >= 20 : s.turn === 5),
+      exposure_target_points: mars ? null : 20 } };
+}
+
+function demoRadioReport(s: MissionState): MissionState["earth_guidance"] {
+  const next = s.turn < 12 ? MARS_RAD[s.turn] : null;
+  const candidates = [s.turn, s.turn + 1].filter(turn => turn < 12 && MARS_RAD[turn] < 20);
+  const best = candidates.sort((a, b) => MARS_RAD[a] - MARS_RAD[b])[0] ?? null;
+  const dust = s.turn < 9;
+  return { received_turn: s.turn, valid_until_turn: Math.min(12, s.turn + 2),
+    advice_code: next !== null && next >= 100 ? "shelter_now" : dust && s.turn >= 4 ? "save_power" : s.systems.solar_integrity_pct < 100 ? "clean_panels" : next !== null && next >= 20 ? "shelter_now" : "research_window",
+    next_turn_dose_rate_ugy_h: next, suggested_eva_turn: best, dust_start_turn: dust ? 6 : null, dust_end_turn: dust ? 9 : null };
 }
 
 const evt = (s: MissionState, type: string, message: string, payload: Record<string, unknown> = {}): TimelineEvent => ({
@@ -321,6 +334,8 @@ function transition(s: MissionState, command: Command): TimelineEvent[] {
     if (r.food_kg <= 0) loss += 10;
     loss += Math.max(0, s.exposure_risk_index - 60) / 10;
     s.crew_health_pct = Math.max(0, round(s.crew_health_pct - loss));
+    const reply = out.find(e => e.type === "earth_reply");
+    if (reply) { s.earth_guidance = demoRadioReport(s); reply.payload.planning_report = s.earth_guidance; }
     out.push(
       evt(s, "turn_advanced", "Turno calculado.", {
         resource_delta: delta(),
@@ -408,10 +423,10 @@ export class MockMissionClient {
       healthy_crew: s.crew_health_pct >= 60,
       science_target: s.science_points >= target,
       food_reserve: s.resources.food_kg >= (s.difficulty === "commander" ? 0.6 : 0.8),
-      ...(s.scenario_id === "mars-outpost-v1" ? { science_shared: s.reported_data_points >= 12 } : {}),
+      ...(s.scenario_id === "mars-outpost-v1" ? { science_shared: s.reported_data_points >= 12 } : { radiation_protection: s.exposure_risk_index <= 20 }),
     };
     const score = Math.round(
-      (s.turn / 12) * 40 + (s.crew_health_pct / 100) * 30 + Math.min(1, s.science_points / target) * 20 + (1 - s.exposure_risk_index / 100) * 10,
+      (s.turn / 12) * 30 + (s.crew_health_pct / 100) * 20 + Math.min(1, s.science_points / target) * 20 + (1 - s.exposure_risk_index / 100) * 20 + Math.min(1, s.resources.food_kg / (s.difficulty === "commander" ? 0.6 : 0.8)) * 10,
     );
     const ok = Object.values(objectives).every(Boolean);
     return {

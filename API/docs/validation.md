@@ -1,5 +1,7 @@
 # Validación de la entrega · v0.1.0
 
+> Informe histórico de la primera API de recursos. No describe el MVP actual, que ya incluye motor, interfaz y ambas misiones. Consulta [MVP 0.4](../../docs/MVP.md) y [validación actual](../../docs/pruebas-del-proyecto.md).
+
 Fecha: **14 de noviembre de 2026**. Entorno ejecutado: Linux, Python 3.12.14. Las instrucciones PowerShell están preparadas para Windows; no se ejecutaron en un equipo Windows.
 
 ## Pruebas automáticas

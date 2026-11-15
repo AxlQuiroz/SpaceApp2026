@@ -76,9 +76,8 @@ export function suggestAction(
   const r = s.resources;
   const why = t.commands.why;
   const enabled = new Set(m.available_actions.filter((a) => a.enabled).map((a) => a.id as ActionId));
-  // Aviso de radiación: el backend lo anuncia como alerta que menciona el refugio.
-  // En "tormenta" la radiación del turno ya pasó: no se sugiere ni entrar ni salir.
-  const warned = m.alerts.some((a) => a.includes("refugio")) || weather === "active";
+  // Python mira el bloque siguiente: una tormenta marciana puede durar varios turnos.
+  const warned = m.planning?.shelter_recommended ?? (m.alerts.some((a) => a.includes("refugio")) || weather === "active" || weather === "storm");
   const calm = !warned && weather === "calm";
   const candidates: [boolean, ActionId, string][] = [
     [warned && !sy.crew_in_shelter, "enter_shelter", why.shelter_warning],
@@ -117,5 +116,5 @@ export function costText(t: Dict, costs: Record<string, number>): string {
       const [unit, d] = units[k] ?? ["", 1];
       return `${v.toFixed(d)}${unit ? ` ${unit}` : ""} ${(names[k] ?? k).toLowerCase()}`;
     });
-  return parts.length ? `${t.commands.spends}: ${parts.join(" · ")}` : t.commands.free;
+  return `${t.commands.actionCost} · ${parts.length ? `${t.commands.spends}: ${parts.join(" · ")}` : t.commands.free}`;
 }
